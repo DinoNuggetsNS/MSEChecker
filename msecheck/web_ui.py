@@ -13,13 +13,14 @@ from .reports import export
 PAGE = r"""<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>MSECheck</title>
 <style>
-:root{color-scheme:dark;--bg:#14171c;--fg:#e6e9ef;--card:#1d222a;--bd:#323946;--mut:#97a1b3;--red:#ff8a80;--amb:#ffb74d;--blu:#82b1ff}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif}main{max-width:980px;margin:auto;padding:1.2rem}
+:root{color-scheme:light;--bg:#ffffff;--fg:#000000;--card:#ffffff;--bd:#d9d9d9;--mut:#222222;--red:#c62828;--amb:#b45f06;--blu:#1a5fb4;--brand:#e3493b}
+html{background:#fff}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;box-sizing:border-box;min-height:100vh;border:8px solid var(--brand)}main{max-width:980px;margin:auto;padding:1.2rem}
 h1{margin:.2rem 0}.mut{color:var(--mut)}section,article{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem;margin:.9rem 0}
 #drop{border:2px dashed var(--bd);border-radius:10px;padding:1.2rem;text-align:center}#drop.over{border-color:var(--blu)}
 textarea,input[type=text]{width:100%;box-sizing:border-box;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:.5rem;font:inherit}
 button{background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:.3rem .6rem;cursor:pointer;font:inherit;font-size:13px}
-button:hover{border-color:var(--blu)}button.pri{background:var(--blu);color:#0b1220;border-color:var(--blu)}
+button:hover{border-color:var(--brand)}button.pri{background:var(--brand);color:#fff;border-color:var(--brand)}
 .stats{display:flex;flex-wrap:wrap;gap:.6rem}.stat{border:1px solid var(--bd);border-radius:8px;padding:.4rem .8rem;min-width:90px}.stat b{font-size:1.4rem;display:block}
 .bar{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}pre.rules{white-space:pre-wrap;background:var(--bg);border-radius:6px;padding:.5rem;margin:.4rem 0;font:inherit}
 article header{display:flex;flex-wrap:wrap;gap:.6rem;align-items:baseline}article h3{margin:0}.ok{color:#2e7d32;font-weight:600}
