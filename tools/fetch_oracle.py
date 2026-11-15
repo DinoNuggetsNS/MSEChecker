@@ -11,8 +11,13 @@ meta = next(b for b in json.load(get("https://api.scryfall.com/bulk-data"))["dat
 out = sys.argv[1]
 if meta.get("jsonl_download_uri"):                    # one card per line: copy straight into a .gz
     print("Downloading", meta["jsonl_download_uri"])
-    with get(meta["jsonl_download_uri"]) as src, gzip.open(out, "wb") as dst:
-        shutil.copyfileobj(src, dst)
+    url = meta["jsonl_download_uri"]
+    if url.endswith(".gz"):                            # already gzipped: save it as it is
+        with get(url) as src, open(out, "wb") as dst:
+            shutil.copyfileobj(src, dst)
+    else:
+        with get(url) as src, gzip.open(out, "wb") as dst:
+            shutil.copyfileobj(src, dst)
 else:                                                  # older API: a single JSON array
     url = meta.get("json_download_uri") or meta["download_uri"]
     print("Downloading", url)
