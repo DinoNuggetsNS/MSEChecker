@@ -17,15 +17,27 @@ def app_dir():
 
 
 def ensure_desktop_shortcut():
-    """Windows .exe build only: put an MSECheck shortcut on the Desktop the first time it runs (never overwrites one)."""
+    """Windows .exe build only: the first time it runs, ask whether to put an MSECheck shortcut on the Desktop.
+    The answer (yes or no) is remembered, so it only asks once."""
     if os.name != "nt" or not getattr(sys, "frozen", False):
         return
     try:
+        import ctypes
+        folder = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"), "MSECheck")
+        marker = os.path.join(folder, "shortcut_asked")
+        if os.path.exists(marker):
+            return
+        os.makedirs(folder, exist_ok=True)
+        open(marker, "w").write("asked")
+        # MB_YESNO | MB_ICONQUESTION | MB_TOPMOST
+        ans = ctypes.windll.user32.MessageBoxW(0, "Create a MSECheck shortcut on your Desktop?", "MSECheck", 0x04 | 0x20 | 0x40000)
+        if ans != 6:          # 6 = Yes
+            return
         exe = sys.executable
         ps = (
             "$d=[Environment]::GetFolderPath('Desktop');$l=Join-Path $d 'MSECheck.lnk';"
-            "if(-not(Test-Path $l)){$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
-            "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s,0';$s.Description='MSECheck';$s.Save()}"
+            "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
+            "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s,0';$s.Description='MSECheck';$s.Save()"
             % (exe, os.path.dirname(exe), exe)
         )
         subprocess.Popen(["powershell", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps],
@@ -71,7 +83,7 @@ def main():
     ap.add_argument("--browser", action="store_true", help="open in your normal web browser instead of the app window")
     ap.add_argument("--no-design-risk", action="store_true", help="turn off the loop / balance / design-risk checks")
     ap.add_argument("--cards", help="path to Scryfall bulk data (JSON, JSONL, or .jsonl.gz)")
-    ap.add_argument("--no-shortcut", action="store_true", help="do not create a Desktop shortcut")
+    ap.add_argument("--no-shortcut", action="store_true", help="do not ask about a Desktop shortcut")
     a = ap.parse_args()
     if not a.no_shortcut:
         ensure_desktop_shortcut()

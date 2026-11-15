@@ -10,7 +10,7 @@ It runs entirely on your computer. Your original file is never changed.
 
 1. Go to the **[Releases page](../../releases/latest)** of this repository.
 2. Under **Assets**, download **`MSECheck.exe`**.
-3. Double-click it. MSECheck opens in its own window.
+3. Double-click it. The first time, it asks if you want a shortcut on your Desktop. MSECheck then opens in its own window.
 
 That's it. Nothing else to install. The app already includes Scryfall's **Oracle Cards** data, so "closest real card" matching works straight away.
 
