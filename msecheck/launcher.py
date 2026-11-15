@@ -16,34 +16,60 @@ def app_dir():
     return os.path.dirname(os.path.abspath(sys.argv[0]))
 
 
+def _log(msg):
+    try:
+        folder = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"), "MSECheck")
+        os.makedirs(folder, exist_ok=True)
+        with open(os.path.join(folder, "shortcut.log"), "a", encoding="utf-8") as f:
+            f.write("%s  %s\n" % (time.strftime("%Y-%m-%d %H:%M:%S"), msg))
+    except Exception:
+        pass
+
+
+def make_desktop_shortcut():
+    """Create Desktop\\MSECheck.lnk pointing at this .exe. Returns True if the file now exists."""
+    exe = sys.executable
+    q = lambda t: t.replace("'", "''")          # escape for a PowerShell single-quoted string
+    ps = (
+        "$ErrorActionPreference='Stop';"
+        "$d=[Environment]::GetFolderPath('Desktop');$l=Join-Path $d 'MSECheck.lnk';"
+        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
+        "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s,0';$s.Description='MSECheck';$s.Save();"
+        "Write-Output $l" % (q(exe), q(os.path.dirname(exe)), q(exe))
+    )
+    r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", ps],
+                       capture_output=True, text=True, timeout=30, creationflags=0x08000000)
+    path = (r.stdout or "").strip().splitlines()[-1] if (r.stdout or "").strip() else ""
+    _log("powershell exit=%s path=%s stderr=%s" % (r.returncode, path, (r.stderr or "").strip()[:300]))
+    return bool(path) and os.path.exists(path)
+
+
 def ensure_desktop_shortcut():
     """Windows .exe build only: the first time it runs, ask whether to put an MSECheck shortcut on the Desktop.
-    The answer (yes or no) is remembered, so it only asks once."""
+    A "No" is remembered. A "Yes" that fails to create the file asks again next time. Details go to
+    %LOCALAPPDATA%\\MSECheck\\shortcut.log."""
     if os.name != "nt" or not getattr(sys, "frozen", False):
         return
     try:
         import ctypes
         folder = os.path.join(os.environ.get("LOCALAPPDATA") or os.path.expanduser("~"), "MSECheck")
         marker = os.path.join(folder, "shortcut_asked")
-        if os.path.exists(marker):
-            return
+        if os.path.exists(marker) and open(marker).read().strip() in ("yes", "no"):
+            return                                # (an older build wrote "asked" before the answer: ask again)
         os.makedirs(folder, exist_ok=True)
-        open(marker, "w").write("asked")
-        # MB_YESNO | MB_ICONQUESTION | MB_TOPMOST
-        ans = ctypes.windll.user32.MessageBoxW(0, "Create a MSECheck shortcut on your Desktop?", "MSECheck", 0x04 | 0x20 | 0x40000)
-        if ans != 6:          # 6 = Yes
+        # MB_YESNO | MB_ICONQUESTION | MB_SETFOREGROUND | MB_TOPMOST
+        ans = ctypes.windll.user32.MessageBoxW(0, "Create a MSECheck shortcut on your Desktop?", "MSECheck", 0x04 | 0x20 | 0x10000 | 0x40000)
+        _log("answer=%s" % ans)
+        if ans != 6:                              # 6 = Yes
+            open(marker, "w").write("no")
             return
-        exe = sys.executable
-        ps = (
-            "$d=[Environment]::GetFolderPath('Desktop');$l=Join-Path $d 'MSECheck.lnk';"
-            "$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
-            "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s,0';$s.Description='MSECheck';$s.Save()"
-            % (exe, os.path.dirname(exe), exe)
-        )
-        subprocess.Popen(["powershell", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps],
-                         creationflags=0x08000000)       # CREATE_NO_WINDOW
-    except Exception:
-        pass
+        if make_desktop_shortcut():
+            open(marker, "w").write("yes")
+        else:
+            ctypes.windll.user32.MessageBoxW(0, "Couldn't create the shortcut. Details are in:\n" + os.path.join(folder, "shortcut.log"),
+                                             "MSECheck", 0x10 | 0x40000)
+    except Exception as e:
+        _log("error: %r" % (e,))
 
 
 def _find_app_browser():
