@@ -16,6 +16,24 @@ def app_dir():
     return os.path.dirname(os.path.abspath(sys.argv[0]))
 
 
+def ensure_desktop_shortcut():
+    """Windows .exe build only: put an MSECheck shortcut on the Desktop the first time it runs (never overwrites one)."""
+    if os.name != "nt" or not getattr(sys, "frozen", False):
+        return
+    try:
+        exe = sys.executable
+        ps = (
+            "$d=[Environment]::GetFolderPath('Desktop');$l=Join-Path $d 'MSECheck.lnk';"
+            "if(-not(Test-Path $l)){$s=(New-Object -ComObject WScript.Shell).CreateShortcut($l);"
+            "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s,0';$s.Description='MSECheck';$s.Save()}"
+            % (exe, os.path.dirname(exe), exe)
+        )
+        subprocess.Popen(["powershell", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps],
+                         creationflags=0x08000000)       # CREATE_NO_WINDOW
+    except Exception:
+        pass
+
+
 def _find_app_browser():
     """Edge or Chrome, for opening the checker as its own window (no tabs, no address bar)."""
     cands = []
@@ -53,7 +71,10 @@ def main():
     ap.add_argument("--browser", action="store_true", help="open in your normal web browser instead of the app window")
     ap.add_argument("--no-design-risk", action="store_true", help="turn off the loop / balance / design-risk checks")
     ap.add_argument("--cards", help="path to Scryfall bulk data (JSON, JSONL, or .jsonl.gz)")
+    ap.add_argument("--no-shortcut", action="store_true", help="do not create a Desktop shortcut")
     a = ap.parse_args()
+    if not a.no_shortcut:
+        ensure_desktop_shortcut()
     state.DESIGN_RISK = not a.no_design_risk
     dirs = []
     for d in (app_dir(), os.getcwd(), getattr(sys, "_MEIPASS", None)):   # _MEIPASS: data bundled inside the .exe
@@ -109,7 +130,11 @@ def main():
                 webview.settings["ALLOW_DOWNLOADS"] = True
             except Exception:
                 pass
-            webview.create_window("MSECheck", url, width=1280, height=860, min_size=(900, 600))
+            try:
+                webview.create_window("MSECheck", url, width=1280, height=860, min_size=(900, 600),
+                                      text_select=True)   # pywebview blocks selecting/copying text unless this is on
+            except TypeError:                             # very old pywebview without that option
+                webview.create_window("MSECheck", url, width=1280, height=860, min_size=(900, 600))
             webview.start()                      # returns when the window is closed
             srv.shutdown()
             return

@@ -14,7 +14,7 @@ PAGE = r"""<!doctype html><html lang=en><meta charset=utf-8><meta name=viewport 
 <title>MSECheck</title>
 <style>
 :root{color-scheme:light;--bg:#ffffff;--fg:#000000;--card:#ffffff;--bd:#d9d9d9;--mut:#222222;--red:#c62828;--amb:#b45f06;--blu:#1a5fb4;--brand:#e3493b}
-html{background:#fff}
+html{background:#fff}body,main,article,pre,.f{-webkit-user-select:text;user-select:text}
 body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,sans-serif;box-sizing:border-box;min-height:100vh;border:8px solid var(--brand)}main{max-width:980px;margin:auto;padding:1.2rem}
 h1{margin:.2rem 0}.mut{color:var(--mut)}section,article{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:1rem;margin:.9rem 0}
 #drop{border:2px dashed var(--bd);border-radius:10px;padding:1.2rem;text-align:center}#drop.over{border-color:var(--blu)}
