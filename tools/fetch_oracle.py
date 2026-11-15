@@ -8,8 +8,10 @@ def get(url):
     return urllib.request.urlopen(urllib.request.Request(url, headers=HDR), timeout=300)
 
 meta = next(b for b in json.load(get("https://api.scryfall.com/bulk-data"))["data"] if b["type"] == "oracle_cards")
-print("Downloading", meta["download_uri"])
-cards = json.load(get(meta["download_uri"]))
+print("bulk-data entry:", {k: (v if len(str(v)) < 120 else str(v)[:120]) for k, v in meta.items()})
+url = meta.get("download_uri") or next(v for v in meta.values() if isinstance(v, str) and v.startswith("https://") and v.endswith((".json", ".json.gz")))
+print("Downloading", url)
+cards = json.load(get(url))
 with gzip.open(sys.argv[1], "wt", encoding="utf-8") as f:
     for c in cards:
         f.write(json.dumps(c, ensure_ascii=False) + "\n")
