@@ -1,0 +1,4 @@
+# All optional; MSECheck runs on the standard library alone.
+pyspellchecker   # flavor-text spell check
+pywebview        # opens MSECheck in its own window
+orjson           # faster loading of the Scryfall bulk file

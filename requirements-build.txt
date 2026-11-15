@@ -1,0 +1,2 @@
+pyinstaller
+pillow           # only for make_icon.py

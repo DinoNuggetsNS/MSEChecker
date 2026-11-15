@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+*.exe
+# Scryfall bulk data is large; download it yourself
+*-cards-*.json
+*-cards-*.json.gz
+*-cards-*.jsonl
