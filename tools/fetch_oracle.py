@@ -7,7 +7,7 @@ HDR = {"User-Agent": "MSECheck-build/1.0", "Accept": "application/json;q=0.9,*/*
 def get(url):
     return urllib.request.urlopen(urllib.request.Request(url, headers=HDR), timeout=300)
 
-meta = json.load(get("https://api.scryfall.com/bulk-data/oracle-cards"))
+meta = next(b for b in json.load(get("https://api.scryfall.com/bulk-data"))["data"] if b["type"] == "oracle_cards")
 print("Downloading", meta["download_uri"])
 cards = json.load(get(meta["download_uri"]))
 with gzip.open(sys.argv[1], "wt", encoding="utf-8") as f:
