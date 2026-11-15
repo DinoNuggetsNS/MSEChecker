@@ -1,0 +1,43 @@
+name: Build Windows app and publish release
+
+on:
+  workflow_dispatch:        # run it by hand from the Actions tab
+  push:
+    tags: ["v*"]            # or push a tag like v5.2
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest   # 64-bit Windows (x86_64)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-build.txt
+      - name: Download Scryfall Oracle Cards
+        run: python tools/fetch_oracle.py oracle-cards.jsonl.gz
+      - name: Build MSECheck.exe
+        run: >
+          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico
+          --collect-all webview --collect-all spellchecker
+          --add-data "oracle-cards.jsonl.gz;." MSECheck.py
+      - name: Smoke test the exe
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath dist\MSECheck.exe -ArgumentList "--no-browser","--port","8999" -PassThru
+          Start-Sleep -Seconds 25
+          $r = Invoke-WebRequest -Uri http://127.0.0.1:8999/api/ping -UseBasicParsing
+          Write-Host $r.Content
+          Stop-Process -Id $p.Id -Force
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = if ($env:GITHUB_REF -like "refs/tags/*") { $env:GITHUB_REF_NAME } else { "v" + (Get-Date -Format "yyyy.MM.dd-HHmm") }
+          gh release create $tag dist\MSECheck.exe --title "MSECheck $tag" --notes "Download **MSECheck.exe** and double-click it. Includes Scryfall Oracle Cards data as of the build date." --repo $env:GITHUB_REPOSITORY

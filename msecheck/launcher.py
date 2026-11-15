@@ -56,7 +56,9 @@ def main():
     a = ap.parse_args()
     state.DESIGN_RISK = not a.no_design_risk
     dirs = []
-    for d in (app_dir(), os.getcwd()):
+    for d in (app_dir(), os.getcwd(), getattr(sys, "_MEIPASS", None)):   # _MEIPASS: data bundled inside the .exe
+        if not d:
+            continue
         for e in (d, os.path.join(d, "templates")):
             if os.path.isdir(e) and e not in dirs:
                 dirs.append(e)
