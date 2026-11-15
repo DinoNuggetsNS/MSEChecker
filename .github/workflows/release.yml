@@ -29,7 +29,7 @@ jobs:
       - name: Smoke test the exe
         shell: pwsh
         run: |
-          $p = Start-Process -FilePath dist\MSECheck.exe -ArgumentList "--no-browser","--port","8999" -PassThru
+          $p = Start-Process -FilePath dist\MSECheck.exe -ArgumentList "--no-browser","--no-shortcut","--port","8999" -PassThru
           Start-Sleep -Seconds 25
           $r = Invoke-WebRequest -Uri http://127.0.0.1:8999/api/ping -UseBasicParsing
           Write-Host $r.Content

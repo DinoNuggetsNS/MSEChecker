@@ -85,7 +85,7 @@ def main():
     ap.add_argument("--cards", help="path to Scryfall bulk data (JSON, JSONL, or .jsonl.gz)")
     ap.add_argument("--no-shortcut", action="store_true", help="do not ask about a Desktop shortcut")
     a = ap.parse_args()
-    if not a.no_shortcut:
+    if not a.no_shortcut and not a.no_browser:
         ensure_desktop_shortcut()
     state.DESIGN_RISK = not a.no_design_risk
     dirs = []
