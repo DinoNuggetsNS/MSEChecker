@@ -3,7 +3,7 @@ import json, time, urllib.parse
 from http.server import BaseHTTPRequestHandler
 from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
-from .analysis import analyze, apply_all, apply_fix, corrected_download, load_text, load_upload
+from .analysis import analyze, apply_all, apply_fix, card_image, corrected_download, load_text, load_upload
 from .reports import export
 from . import shortcut
 
@@ -21,12 +21,12 @@ PAGE = r"""<!doctype html><html lang=en data-theme=dark><meta charset=utf-8><met
 --bd:rgba(255,255,255,.11);--bd2:rgba(255,255,255,.2);--head:rgba(10,10,12,.72);--sh:0 10px 40px rgba(0,0,0,.35);
 --lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#ff8b80;
 --mark:rgba(255,196,80,.28);--del:rgba(255,107,94,.3);--ins:rgba(84,210,128,.28);
---fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.62),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.17),transparent 60%),linear-gradient(180deg,transparent 58%,rgba(227,73,59,.14) 100%)}
+--fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.30),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.08),transparent 60%),linear-gradient(180deg,transparent 60%,rgba(227,73,59,.06) 100%)}
 :root[data-theme=light]{color-scheme:light;--bg:#fbf8f7;--fg:#16161a;--mut:#62626d;--glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.55);--inset:rgba(20,20,30,.045);
 --bd:rgba(20,20,30,.1);--bd2:rgba(20,20,30,.2);--head:rgba(251,248,247,.78);--sh:0 10px 34px rgba(60,30,30,.1);
 --lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#d63a2c;
 --mark:rgba(255,200,60,.45);--del:rgba(239,100,90,.3);--ins:rgba(80,190,110,.32);
---fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.34),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.1),transparent 60%),linear-gradient(180deg,transparent 58%,rgba(227,73,59,.08) 100%)}
+--fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.17),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.05),transparent 60%),linear-gradient(180deg,transparent 60%,rgba(227,73,59,.035) 100%)}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -52,7 +52,9 @@ header.top{position:sticky;top:0;z-index:50;background:var(--head);backdrop-filt
 .chip.g:has(input:checked){background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 18px rgba(105,89,143,.5)}.chip.g:has(input:checked) b{color:#fff}
 .tools{margin-left:auto;display:flex;align-items:center;gap:.5rem}
 input[type=search],input[type=text],select,textarea{background:var(--glass2);color:var(--fg);border:1px solid var(--bd);border-radius:11px;padding:.42rem .75rem;font:inherit;font-size:13.5px;outline:none;transition:.15s}
-input[type=search]{width:min(270px,100%)}select{padding-right:.4rem;cursor:pointer}option{background:var(--bg);color:var(--fg)}
+input[type=search]{width:min(270px,100%)}
+.topin.loaded .tools{flex:1 1 100%;margin-left:0}.topin.loaded #q{flex:1 1 auto;width:auto;min-width:0}
+input.bad{border-color:var(--err)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--err) 20%,transparent)!important}select{padding-right:.4rem;cursor:pointer}option{background:var(--bg);color:var(--fg)}
 input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(227,73,59,.2)}
 textarea{width:100%;resize:vertical}
 .switch{position:relative;width:58px;height:30px;border-radius:99px;border:1px solid var(--bd);background:var(--glass);cursor:pointer;padding:0;flex:none}
@@ -162,6 +164,8 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
+.imgbtn.on{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
+.cardimg{display:block;max-width:min(360px,100%);max-height:520px;border-radius:12px;margin:.7rem 0;box-shadow:var(--sh);border:1px solid var(--bd)}
 #dropveil{position:fixed;inset:0;z-index:99;display:grid;place-items:center;font-size:1.5rem;font-weight:650;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border:3px dashed var(--brand);margin:12px;border-radius:24px}
 #dropveil[hidden],[hidden]{display:none!important}
 </style>
@@ -173,7 +177,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   <button class=mlink id=mnever type=button>Don’t ask again</button></div></div>
 <div id=toast class="glass toast" hidden role=status></div>
 <div id=dropveil hidden>Drop your .mse-set file to check it</div>
-<header class=top><div class=topin>
+<header class=top><div class=topin id=topin>
   <a class=brand href="#" id=home><img alt="" id=brandlogo><span>MSECheck</span><small id=ver class=pill>v5.2</small></a>
   <div id=filters class=filters hidden>
     <label class="chip e"><input type=checkbox data-sev="Likely error" checked><i></i>Errors <b id=cE>0</b></label>
@@ -184,7 +188,8 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <button id=fixall class=fixbtn type=button title="Apply every automatic fix to your working copy">✓ Fix all fixable</button>
   </div>
   <div class=tools>
-    <input type=search id=q placeholder="Search cards" hidden aria-label="Search cards">
+    <input type=search id=q placeholder="Search cards for Magic cards… e.g. o:creature  t:elf  c:r  mv&lt;=2" hidden aria-label="Search cards for Magic cards" title="Scryfall-style search over the cards in your set.&#10;name  o:text  t:type  c:rg  m:{R}  mv>=3  pow>=3  tou  loy  r:rare  kw:flying  ft:flavor  a:artist  is:creature  has:findings&#10;sev:error  cat:credits  (red/blue/…)  -term  a or b  ( )  &quot;quoted phrase&quot;  /regex/  !&quot;exact name&quot;  ~ = card name">
+    <button id=imgs class=imgbtn type=button hidden title="Show the pictures stored in your .mse-set file instead of the card text">🖼 Display images</button>
     <button id=collapse class=cbtn type=button hidden title="Condense the results into a quick-look table">▤ Collapse all</button>
     <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
     <button id=theme class=switch role=switch aria-checked=false aria-label="Light mode" title="Light / dark mode">
@@ -236,7 +241,107 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtext='',noScry=false,compact=false;
+let D=null,FM={},sortMode='sev',qtextv='',noScry=false,compact=false,showImgs=false;
+/* Scryfall-style search over the cards in the set */
+const QCOL={w:'W',white:'W',u:'U',blue:'U',b:'B',black:'B',r:'R',red:'R',g:'G',green:'G'};
+const QRAR={c:0,common:0,u:1,uncommon:1,r:2,rare:2,m:3,mythic:3,s:4,special:4};
+function qinfo(c){
+  if(c._q)return c._q;
+  const cost=(c.cost||'').replace(/[{}]/g,''),toks=[];let mv=0,cols=new Set();
+  const re=/(\d+)|([WUBRG])\/([WUBRGP]|2)|([WUBRGCXS])/gi;let m;
+  while((m=re.exec(cost))){
+    if(m[1]){toks.push(m[1]);mv+=+m[1]}
+    else if(m[2]){const a=m[2].toUpperCase(),b=m[3].toUpperCase();toks.push(a+'/'+b);cols.add(a);if('WUBRG'.includes(b))cols.add(b);mv+=b==='2'?2:1}
+    else{const x=m[4].toUpperCase();toks.push(x);if('WUBRG'.includes(x))cols.add(x);if(x!=='X')mv+=1}}
+  const rules=c.rules||'',nm=(c.name||'').toLowerCase(),low=rules.toLowerCase();
+  const idc=new Set(cols);(rules.match(/\{([WUBRG])\}/g)||[]).forEach(x=>idc.add(x[1]));
+  return c._q={toks,mv,cols,idc,low,tilde:nm?low.split(nm).join('~'):low,nm,type:(c.type||'').toLowerCase(),flavor:(c.flavor||'').toLowerCase(),artist:(c.artist||'').toLowerCase()}}
+function qnum(v){const x=parseFloat(v);return isNaN(x)?null:x}
+function qcmp(a,op,b){if(a==null||b==null)return false;
+  switch(op){case':':case'=':return a===b;case'!=':return a!==b;case'<':return a<b;case'>':return a>b;case'<=':return a<=b;case'>=':return a>=b}return false}
+function qtext(get,val,op){
+  let rx=null;if(val.length>1&&val[0]==='/'&&val[val.length-1]==='/')rx=new RegExp(val.slice(1,-1),'i');
+  const v=val.toLowerCase();
+  if(op==='!=')return c=>rx?!rx.test(get(c)):!get(c).includes(v);
+  return c=>rx?rx.test(get(c)):get(c).includes(v)}
+function qcolors(op,val,getset){
+  const v=val.toLowerCase();
+  if(v==='c'||v==='colorless')return c=>getset(c).size===0;
+  if(v==='m'||v==='multicolor')return c=>getset(c).size>1;
+  const want=new Set();for(const ch of (QCOL[v]?[v]:v.split('')))if(QCOL[ch])want.add(QCOL[ch]);else throw new Error('Unknown color “'+val+'”');
+  return c=>{const have=getset(c),all=[...want].every(x=>have.has(x)),eq=all&&have.size===want.size,sub=[...have].every(x=>want.has(x));
+    switch(op){case':':case'>=':return all;case'=':return eq;case'!=':return !eq;case'>':return all&&have.size>want.size;case'<=':return sub;case'<':return sub&&have.size<want.size}return false}}
+function qterm(key,op,val){
+  const k=key.toLowerCase();
+  switch(k){
+  case'name':case'n':return qtext(c=>qinfo(c).nm,val,op);
+  case'o':case'oracle':case'text':case'fo':{const t=qtext(c=>qinfo(c).low,val,op),t2=qtext(c=>qinfo(c).tilde,val,op);return val.includes('~')?t2:c=>t(c)||t2(c)}
+  case't':case'type':case'type_line':return qtext(c=>qinfo(c).type,val,op);
+  case'ft':case'flavor':return qtext(c=>qinfo(c).flavor,val,op);
+  case'a':case'artist':case'art':return qtext(c=>qinfo(c).artist,val,op);
+  case'kw':case'keyword':{const w=val.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),r=new RegExp('\\b'+w+'\\b');return c=>r.test(qinfo(c).low)}
+  case'm':case'mana':{const want=val.replace(/[{}]/g,'').toUpperCase().match(/\d+|[WUBRG]\/[WUBRGP2]|[WUBRGCXS]/g)||[];
+    return c=>{const have=qinfo(c).toks.slice();return want.every(t=>{const i=have.indexOf(t);if(i<0)return false;have.splice(i,1);return true})}}
+  case'mv':case'cmc':case'manavalue':{const n=qnum(val);if(n==null)throw new Error('“'+key+'” needs a number');return c=>qcmp(qinfo(c).mv,op,n)}
+  case'pow':case'power':case'tou':case'toughness':case'loy':case'loyalty':{
+    const f=k.startsWith('p')?'power':k.startsWith('t')?'toughness':'loyalty',n=qnum(val);
+    if(n==null){const o=({pow:'power',tou:'toughness',loy:'loyalty',power:'power',toughness:'toughness',loyalty:'loyalty'})[val.toLowerCase()];if(!o)throw new Error('“'+key+'” needs a number');return c=>qcmp(qnum(c[f]),op,qnum(c[o]))}
+    return c=>qcmp(qnum(c[f]),op,n)}
+  case'r':case'rarity':{const v=QRAR[val.toLowerCase()];if(v==null)throw new Error('Unknown rarity “'+val+'”');
+    return c=>{const have=QRAR[(c.rarity||'').toLowerCase()];return have==null?false:qcmp(have,op,v)}}
+  case'c':case'color':case'colors':return qcolors(op,val,c=>qinfo(c).cols);
+  case'id':case'identity':case'ci':return qcolors(op,val,c=>qinfo(c).idc);
+  case'is':{const v=val.toLowerCase();
+    const m={creature:c=>/creature/.test(qinfo(c).type),artifact:c=>/artifact/.test(qinfo(c).type),enchantment:c=>/enchantment/.test(qinfo(c).type),land:c=>/land/.test(qinfo(c).type),
+      planeswalker:c=>/planeswalker/.test(qinfo(c).type),instant:c=>/instant/.test(qinfo(c).type),sorcery:c=>/sorcery/.test(qinfo(c).type),legendary:c=>/legendary/.test(qinfo(c).type),
+      permanent:c=>!/instant|sorcery/.test(qinfo(c).type),spell:c=>!/land/.test(qinfo(c).type),multicolor:c=>qinfo(c).cols.size>1,colorless:c=>qinfo(c).cols.size===0,
+      vanilla:c=>!(c.rules||'').trim(),flagged:c=>c.findings.length>0,fixable:c=>c.findings.some(f=>f.can_apply),clean:c=>c.has_text&&!c.findings.length}[v];
+    if(!m)throw new Error('Unknown “is:” value “'+val+'”');return m}
+  case'has':{const v=val.toLowerCase();
+    const m={findings:c=>c.findings.length>0,text:c=>!!(c.rules||'').trim(),artist:c=>!!c.artist,flavor:c=>!!c.flavor,pt:c=>!!(c.power||c.toughness),image:c=>!!c.image}[v];
+    if(!m)throw new Error('Unknown “has:” value “'+val+'”');return m}
+  case'sev':case'level':case'severity':{const v=val.toLowerCase(),want=/^err/.test(v)||/^like/.test(v)?'Likely error':/^rev|^need/.test(v)?'Needs review':/^sug/.test(v)?'Suggestion':null;
+    if(!want)throw new Error('Use sev:error, sev:review or sev:suggestion');return c=>c.findings.some(f=>f.sev===want)}
+  case'cat':case'category':case'issue':return c=>c.findings.some(f=>f.cat.toLowerCase().includes(val.toLowerCase())||f.rule.toLowerCase().includes(val.toLowerCase()));
+  }
+  throw new Error('Unknown search term “'+key+':”')}
+function qtokens(s){const out=[];let i=0;const n=s.length;
+  while(i<n){const ch=s[i];
+    if(/\s/.test(ch)){i++;continue}
+    if(ch==='('){out.push({p:'('});i++;continue}
+    if(ch===')'){out.push({p:')'});i++;continue}
+    let neg=false;
+    if(ch==='-'&&i+1<n&&!/\s/.test(s[i+1])){neg=true;i++;if(s[i]==='('){out.push({p:'(',neg:true});i++;continue}}
+    let w='',q=false,re=false;
+    while(i<n){const c=s[i];
+      if(!q&&!re&&(/\s/.test(c)||c===')'))break;
+      if(c==='"'&&!re)q=!q;
+      else if(c==='/'&&!q){if(re)re=false;else if(w===''||/[:=<>]$/.test(w))re=true}
+      w+=c;i++}
+    if(q)throw new Error('Missing closing quote');
+    if(!neg&&/^or$/i.test(w))out.push({or:true});else if(/^and$/i.test(w)){}else out.push({w,neg})}
+  return out}
+function qcompile(src){
+  const toks=qtokens(src);let p=0;
+  const unq=v=>v.length>1&&v[0]==='"'&&v[v.length-1]==='"'?v.slice(1,-1):v;
+  function term(t){let f;const w=t.w;
+    if(w[0]==='!'){const v=unq(w.slice(1)).toLowerCase();f=c=>qinfo(c).nm===v}
+    else{const m=w.match(/^([A-Za-z_]+)(!=|<=|>=|:|=|<|>)(.*)$/);
+      if(m)f=qterm(m[1],m[2],unq(m[3]));
+      else{const v=unq(w);f=qtext(c=>qinfo(c).nm,v,':')}}
+    return t.neg?c=>!f(c):f}
+  function orE(){let a=andE();while(toks[p]&&toks[p].or){p++;const x=a,b=andE();a=c=>x(c)||b(c)}return a}
+  function andE(){const fs=[];
+    while(p<toks.length&&!toks[p].or&&toks[p].p!==')'){const t=toks[p];
+      if(t.p==='('){p++;const e=orE();if(!(toks[p]&&toks[p].p===')'))throw new Error('Missing closing )');p++;fs.push(t.neg?c=>!e(c):e)}
+      else{fs.push(term(t));p++}}
+    return fs.length?c=>fs.every(f=>f(c)):()=>true}
+  const e=orE();if(p<toks.length)throw new Error('Unexpected )');return e}
+let qfn=null,qerr='';
+function setQuery(v){qtextv=v;qfn=null;qerr='';const q=$('#q');
+  if(v.trim()){try{qfn=qcompile(v)}catch(e){qerr=e.message}}
+  q.classList.toggle('bad',!!qerr)}
+
 /* peelable logo: drag the bottom-left corner to see what's underneath */
 (function(){
   const box=$('#peel'),top=$('#herologo'),flap=$('#flap'),corner=$('#corner');
@@ -279,8 +384,9 @@ async function post(path,body,raw){
   try{const r=await fetch(path,{method:'POST',headers:raw?{}:{'Content-Type':'application/json'},body:raw?body:JSON.stringify(body||{})});
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse'].forEach(s=>$(s).hidden=true);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false}
+function setLoaded(v){$('#topin').classList.toggle('loaded',v)}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#imgs'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#imgs').hidden=false;setLoaded(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -323,7 +429,7 @@ function cardHTML(v){
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
   return `<article><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
   ${c.ignored?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span></header>
-  <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}
+  ${showImgs&&c.image?`<img class=cardimg src="/api/img?card=${c.idx}" loading=lazy alt="${esc(c.name)}">`:`<pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}`}
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
   <div class=acts>${c.scryfall?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
@@ -350,12 +456,13 @@ function sheetHTML(list){
 function fixCount(){return D?D.cards.reduce((n,c)=>n+c.findings.filter(f=>f.can_apply&&on[f.sev]).length,0):0}
 function updFix(){const b=$('#fixall'),n=fixCount();b.textContent='✓ Fix all fixable'+(n?' ('+n+')':'');b.disabled=!n;if(!n)b.title='Nothing can be fixed automatically with the current filters'}
 function draw(){updFix();
-  const only=$('#onlyissues').checked,qq=qtext.trim().toLowerCase();
-  const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qq||(v.c.name||'').toLowerCase().includes(qq))).sort(CMP[sortMode]),
+  const only=$('#onlyissues').checked;
+  const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qfn||qfn(v.c))).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
   if(pg>=pages)pg=pages-1;if(pg<0)pg=0;
-  $('#cards').innerHTML=list.length?nav(list.length)+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+nav(list.length)
-    :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`;
+  const ebn=qerr?`<div class=warn>Search: ${esc(qerr)}. Showing all cards until it’s fixed.</div>`:'';
+  $('#cards').innerHTML=ebn+(list.length?nav(list.length)+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+nav(list.length)
+    :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`);
   document.querySelectorAll('.lazy').forEach(el=>lazyIO.observe(el))}
 async function upload(f){if(!f)return;pg=0;render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
 $('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};
@@ -387,16 +494,19 @@ $('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D
   if(r.applied)toast('✓ '+r.applied+' fix'+(r.applied>1?'es':'')+' applied to your working copy','Remember to <b style="display:inline">download the corrected MSE file again</b> so your changes are saved. Your original file isn’t changed.'+(r.skipped?' '+r.skipped+' couldn’t be applied automatically.':''),true);
   else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
+$('#imgs').onclick=()=>{
+  if(!showImgs&&D&&!D.images){toast('No card images in this file','Only .mse-set files saved with art attached contain pictures, and this one has none. MSECheck shows the pictures stored in the file; it can’t draw MSE’s finished card frames.',false);return}
+  showImgs=!showImgs;$('#imgs').classList.toggle('on',showImgs);$('#imgs').textContent=showImgs?'🖼 Show text':'🖼 Display images';if(D)draw()};
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
-$('#q').oninput=e=>{qtext=e.target.value;pg=0;draw()};
+$('#q').oninput=e=>{setQuery(e.target.value);pg=0;draw()};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
   if(a==='toastx'){$('#toast').hidden=true;return}
   if(a==='toastdl'){$('#toast').hidden=true;location.href='/api/download';return}
   if(a==='newcheck'){showHero();return}
-  if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){qtext=c.name||'';$('#q').value=qtext;setCompact(false);window.scrollTo({top:$('#cards').offsetTop-80})}return}
+  if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){$('#q').value='!"'+(c.name||'')+'"';setQuery($('#q').value);setCompact(false);window.scrollTo({top:$('#cards').offsetTop-80})}return}
   if(a==='copy'){try{await navigator.clipboard.writeText(f.after);b.textContent='Copied ✓'}catch(_){prompt('Copy this wording:',f.after)}}
   else if(a==='apply'){if(confirm('Apply to the working copy?\n\nBefore: '+f.detected+'\nAfter:  '+f.after+'\n\nYour original file is not modified.')){
     const r=await post('/api/apply',{id});if(r){render(r.result);if(r.count>1)alert('Replaced '+r.count+' matching occurrences in this field.')}}}
@@ -468,6 +578,11 @@ class Handler(BaseHTTPRequestHandler):
                 if u.path == "/api/export" and ST["last"]:
                     b, t, n = export(urllib.parse.parse_qs(u.query).get("fmt", ["csv"])[0])
                     return self.send(b, t, name=n)
+                if u.path == "/api/img" and ST["kind"]:
+                    r = card_image(int(urllib.parse.parse_qs(u.query).get("card", ["-1"])[0]))
+                    if r:
+                        return self.send(r[0], r[1])
+                    return self.send(b"No image", "text/plain", 404)
                 if u.path == "/api/download" and ST["kind"]:
                     b, t, n = corrected_download()
                     return self.send(b, t, name=n)

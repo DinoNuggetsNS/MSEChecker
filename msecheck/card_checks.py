@@ -293,6 +293,14 @@ def check_card(card, ctx):
                 fix = fx(m.group(0), r["fix"](m)) if r["fix"] else None
                 add(r["sev"], r["cat"], r["id"], m.group(0), r["why"] + stat_text(r["id"]), fix, r["ref"])
 
+            # ---- "This creature is all colors." : a characteristic-defining color ability uses the card's name (~) ----
+            for m in re.finditer(r"\bThis (?:creature|artifact|enchantment|permanent|land|planeswalker|battle|card) is "
+                                 r"(all colors|colorless|(?:white|blue|black|red|green)(?:(?:, and|,| and) (?:white|blue|black|red|green))*)(?=\s*(?:\.|$|\())", line):
+                if m.start() == 0 or re.search(r"[.!?\u201d)]\s*$", line[:m.start()]):
+                    add("Likely error", "Templating", "cda-this-creature", m.group(0),
+                        "A characteristic-defining ability that sets a color uses the card's name (shown as ~), not “this creature”. "
+                        "Real cards read “~ is %s.”" % m.group(1), None, None, "~ is " + m.group(1))
+
             # ---- "if you do" with nothing optional before it ----
             if re.search(r"\bif you do\b", line, re.I):
                 before = (lines[i - 1] if i else "") + " " + line[:re.search(r"\bif you do\b", line, re.I).start()]

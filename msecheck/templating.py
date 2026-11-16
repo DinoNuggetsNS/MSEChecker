@@ -157,6 +157,8 @@ RULES = [
     _r("spell-effect-no-duration", r"\b(?:get|gets|gain|gains|lose|loses|have|has) (?:[+\-][\dX]+/[+\-][\dX]+|(?:" + _KW + r"))\b" + _DUR,
        "Likely error", "Instants and sorceries can't create lasting static effects; this needs a duration such as “until end of turn”.",
        REF_PUMP, cond=lambda c, l, m: SPELL(c, l, m) and not _temp_by_design(c, l, m), skip_if=("pump-no-duration", "grant-no-duration")),
+    _r("on-to-onto", r"\bon to\b", "Likely error", "“on to” should be the single word “onto” (e.g. “put a card onto the battlefield”).", None,
+       fix=lambda m: "Onto" if m.group(0)[0] == "O" else "onto", cat="Grammar"),
     _r("damage-no-amount", r"\bdeals damage to\b", "Likely error", "“deals damage” has no amount (e.g. “deals 3 damage”).", REF_DMG,
        # "deals damage to target player equal to the number of artifacts you control" states its amount after the target
        cond=lambda c, l, m: _effect(c, l, m) and not re.match(r"[^.:;]*\b(?:equal to|equal|that much|that many)\b", l[m.end():], re.I)),
