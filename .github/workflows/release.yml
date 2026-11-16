@@ -34,6 +34,13 @@ jobs:
           $r = Invoke-WebRequest -Uri http://127.0.0.1:8999/api/ping -UseBasicParsing
           Write-Host $r.Content
           Stop-Process -Id $p.Id -Force
+      - name: Check the Desktop shortcut gets created
+        shell: pwsh
+        run: |
+          Start-Process -FilePath dist\MSECheck.exe -ArgumentList "--make-shortcut" -Wait
+          $d = [Environment]::GetFolderPath('Desktop')
+          Get-ChildItem $d | Format-Table Name
+          if (Test-Path "$d\MSECheck.lnk") { Write-Host "shortcut OK" } elseif (Test-Path "$d\MSECheck.url") { Write-Host "fallback .url OK" } else { Get-Content "$env:LOCALAPPDATA\MSECheck\shortcut.log"; exit 1 }
       - name: Publish release
         shell: pwsh
         env:
