@@ -186,6 +186,27 @@ def apply_fix(fid):
     return n if fix["all"] else 1
 
 
+def apply_all(sevs):
+    """Apply every automatic fix (for the given severities) that isn't ignored. Returns (applied, skipped)."""
+    applied = skipped = 0
+    for _ in range(4):                      # a fix can reveal another one, so go round a few times
+        analyze()
+        todo = [f for f in ST["findings"].values()
+                if f["fix"] and f["sev"] in sevs and f["rule"] not in ST["ign_rule"] and f["key"] not in ST["ign_text"]
+                and (f["card"], f["key"]) not in ST["ign_card"]]
+        done = 0
+        for f in todo:
+            try:
+                apply_fix(f["id"])
+                done += 1
+            except Exception:
+                skipped += 1
+        applied += done
+        if not done:
+            break
+    return applied, skipped
+
+
 def corrected_download():
     if ST["kind"] == "text":
         blocks = parse_mse(ST["text"])

@@ -3,7 +3,7 @@ import json, time, urllib.parse
 from http.server import BaseHTTPRequestHandler
 from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
-from .analysis import analyze, apply_fix, corrected_download, load_text, load_upload
+from .analysis import analyze, apply_all, apply_fix, corrected_download, load_text, load_upload
 from .reports import export
 from . import shortcut
 
@@ -43,7 +43,7 @@ header.top{position:sticky;top:0;z-index:50;background:var(--head);backdrop-filt
 .brand img{height:32px;width:auto;display:block}
 .pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;border:1px solid var(--bd);color:var(--mut);background:var(--glass2)}
 .filters{display:flex;gap:.4rem;flex-wrap:wrap;margin-left:.4rem}
-.chip{display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;padding:.32rem .8rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass2);font-size:13px;font-weight:550;transition:.15s;color:var(--mut)}
+.chip{white-space:nowrap;display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;padding:.32rem .8rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass2);font-size:13px;font-weight:550;transition:.15s;color:var(--mut)}
 .chip input{display:none}.chip i{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.9}
 .chip b{font-weight:650;font-variant-numeric:tabular-nums;color:var(--fg)}
 .chip:hover{border-color:var(--bd2)}
@@ -52,7 +52,7 @@ header.top{position:sticky;top:0;z-index:50;background:var(--head);backdrop-filt
 .chip.g:has(input:checked){background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 18px rgba(105,89,143,.5)}.chip.g:has(input:checked) b{color:#fff}
 .tools{margin-left:auto;display:flex;align-items:center;gap:.5rem}
 input[type=search],input[type=text],select,textarea{background:var(--glass2);color:var(--fg);border:1px solid var(--bd);border-radius:11px;padding:.42rem .75rem;font:inherit;font-size:13.5px;outline:none;transition:.15s}
-input[type=search]{width:140px}select{padding-right:.4rem;cursor:pointer}option{background:var(--bg);color:var(--fg)}
+input[type=search]{width:min(270px,100%)}select{padding-right:.4rem;cursor:pointer}option{background:var(--bg);color:var(--fg)}
 input:focus,select:focus,textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(227,73,59,.2)}
 textarea{width:100%;resize:vertical}
 .switch{position:relative;width:58px;height:30px;border-radius:99px;border:1px solid var(--bd);background:var(--glass);cursor:pointer;padding:0;flex:none}
@@ -61,7 +61,7 @@ textarea{width:100%;resize:vertical}
 .switch .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));box-shadow:0 2px 8px rgba(227,73,59,.5);transition:transform .22s cubic-bezier(.3,.8,.3,1)}
 :root[data-theme=light] .switch .knob{transform:translateX(28px)}
 /* buttons */
-button,.btn{font:inherit;font-size:13px;font-weight:550;color:var(--fg);background:var(--glass);border:1px solid var(--bd);border-radius:99px;padding:.38rem .9rem;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none!important}
+button,.btn{white-space:nowrap;font:inherit;font-size:13px;font-weight:550;color:var(--fg);background:var(--glass);border:1px solid var(--bd);border-radius:99px;padding:.38rem .9rem;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:.4rem;text-decoration:none!important}
 button:hover,.btn:hover{border-color:var(--bd2);background:color-mix(in srgb,var(--fg) 8%,transparent)}
 .pri{background:linear-gradient(135deg,var(--brand),var(--brand2))!important;border-color:transparent!important;color:#fff!important;box-shadow:0 6px 22px rgba(227,73,59,.35)}
 .pri:hover{filter:brightness(1.08)}
@@ -158,6 +158,10 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .sgroup .srow{border-bottom:0;padding-top:.32rem;padding-bottom:.32rem}.sgroup .srow:first-child{padding-top:.55rem}.sgroup .srow:last-child{padding-bottom:.55rem}
 .sname{font-weight:650;letter-spacing:-.01em}.sgroup .none{color:var(--mut)}
 @media(max-width:640px){.srow{grid-template-columns:1fr 1fr;gap:.3rem .8rem}.srow>:nth-child(3){grid-column:1/-1}.shead>:nth-child(3){display:none}}
+.fixbtn{color:#eafff1;border-color:rgba(255,255,255,.12);background:linear-gradient(135deg,#0f4d2a,#14693a);box-shadow:0 4px 16px rgba(20,105,58,.4)}
+.fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
+.toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
 #dropveil{position:fixed;inset:0;z-index:99;display:grid;place-items:center;font-size:1.5rem;font-weight:650;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border:3px dashed var(--brand);margin:12px;border-radius:24px}
 #dropveil[hidden],[hidden]{display:none!important}
 </style>
@@ -167,6 +171,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   <p id=mtext>Get one-click access. A shortcut will appear on your Desktop so you can open MSECheck like any other app.</p>
   <div class=mbtns><button class="btn pri" id=madd type=button>Add shortcut</button><button class="btn ghost" id=mnot type=button>Not now</button></div>
   <button class=mlink id=mnever type=button>Don’t ask again</button></div></div>
+<div id=toast class="glass toast" hidden role=status></div>
 <div id=dropveil hidden>Drop your .mse-set file to check it</div>
 <header class=top><div class=topin>
   <a class=brand href="#" id=home><img alt="" id=brandlogo><span>MSECheck</span><small id=ver class=pill>v5.2</small></a>
@@ -176,6 +181,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <label class="chip s"><input type=checkbox data-sev="Suggestion" checked><i></i>Suggestions <b id=cS>0</b></label>
     <label class="chip o"><input type=checkbox id=onlyissues checked title="Only show cards that have findings"><i></i>With findings</label>
     <label class="chip g" title="Hide the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Remove Scryfall comparisons</label>
+    <button id=fixall class=fixbtn type=button title="Apply every automatic fix to your working copy">✓ Fix all fixable</button>
   </div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards" hidden aria-label="Search cards">
@@ -341,7 +347,9 @@ function sheetHTML(list){
     const c=v.c,nm=`<span class=sname>${esc(c.name||'(unnamed card)')}</span>`;
     if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
     return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
-function draw(){
+function fixCount(){return D?D.cards.reduce((n,c)=>n+c.findings.filter(f=>f.can_apply&&on[f.sev]).length,0):0}
+function updFix(){const b=$('#fixall'),n=fixCount();b.textContent='✓ Fix all fixable'+(n?' ('+n+')':'');b.disabled=!n;if(!n)b.title='Nothing can be fixed automatically with the current filters'}
+function draw(){updFix();
   const only=$('#onlyissues').checked,qq=qtext.trim().toLowerCase();
   const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qq||(v.c.name||'').toLowerCase().includes(qq))).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
@@ -371,6 +379,13 @@ $('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();D?showD
 $('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;render(r)}};
 document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.dataset.sev]=cb.checked;pg=0;draw()});
 $('#onlyissues').onchange=()=>{pg=0;draw()};
+
+function toast(title,text,withDl){const t=$('#toast');
+  t.innerHTML=`<b>${title}</b><p>${text}</p><div class=tb>${withDl?'<button class=pri data-act=toastdl>Download corrected copy</button>':''}<button data-act=toastx>Got it</button></div>`;t.hidden=false}
+$('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D)return;
+  const r=await post('/api/applyall',{sevs});if(!r)return;render(r.result);
+  if(r.applied)toast('✓ '+r.applied+' fix'+(r.applied>1?'es':'')+' applied to your working copy','Remember to <b style="display:inline">download the corrected MSE file again</b> so your changes are saved. Your original file isn’t changed.'+(r.skipped?' '+r.skipped+' couldn’t be applied automatically.':''),true);
+  else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
@@ -378,6 +393,8 @@ $('#q').oninput=e=>{qtext=e.target.value;pg=0;draw()};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
+  if(a==='toastx'){$('#toast').hidden=true;return}
+  if(a==='toastdl'){$('#toast').hidden=true;location.href='/api/download';return}
   if(a==='newcheck'){showHero();return}
   if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){qtext=c.name||'';$('#q').value=qtext;setCompact(false);window.scrollTo({top:$('#cards').offsetTop-80})}return}
   if(a==='copy'){try{await navigator.clipboard.writeText(f.after);b.textContent='Copied ✓'}catch(_){prompt('Copy this wording:',f.after)}}
@@ -486,6 +503,9 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Upload a file or paste a card first.")
                 if u.path == "/api/recheck":
                     return self.js(analyze())
+                if u.path == "/api/applyall":
+                    applied, skipped = apply_all(set(body.get("sevs") or []))
+                    return self.js({"result": analyze(), "applied": applied, "skipped": skipped})
                 if u.path == "/api/apply":
                     n = apply_fix(body["id"])
                     return self.js({"result": analyze(), "count": n})
