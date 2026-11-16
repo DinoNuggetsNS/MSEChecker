@@ -55,7 +55,9 @@ def main():
     ap.add_argument("--cards", help="path to Scryfall bulk data (JSON, JSONL, or .jsonl.gz)")
     ap.add_argument("--no-shortcut", action="store_true", help="do not ask about a Desktop shortcut")
     ap.add_argument("--make-shortcut", action="store_true", help="create the Desktop shortcut now and exit")
+    ap.add_argument("--mse", metavar="PATH", help="path to mse.exe (Magic Set Editor), used by Display images")
     a = ap.parse_args()
+    state.MSE_PATH = a.mse
     if a.make_shortcut:
         from . import shortcut
         sys.exit(0 if shortcut.create()[0] else 1)

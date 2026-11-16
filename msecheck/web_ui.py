@@ -5,7 +5,7 @@ from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
 from .analysis import analyze, apply_all, apply_fix, card_image, corrected_download, load_text, load_upload
 from .reports import export
-from . import shortcut
+from . import shortcut, mse_render
 
 
 # ----------------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
 .imgbtn.on{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
-.cardimg{display:block;max-width:min(360px,100%);max-height:520px;border-radius:12px;margin:.7rem 0;box-shadow:var(--sh);border:1px solid var(--bd)}
+.cardimg{display:block;max-width:min(420px,100%);max-height:520px;border-radius:12px;margin:.7rem 0;box-shadow:var(--sh);border:1px solid var(--bd)}
 #dropveil{position:fixed;inset:0;z-index:99;display:grid;place-items:center;font-size:1.5rem;font-weight:650;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border:3px dashed var(--brand);margin:12px;border-radius:24px}
 #dropveil[hidden],[hidden]{display:none!important}
 </style>
@@ -175,6 +175,13 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   <p id=mtext>Get one-click access. A shortcut will appear on your Desktop so you can open MSECheck like any other app.</p>
   <div class=mbtns><button class="btn pri" id=madd type=button>Add shortcut</button><button class="btn ghost" id=mnot type=button>Not now</button></div>
   <button class=mlink id=mnever type=button>Don’t ask again</button></div></div>
+<div id=msemodal class=modal hidden role=dialog aria-modal=true aria-labelledby=mmtitle><div class="glass mcard">
+  <div class=mico>🖼</div><h3 id=mmtitle>Where is Magic Set Editor?</h3>
+  <p>MSECheck draws your cards with MSE itself, but couldn’t find it on this computer. Paste the path to <b>mse.exe</b> (usually in <i>C:\Program Files\Magic Set Editor</i>).</p>
+  <p><input type=text id=msepath placeholder="C:\Program Files\Magic Set Editor\mse.exe" style="width:100%"></p>
+  <p id=mseerr class=mut hidden style="color:var(--err)"></p>
+  <div class=mbtns><button class="btn pri" id=msego type=button>Use this path</button><button class="btn ghost" id=mseart type=button>Show stored art instead</button></div>
+  <button class=mlink id=msex type=button>Cancel</button></div></div>
 <div id=toast class="glass toast" hidden role=status></div>
 <div id=dropveil hidden>Drop your .mse-set file to check it</div>
 <header class=top><div class=topin id=topin>
@@ -241,7 +248,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtextv='',noScry=false,compact=false,showImgs=false;
+let D=null,FM={},sortMode='sev',qtextv='',noScry=false,compact=false,showImgs=false,useRendered=false,RIMG=new Set(),rv=0;
 /* Scryfall-style search over the cards in the set */
 const QCOL={w:'W',white:'W',u:'U',blue:'U',b:'B',black:'B',r:'R',red:'R',g:'G',green:'G'};
 const QRAR={c:0,common:0,u:1,uncommon:1,r:2,rare:2,m:3,mythic:3,s:4,special:4};
@@ -423,13 +430,14 @@ function findingHTML(f){
 function closeHTML(cm,title,empty){
   if(!cm||!cm.items||!cm.items.length)return empty||'';
   return `<div class=matches><h4>${esc(title)}</h4>${cm.note?`<p class=mut><small>${esc(cm.note)}</small></p>`:''}${cm.items.map(m=>`<div class=match>${m.img?`<img src="${esc(m.img)}" loading=lazy alt="" onerror="this.remove()">`:''}<b><a href="${esc(m.url)}" target=_blank rel=noopener>${esc(m.name)}</a></b> <span class=mut>${esc(m.mana)} ${esc(m.type)}${m.of?' · '+m.score+'% similar · shares '+m.shared+' of '+m.of+' distinct words':' · closest type line'}</span><pre class=rules>${esc(m.text)||'(no rules text)'}</pre></div>`).join('')}<small>A close match is a wording comparison, not proof of an error or of copying.</small></div>`}
+function imgSrc(c){if(!showImgs)return null;return useRendered?(RIMG.has(c.idx)?'/api/mimg?card='+c.idx+'&v='+rv:null):(c.image?'/api/img?card='+c.idx:null)}
 function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
   return `<article><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
   ${c.ignored?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span></header>
-  ${showImgs&&c.image?`<img class=cardimg src="/api/img?card=${c.idx}" loading=lazy alt="${esc(c.name)}">`:`<pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}`}
+  ${imgSrc(c)?`<img class=cardimg src="${imgSrc(c)}" loading=lazy alt="${esc(c.name)}">`:`<pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}`}
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
   <div class=acts>${c.scryfall?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
@@ -464,7 +472,7 @@ function draw(){updFix();
   $('#cards').innerHTML=ebn+(list.length?nav(list.length)+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+nav(list.length)
     :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`);
   document.querySelectorAll('.lazy').forEach(el=>lazyIO.observe(el))}
-async function upload(f){if(!f)return;pg=0;render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
+async function upload(f){if(!f)return;pg=0;resetImgs();render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
 $('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};
 let dragN=0;
 addEventListener('dragenter',e=>{e.preventDefault();dragN++;$('#dropveil').hidden=false});
@@ -482,8 +490,8 @@ async function pollOracle(){
   }catch(_){}}
 pollOracle();
 $('#showpaste').onclick=()=>{const b=$('#pastebox');b.hidden=!b.hidden;if(!b.hidden)$('#ctext').focus()};
-$('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();D?showDash():showHero()};
-$('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;render(r)}};
+$('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();showHero()};
+$('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;resetImgs();render(r)}};
 document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.dataset.sev]=cb.checked;pg=0;draw()});
 $('#onlyissues').onchange=()=>{pg=0;draw()};
 
@@ -494,9 +502,32 @@ $('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D
   if(r.applied)toast('✓ '+r.applied+' fix'+(r.applied>1?'es':'')+' applied to your working copy','Remember to <b style="display:inline">download the corrected MSE file again</b> so your changes are saved. Your original file isn’t changed.'+(r.skipped?' '+r.skipped+' couldn’t be applied automatically.':''),true);
   else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
-$('#imgs').onclick=()=>{
-  if(!showImgs&&D&&!D.images){toast('No card images in this file','Only .mse-set files saved with art attached contain pictures, and this one has none. MSECheck shows the pictures stored in the file; it can’t draw MSE’s finished card frames.',false);return}
-  showImgs=!showImgs;$('#imgs').classList.toggle('on',showImgs);$('#imgs').textContent=showImgs?'🖼 Show text':'🖼 Display images';if(D)draw()};
+function setImgs(on){showImgs=on;$('#imgs').classList.toggle('on',on);$('#imgs').textContent=on?'🖼 Show text':'🖼 Display images';if(D)draw()}
+function resetImgs(){RIMG=new Set();useRendered=false;if(showImgs)setImgs(false)}
+async function mseGet(){try{return await (await fetch('/api/mse')).json()}catch(_){return null}}
+function artFallback(){if(D&&D.images){useRendered=false;setImgs(true);return true}return false}
+async function mseTick(){
+  const s=await mseGet();if(!s)return;
+  if(s.state==='running'){toast('Drawing your cards with Magic Set Editor…',esc(s.message),false);setTimeout(mseTick,900);return}
+  if(s.state==='done'){RIMG=new Set(s.have);rv++;useRendered=true;setImgs(true);toast('Cards drawn by Magic Set Editor','Showing '+s.done+' of '+s.total+' cards exactly as MSE draws them.',false);setTimeout(()=>{$('#toast').hidden=true},2800);return}
+  const art=artFallback();
+  toast('Magic Set Editor couldn’t draw the cards',esc(s.message||'')+(s.detail?'<br><small>'+esc(s.detail)+'</small>':'')+(art?'<br>Showing the art stored in the file instead.':''),false)}
+async function mseStart(){const r=await post('/api/mse',{action:'start'});if(r)mseTick()}
+$('#imgs').onclick=async()=>{
+  if(showImgs){setImgs(false);return}
+  if(!D)return;
+  if(D.mode==='text'){toast('Nothing to draw','Pasted rules text has no card frame. Open a .mse-set file to see its cards drawn.',false);return}
+  const s=await mseGet();
+  if(s&&s.state==='done'&&!s.stale){RIMG=new Set(s.have);useRendered=true;setImgs(true);return}
+  if(s&&s.state==='running'){mseTick();return}
+  if(!s||!s.found){$('#mseerr').hidden=true;$('#msemodal').hidden=false;$('#msepath').focus();return}
+  mseStart()};
+$('#msex').onclick=()=>{$('#msemodal').hidden=true};
+$('#mseart').onclick=()=>{$('#msemodal').hidden=true;if(!artFallback())toast('No stored art','This file has no pictures stored in it, so there is nothing to show without Magic Set Editor.',false)};
+$('#msego').onclick=async()=>{const e=$('#mseerr');e.hidden=true;
+  try{const r=await fetch('/api/mse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setpath',path:$('#msepath').value})});const j=await r.json();
+    if(j.error){e.textContent=j.error;e.hidden=false;return}
+    $('#msemodal').hidden=true;mseStart()}catch(x){e.textContent=String(x);e.hidden=false}};
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
 $('#q').oninput=e=>{setQuery(e.target.value);pg=0;draw()};
@@ -558,6 +589,11 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(PAGE.encode("utf-8"), "text/html; charset=utf-8")
         if u.path == "/api/shortcut":
             return self.js({"ask": shortcut.should_ask()})
+        if u.path == "/api/mse":
+            return self.js(mse_render.status())
+        if u.path == "/api/mimg":
+            b = mse_render.image(int(urllib.parse.parse_qs(u.query).get("card", ["-1"])[0]))
+            return self.send(b, "image/png") if b else self.send(b"No image", "text/plain", 404)
         if u.path == "/api/ping":
             HEARTBEAT["last"] = time.time()
             return self.js({"ok": True})
@@ -618,6 +654,14 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Upload a file or paste a card first.")
                 if u.path == "/api/recheck":
                     return self.js(analyze())
+                if u.path == "/api/mse":
+                    if body.get("action") == "setpath":
+                        return self.js({"path": mse_render.save_path(body.get("path"))})
+                    if ST["kind"] != "set":
+                        raise ValueError("Drawing cards needs a .mse-set file. Pasted text has no card frame to draw.")
+                    n = len(analyze()["cards"])
+                    mse_render.start(corrected_download()[0], n)
+                    return self.js({"ok": True})
                 if u.path == "/api/applyall":
                     applied, skipped = apply_all(set(body.get("sevs") or []))
                     return self.js({"result": analyze(), "applied": applied, "skipped": skipped})

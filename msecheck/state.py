@@ -14,3 +14,4 @@ HEARTBEAT = {"last": None}
 DESIGN_RISK = True            # turn off with --no-design-risk
 START = None                    # set in launcher.main() once the server is up
 SHORTCUT_ENABLED = True         # --no-shortcut turns the Desktop-shortcut question off
+MSE_PATH = None                  # --mse PATH: where Magic Set Editor lives (otherwise MSECheck looks for it)
