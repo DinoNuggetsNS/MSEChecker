@@ -19,12 +19,12 @@ PAGE = r"""<!doctype html><html lang=en data-theme=dark><meta charset=utf-8><met
 --brand:#e3493b;--brand2:#c4302b;--r:16px}
 :root[data-theme=dark]{color-scheme:dark;--bg:#0a0a0c;--fg:#f4f4f6;--mut:#a3a3ad;--glass:rgba(255,255,255,.055);--glass2:rgba(255,255,255,.04);--inset:rgba(0,0,0,.28);
 --bd:rgba(255,255,255,.11);--bd2:rgba(255,255,255,.2);--head:rgba(10,10,12,.72);--sh:0 10px 40px rgba(0,0,0,.35);
---pur:#b794ff;--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#ff8b80;
+--lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#ff8b80;
 --mark:rgba(255,196,80,.28);--del:rgba(255,107,94,.3);--ins:rgba(84,210,128,.28);
 --fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.62),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.17),transparent 60%),linear-gradient(180deg,transparent 58%,rgba(227,73,59,.14) 100%)}
 :root[data-theme=light]{color-scheme:light;--bg:#fbf8f7;--fg:#16161a;--mut:#62626d;--glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.55);--inset:rgba(20,20,30,.045);
 --bd:rgba(20,20,30,.1);--bd2:rgba(20,20,30,.2);--head:rgba(251,248,247,.78);--sh:0 10px 34px rgba(60,30,30,.1);
---pur:#7c3aed;--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#d63a2c;
+--lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#d63a2c;
 --mark:rgba(255,200,60,.45);--del:rgba(239,100,90,.3);--ins:rgba(80,190,110,.32);
 --fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.34),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.1),transparent 60%),linear-gradient(180deg,transparent 58%,rgba(227,73,59,.08) 100%)}
 *{box-sizing:border-box}
@@ -48,7 +48,8 @@ header.top{position:sticky;top:0;z-index:50;background:var(--head);backdrop-filt
 .chip b{font-weight:650;font-variant-numeric:tabular-nums;color:var(--fg)}
 .chip:hover{border-color:var(--bd2)}
 .chip:has(input:checked){color:var(--c);border-color:color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 13%,transparent)}
-.chip.e{--c:var(--err)}.chip.r{--c:var(--rev)}.chip.s{--c:var(--sug)}.chip.o{--c:var(--pur)}
+.chip.e{--c:var(--err)}.chip.r{--c:var(--rev)}.chip.s{--c:var(--sug)}.chip.o{--c:var(--lime)}
+.chip.g:has(input:checked){background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 4px 18px rgba(105,89,143,.5)}.chip.g:has(input:checked) b{color:#fff}
 .tools{margin-left:auto;display:flex;align-items:center;gap:.5rem}
 input[type=search],input[type=text],select,textarea{background:var(--glass2);color:var(--fg);border:1px solid var(--bd);border-radius:11px;padding:.42rem .75rem;font:inherit;font-size:13.5px;outline:none;transition:.15s}
 input[type=search]{width:140px}select{padding-right:.4rem;cursor:pointer}option{background:var(--bg);color:var(--fg)}
@@ -163,6 +164,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <label class="chip r"><input type=checkbox data-sev="Needs review" checked><i></i>Review <b id=cR>0</b></label>
     <label class="chip s"><input type=checkbox data-sev="Suggestion" checked><i></i>Suggestions <b id=cS>0</b></label>
     <label class="chip o"><input type=checkbox id=onlyissues checked title="Only show cards that have findings"><i></i>With findings</label>
+    <label class="chip g" title="Hide the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Remove Scryfall comparisons</label>
   </div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards" hidden aria-label="Search cards">
@@ -216,7 +218,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtext='';
+let D=null,FM={},sortMode='sev',qtext='',noScry=false;
 /* peelable logo: drag the bottom-left corner to see what's underneath */
 (function(){
   const box=$('#peel'),top=$('#herologo'),flap=$('#flap'),corner=$('#corner');
@@ -287,7 +289,7 @@ function findingHTML(f){
   h+=`<button data-act=ign data-scope=card data-id="${f.id}">Ignore on this card</button>
   <button data-act=ign data-scope=text data-id="${f.id}">Ignore this exact issue everywhere</button>
   <button data-act=ign data-scope=rule data-id="${f.id}">Ignore this type of issue everywhere</button></div>`;
-  if(f.ref){const r=f.ref;
+  if(f.ref&&!noScry){const r=f.ref;
     h+=`<div class=lbl>Reference</div><div>${r.name?`Reference card “${esc(r.name)}” — ${esc(r.note)}. <a href="${r.url}" target=_blank rel=noopener>View card on Scryfall</a> · `:`${esc(r.note)}: `}
     <a href="${r.qurl}" target=_blank rel=noopener>Search similar wording on Scryfall</a><br>
     <small>A reference is a comparison, not proof that the custom card is incorrect.</small></div>`}
@@ -304,7 +306,7 @@ function cardHTML(v){
   ${c.ignored?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span></header>
   <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
-  <div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>
+  ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
   <div class=acts>${c.scryfall?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
 }
 const lazyIO=new IntersectionObserver(es=>es.forEach(async e=>{
@@ -350,6 +352,7 @@ $('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();D?showD
 $('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;render(r)}};
 document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.dataset.sev]=cb.checked;pg=0;draw()});
 $('#onlyissues').onchange=()=>{pg=0;draw()};
+$('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
 $('#q').oninput=e=>{qtext=e.target.value;pg=0;draw()};
 document.addEventListener('click',async e=>{
