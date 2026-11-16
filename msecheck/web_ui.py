@@ -147,6 +147,17 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .mcard.ok .mico{box-shadow:0 10px 30px rgba(95,214,138,.4)}
 @keyframes mfade{from{opacity:0}}@keyframes mpop{from{opacity:0;transform:translateY(14px) scale(.96)}}
 @media(prefers-reduced-motion:reduce){.modal,.mcard{animation:none}}
+.cbtn{border:1px solid transparent;font-weight:650;color:#17100f;background:linear-gradient(135deg,#fff 0%,#f6b3ac 48%,#e3493b 100%);box-shadow:0 4px 16px rgba(227,73,59,.3)}
+.cbtn:hover{filter:brightness(1.05);background:linear-gradient(135deg,#fff 0%,#f6b3ac 48%,#e3493b 100%);border-color:transparent}
+:root[data-theme=light] .cbtn{color:#fff;background:linear-gradient(135deg,#0d0d0f 0%,#5a1a16 48%,#e3493b 100%)}
+:root[data-theme=light] .cbtn:hover{background:linear-gradient(135deg,#0d0d0f 0%,#5a1a16 48%,#e3493b 100%)}
+.sheet{overflow:hidden;margin:.8rem 0;padding:0}
+.srow{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(160px,1.5fr) 150px;gap:1rem;padding:.5rem 1.1rem;align-items:center;font-size:14px;border-bottom:1px solid var(--bd)}
+.shead{position:sticky;top:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:650;background:var(--glass2)}
+.sgroup{cursor:pointer;border-bottom:1px solid var(--bd)}.sgroup:nth-child(even){background:color-mix(in srgb,var(--fg) 3.5%,transparent)}.sgroup:hover{background:color-mix(in srgb,var(--brand) 9%,transparent)}
+.sgroup .srow{border-bottom:0;padding-top:.32rem;padding-bottom:.32rem}.sgroup .srow:first-child{padding-top:.55rem}.sgroup .srow:last-child{padding-bottom:.55rem}
+.sname{font-weight:650;letter-spacing:-.01em}.sgroup .none{color:var(--mut)}
+@media(max-width:640px){.srow{grid-template-columns:1fr 1fr;gap:.3rem .8rem}.srow>:nth-child(3){grid-column:1/-1}.shead>:nth-child(3){display:none}}
 #dropveil{position:fixed;inset:0;z-index:99;display:grid;place-items:center;font-size:1.5rem;font-weight:650;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border:3px dashed var(--brand);margin:12px;border-radius:24px}
 #dropveil[hidden],[hidden]{display:none!important}
 </style>
@@ -168,6 +179,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   </div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards" hidden aria-label="Search cards">
+    <button id=collapse class=cbtn type=button hidden title="Condense the results into a quick-look table">▤ Collapse all</button>
     <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
     <button id=theme class=switch role=switch aria-checked=false aria-label="Light mode" title="Light / dark mode">
       <svg class=sun viewBox="0 0 24 24"><circle cx=12 cy=12 r=4></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
@@ -218,7 +230,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtext='',noScry=false;
+let D=null,FM={},sortMode='sev',qtext='',noScry=false,compact=false;
 /* peelable logo: drag the bottom-left corner to see what's underneath */
 (function(){
   const box=$('#peel'),top=$('#herologo'),flap=$('#flap'),corner=$('#corner');
@@ -260,8 +272,9 @@ $('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='light
 async function post(path,body,raw){
   try{const r=await fetch(path,{method:'POST',headers:raw?{}:{'Content-Type':'application/json'},body:raw?body:JSON.stringify(body||{})});
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort'].forEach(s=>$(s).hidden=true);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false}
+function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse'].forEach(s=>$(s).hidden=true);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -314,20 +327,26 @@ const lazyIO=new IntersectionObserver(es=>es.forEach(async e=>{
   try{const r=await (await fetch('/api/close?'+(el.dataset.f?'f='+encodeURIComponent(el.dataset.f):'card='+el.dataset.card))).json();
     el.innerHTML=r.empty?'<p class=mut><small>Found no rules text.</small></p>':closeHTML(r.close,el.dataset.title,el.dataset.f||D.oracle_cards?'':'<p class=mut><small>Scryfall card data isn’t loaded, so the closest real cards can’t be shown.</small></p>')}
   catch(_){el.innerHTML=''}}),{rootMargin:'600px'});
-const PAGE_SIZE=20;let pg=0;
-function nav(total){const pages=Math.max(1,Math.ceil(total/PAGE_SIZE)),a=pg*PAGE_SIZE+1,b=Math.min(total,(pg+1)*PAGE_SIZE);
-  return `<div class=pager><button data-act=prev ${pg<=0?'disabled':''}>← Previous ${PAGE_SIZE}</button><span class=mut>Cards ${total?a:0}–${b} of ${total} · page ${pg+1} of ${pages}</span><button data-act=next ${pg>=pages-1?'disabled':''}>Next ${PAGE_SIZE} →</button></div>`}
+let pg=0;const PS=()=>compact?60:20;
+function nav(total){const pages=Math.max(1,Math.ceil(total/PS())),a=pg*PS()+1,b=Math.min(total,(pg+1)*PS());
+  return `<div class=pager><button data-act=prev ${pg<=0?'disabled':''}>← Previous ${PS()}</button><span class=mut>Cards ${total?a:0}–${b} of ${total} · page ${pg+1} of ${pages}</span><button data-act=next ${pg>=pages-1?'disabled':''}>Next ${PS()} →</button></div>`}
 function view(c){const fs=c.findings.filter(f=>on[f.sev]),cnt=[0,0,0];fs.forEach(f=>cnt[RANK[f.sev]]++);
   return{c,fs,cnt,worst:fs.length?Math.min(...fs.map(f=>RANK[f.sev])):(c.has_text?3:4)}}
 const CMP={sev:(a,b)=>a.worst-b.worst||b.cnt[0]-a.cnt[0]||b.cnt[1]-a.cnt[1]||b.cnt[2]-a.cnt[2]||a.c.idx-b.c.idx,
   set:(a,b)=>a.c.idx-b.c.idx,name:(a,b)=>(a.c.name||'').localeCompare(b.c.name||'')||a.c.idx-b.c.idx,
   count:(a,b)=>b.fs.length-a.fs.length||a.c.idx-b.c.idx};
+function sheetHTML(list){
+  const lv={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
+  return '<div class="glass sheet"><div class="srow shead"><span>Card</span><span>Error type</span><span>Level</span></div>'+list.map(v=>{
+    const c=v.c,nm=`<span class=sname>${esc(c.name||'(unnamed card)')}</span>`;
+    if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
+    return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
 function draw(){
   const only=$('#onlyissues').checked,qq=qtext.trim().toLowerCase();
   const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qq||(v.c.name||'').toLowerCase().includes(qq))).sort(CMP[sortMode]),
-    pages=Math.max(1,Math.ceil(list.length/PAGE_SIZE));
+    pages=Math.max(1,Math.ceil(list.length/PS()));
   if(pg>=pages)pg=pages-1;if(pg<0)pg=0;
-  $('#cards').innerHTML=list.length?nav(list.length)+list.slice(pg*PAGE_SIZE,(pg+1)*PAGE_SIZE).map(cardHTML).join('')+nav(list.length)
+  $('#cards').innerHTML=list.length?nav(list.length)+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+nav(list.length)
     :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`;
   document.querySelectorAll('.lazy').forEach(el=>lazyIO.observe(el))}
 async function upload(f){if(!f)return;pg=0;render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
@@ -352,6 +371,7 @@ $('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();D?showD
 $('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;render(r)}};
 document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.dataset.sev]=cb.checked;pg=0;draw()});
 $('#onlyissues').onchange=()=>{pg=0;draw()};
+$('#collapse').onclick=()=>setCompact(!compact);
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
 $('#q').oninput=e=>{qtext=e.target.value;pg=0;draw()};
@@ -359,6 +379,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
   if(a==='newcheck'){showHero();return}
+  if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){qtext=c.name||'';$('#q').value=qtext;setCompact(false);window.scrollTo({top:$('#cards').offsetTop-80})}return}
   if(a==='copy'){try{await navigator.clipboard.writeText(f.after);b.textContent='Copied ✓'}catch(_){prompt('Copy this wording:',f.after)}}
   else if(a==='apply'){if(confirm('Apply to the working copy?\n\nBefore: '+f.detected+'\nAfter:  '+f.after+'\n\nYour original file is not modified.')){
     const r=await post('/api/apply',{id});if(r){render(r.result);if(r.count>1)alert('Replaced '+r.count+' matching occurrences in this field.')}}}
