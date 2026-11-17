@@ -10,16 +10,6 @@ from .scryfall_data import stat_text
 # ----------------------------------------------------------------------------------------
 # Per-card checks
 # ----------------------------------------------------------------------------------------
-def check_artist(card):
-    """Flag a card only when it has no artist credit (an empty or absent illustrator field)."""
-    if not (card["name"] or "").strip():
-        return []
-    if card["artist"].strip():
-        return []
-    return [mk("Needs review", "Credits", "artist-missing", card["name"], "", "This card has no artist credit. Add the illustrator's name "
-               "(or the source of the artwork) so the art is properly credited.", field="illustrator")]
-
-
 _FOREIGN_PAIRS = {("bona", "fide"), ("ad", "hoc"), ("de", "facto"), ("de", "jure"), ("vice", "versa"), ("a", "priori"), ("per", "se"),
                   ("status", "quo"), ("modus", "operandi"), ("carpe", "diem"), ("in", "situ"), ("sine", "qua"), ("qua", "non"),
                   ("pro", "bono"), ("quid", "pro"), ("pro", "quo"), ("habeas", "corpus"), ("mea", "culpa"), ("ex", "nihilo"),
