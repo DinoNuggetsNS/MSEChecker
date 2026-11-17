@@ -164,6 +164,13 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
+.healthbtn{font-size:12px;padding:.3rem .7rem;border-color:transparent;font-weight:650;color:#2a1c00;background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);box-shadow:0 3px 12px rgba(214,163,40,.35)}
+.healthbtn:hover{filter:brightness(1.07);background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);border-color:transparent}
+.hcard{background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;width:min(640px,100%);max-height:88vh;overflow:auto;padding:1.6rem 1.6rem 1.2rem;position:relative;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2)}
+.hhead{display:flex;gap:1.1rem;align-items:center;margin-bottom:1rem}.hhead h3{margin:0;font-size:1.3rem;letter-spacing:-.025em}.hhead p{margin:.2rem 0 0;color:var(--mut);font-size:13px}
+.hscore{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:1.6rem;font-weight:750;color:var(--fg)}
+.hrow{display:grid;grid-template-columns:22px 1fr;gap:.2rem .6rem;padding:.6rem 0;border-top:1px solid var(--bd)}.hrow b{font-size:14px}.hrow span{color:var(--mut);font-size:13px;grid-column:2}
+.hdot{width:12px;height:12px;border-radius:50%;margin-top:4px}.hdot.hg{background:#5fd68a}.hdot.hw{background:#e8b93a}.hdot.hb{background:#e3493b}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
 .graphbtn:hover{filter:brightness(1.08);background:linear-gradient(135deg,#3b6fd4,#7c4fd0);border-color:transparent}.graphbtn.on{background:var(--glass);color:var(--fg);border-color:var(--bd2);box-shadow:none}
 .chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
@@ -196,6 +203,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   </div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards for Magic cards… e.g. o:creature  t:elf  c:r  mv&lt;=2" hidden aria-label="Search cards for Magic cards" title="Scryfall-style search over the cards in your set.&#10;name  o:text  t:type  c:rg  m:{R}  mv>=3  pow>=3  tou  loy  r:rare  kw:flying  ft:flavor  a:artist  is:creature  has:findings&#10;sev:error  cat:credits  (red/blue/…)  -term  a or b  ( )  &quot;quoted phrase&quot;  /regex/  !&quot;exact name&quot;  ~ = card name">
+    <button id=health class=healthbtn type=button hidden title="A quick health report on your set's balance">✚ Set health</button>
     <button id=graphs class=graphbtn type=button hidden title="Show graphs about your set instead of the cards">📊 Graphs</button>
     <button id=collapse class=cbtn type=button hidden title="Condense the results into a quick-look table">▤ Collapse all</button>
     <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
@@ -392,8 +400,8 @@ async function post(path,body,raw){
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
 function setLoaded(v){$('#topin').classList.toggle('loaded',v)}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs','#health'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;$('#health').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -598,6 +606,40 @@ $('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D
   else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
 $('#graphs').onclick=()=>setChart(!chartMode);
+/* ---------- set health report ---------- */
+function healthItems(){
+  const all=D.cards,cs=all.filter(c=>!isLand(c)),n=cs.length||1,I=[],add=(st,t,d)=>I.push({st,t,d});
+  const pc=x=>Math.round(100*x/n);
+  const sev=D.summary.severity||{},err=sev['Likely error']||0;
+  add(err?(err>10?'bad':'warn'):'good','Wording and rules errors',err?`${err} likely error${err>1?'s':''} still flagged. Use “Fix all fixable” or edit them in MSE.`:'No likely errors flagged.');
+  const rar={};cs.forEach(c=>{const r=prarity(c);rar[r]=(rar[r]||0)+1});
+  const unk=rar.Unknown||0,com=rar.Common||0,top=(rar.Rare||0)+(rar.Mythic||0);
+  if(unk>n*.5)add('warn','Rarity','Most cards have no rarity set in MSE, so rarity checks are skipped.');
+  else{const cp=pc(com),tp=pc(top);add(cp<30||tp>25?'warn':'good','Rarity spread',`${cp}% commons, ${pc(rar.Uncommon||0)}% uncommons, ${tp}% rares and mythics. ${cp<30?'Few commons: ':tp>25?'Lots of rares: ':''}${cp<30||tp>25?'sets usually have a base of commons and few rares.':'Looks like a typical shape.'}${unk?` (${unk} with no rarity.)`:''}`)}
+  const mono={W:0,U:0,B:0,R:0,G:0};cs.forEach(c=>{const s=qinfo(c).cols;if(s.size===1)mono[[...s][0]]++});
+  const mv=Object.values(mono),mx=Math.max(...mv),mn=Math.min(...mv);
+  if(mx>=5)add(mn<mx*.6?'warn':'good','Colour balance',`One-colour cards: ${Object.keys(mono).map(k=>CNAME[k]+' '+mono[k]).join(', ')}. ${mn<mx*.6?CNAME[Object.keys(mono).find(k=>mono[k]===mn)]+' has noticeably fewer than '+CNAME[Object.keys(mono).find(k=>mono[k]===mx)]+'.':'Evenly spread.'}`);
+  const rem={};Object.keys(mono).forEach(k=>rem[k]=0);cs.forEach(c=>{const t=noRem(c);if(REM.some(r=>r[1].test(t))){const s=qinfo(c).cols;if(s.size===1)rem[[...s][0]]++}});
+  const nor=Object.keys(rem).filter(k=>!rem[k]&&mono[k]>=4);
+  if(mx>=5)add(nor.length?'warn':'good','Removal',nor.length?`No removal found in ${nor.map(k=>CNAME[k]).join(', ')}. Players in those colours may have no way to answer threats.`:`Every colour has removal (${Object.keys(rem).map(k=>CNAME[k]+' '+rem[k]).join(', ')}).`);
+  const cr=cs.filter(c=>/creature/.test(qinfo(c).type)).length,crp=pc(cr);
+  add(crp<30||crp>60?'warn':'good','Creature count',`${crp}% of non-land cards are creatures. ${crp<30?'That’s low: games may feel slow and spell-heavy.':crp>60?'That’s high: a set needs enough noncreature spells for variety.':'A healthy mix.'}`);
+  const mvs=cs.map(c=>qinfo(c).mv),a=avg(mvs),hi=mvs.filter(m=>m>=5).length,hp=pc(hi);
+  add(a>3.8||a<2.2||hp>25?'warn':'good','Mana curve',`Average mana value ${a}, with ${hp}% of cards costing 5 or more. ${a>3.8||hp>25?'Top-heavy: add cheaper cards.':a<2.2?'Very low: the set may lack late-game power.':'Looks reasonable.'}`);
+  const cx=cs.filter(c=>prarity(c)==='Common'&&noRem(c).split(/\s+/).filter(Boolean).length>35);
+  add(cx.length>com*.15&&cx.length>2?'warn':'good','Common complexity',cx.length?`${cx.length} common${cx.length>1?'s have':' has'} long rules text (over 35 words): ${cx.slice(0,3).map(c=>c.name).join(', ')}${cx.length>3?'…':''}. Commons should be simple to read.`:'Commons have short, readable rules text.');
+  const seen={},dup=[];all.forEach(c=>{const k=(c.name||'').trim().toLowerCase();if(!k)return;if(seen[k])dup.push(c.name);seen[k]=1});
+  add(dup.length?'bad':'good','Duplicate names',dup.length?`These names appear more than once: ${[...new Set(dup)].slice(0,5).join(', ')}.`:'Every card has a unique name.');
+  const nt=D.summary.no_text||0;if(nt)add('warn','Cards with no rules text',`${nt} card${nt>1?'s were':' was'} not checked because the text is empty.`);
+  return I}
+function showHealth(){
+  if(!D)return;const I=healthItems(),score=Math.max(0,100-I.reduce((s,i)=>s+(i.st==='bad'?15:i.st==='warn'?7:0),0)),col=score>=85?'#5fd68a':score>=65?'#e8b93a':'#e3493b';
+  const m=document.createElement('div');m.className='modal';m.setAttribute('role','dialog');
+  m.innerHTML=`<div class="glass hcard"><div class="hhead"><div class="hscore" style="background:conic-gradient(${col} ${score*3.6}deg,color-mix(in srgb,var(--fg) 12%,transparent) 0)"><div style="background:var(--bg);width:66px;height:66px;border-radius:50%;display:grid;place-items:center">${score}</div></div><div><h3>Set health report</h3><p>${esc(D.file||'Your set')} · ${D.cards.length} cards. A rough guide to balance, not a rule: every set is different.</p></div></div>${I.map(i=>`<div class="hrow"><i class="hdot h${i.st[0]}"></i><b>${esc(i.t)}</b><span>${esc(i.d)}</span></div>`).join('')}<div class="mbtns" style="margin-top:1rem"><button class="pri" id="hclose">Close</button></div></div>`;
+  document.body.appendChild(m);const x=()=>{m.remove();document.removeEventListener('keydown',k)},k=e=>{if(e.key==='Escape')x()};
+  document.addEventListener('keydown',k);m.onclick=e=>{if(e.target===m)x()};m.querySelector('#hclose').onclick=x}
+$('#health').onclick=showHealth;
+
 
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
