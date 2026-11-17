@@ -29,10 +29,6 @@ That's it. Nothing else to install. The app already includes Scryfall's **Oracle
 4. Use **Apply** on a finding to fix it, or **Ignore** to hide it. **Download corrected copy** saves a new file; the original is never overwritten.
 5. **CSV**, **HTML** and **Text** export the full report.
 
-### Display images
-
-The **Display images** button asks Magic Set Editor (it must be installed) to draw every card, then shows those pictures in place of the card text, exactly as MSE draws them. MSECheck looks for MSE automatically; if it can't find it, it asks for the path to `mse.exe` once. Run with `--mse "C:\path\to\mse.exe"` to set it yourself.
-
 ### Card data (Scryfall)
 
 The release includes Scryfall's Oracle Cards as of the day it was built. To use newer data, download **Oracle Cards** from <https://scryfall.com/docs/api/bulk-data> and put the file next to `MSECheck.exe`. MSECheck prefers a file you put there over the bundled one.

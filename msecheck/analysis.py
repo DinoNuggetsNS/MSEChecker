@@ -46,32 +46,6 @@ def game_of(text):
     return m.group(1).strip() if m else ""
 
 
-def image_names():
-    """Names of the files stored inside the .mse-set (it is a zip when the set has art attached)."""
-    try:
-        if ST.get("orig") and zipfile.is_zipfile(io.BytesIO(ST["orig"])):
-            return set(zipfile.ZipFile(io.BytesIO(ST["orig"])).namelist())
-    except Exception:
-        pass
-    return set()
-
-
-def card_image(idx):
-    """(bytes, mime) of the picture stored for card #idx in the set file, or None."""
-    cards = make_cards(parse_mse(ST["text"]))
-    c = next((x for x in cards if x["idx"] == idx), None)
-    if not c or not c.get("image"):
-        return None
-    z = zipfile.ZipFile(io.BytesIO(ST["orig"]))
-    if c["image"] not in z.namelist():
-        return None
-    b = z.read(c["image"])
-    mime = ("image/png" if b[:8] == b"\x89PNG\r\n\x1a\n" else "image/jpeg" if b[:3] == b"\xff\xd8\xff" else
-            "image/gif" if b[:4] == b"GIF8" else "image/webp" if b[:4] == b"RIFF" and b[8:12] == b"WEBP" else
-            "image/bmp" if b[:2] == b"BM" else None)
-    return (b, mime) if mime else None
-
-
 def analyze():
     _t0 = time.time()
     blocks = parse_mse(ST["text"])
@@ -103,7 +77,6 @@ def analyze():
             except Exception as e:
                 fl[c["idx"]].append(mk("Needs review", "Checker", "checker-error", c["name"], c["name"],
                                        "The design-risk checks hit an unexpected problem on this card (%s). Please report it." % e))
-    names = image_names()
     ST["findings"] = {}
     out_cards, sev_count, cat_count, ignored_total, clean, no_text = [], Counter(), Counter(), 0, 0, 0
     for c in cards:
@@ -151,7 +124,6 @@ def analyze():
                           "rules": rules_text, "findings": res,
                           "power": c["power"], "toughness": c["toughness"], "loyalty": c.get("loyalty", ""), "rarity": c.get("rarity", ""),
                           "flavor": "\n".join(f["plain"] for f in c["flavor"]), "artist": c["artist"],
-                          "image": bool(c.get("image")) and c["image"] in names,
                           "ignored": n_ign, "scryfall": qurl, "terms": qterms, "has_text": has_text, "filled": c["filled"],
                           "text_fields": [f["key"] for f in c["rules"] if f["plain"].strip()]})
     d = get_dict()
@@ -162,7 +134,7 @@ def analyze():
                     "ignored": ignored_total, "categories": cat_count.most_common(),
                     "custom_keywords": ctx.custom, "game": game_of(ST["text"]), "text_fields": Counter(
                         k for c in cards for k in {f["key"] for f in c["rules"] if f["plain"].strip()}).most_common(), "spellcheck": "full dictionary" if d else "built-in MTG vocabulary (flavor-text spelling needs: pip install pyspellchecker)"},
-        "images": sum(1 for x in out_cards if x["image"]), "cards": out_cards}
+        "cards": out_cards}
     ST["last"] = result
     print("Analyzed %d cards in %.1fs" % (len(cards), time.time() - _t0))
     return result

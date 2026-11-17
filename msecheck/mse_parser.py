@@ -149,7 +149,7 @@ def make_cards(blocks):
             "idx": n, "name": P("name"), "supertype": " ".join(plain(fval(f)).strip() for f in sups).strip() or P("type"),
             "subtype": " ".join(plain(fval(f)).strip() for f in subs).strip(), "subkey": subs[0].key if subs else "sub type",
             "cost": P("casting cost"), "cost2": " ".join(plain(fval(f)).strip() for f in b.fields
-                                                          if re.fullmatch(r"casting cost \d+", nk(f.key))), "power": P("power"), "toughness": P("toughness"), "loyalty": P("loyalty"), "rarity": P("rarity"), "image": P("image"),
+                                                          if re.fullmatch(r"casting cost \d+", nk(f.key))), "power": P("power"), "toughness": P("toughness"), "loyalty": P("loyalty"), "rarity": P("rarity"),
             "filled": [nk(f.key) for f in b.fields if fval(f).strip() and not re.match(
                 r"(time |stylesheet|has styling|styling data|image|card color|notes|rarity|illustrator)", nk(f.key))],
             "rules": rules, "loyalty_costs": list(lcosts.values()),

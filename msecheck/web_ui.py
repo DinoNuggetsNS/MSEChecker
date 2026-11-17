@@ -3,9 +3,9 @@ import json, time, urllib.parse
 from http.server import BaseHTTPRequestHandler
 from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
-from .analysis import analyze, apply_all, apply_fix, card_image, corrected_download, load_text, load_upload
+from .analysis import analyze, apply_all, apply_fix, corrected_download, load_text, load_upload
 from .reports import export
-from . import shortcut, mse_render
+from . import shortcut
 
 
 # ----------------------------------------------------------------------------------------
@@ -164,8 +164,15 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
-.imgbtn.on{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-color:transparent}
-.cardimg{display:block;max-width:min(420px,100%);max-height:520px;border-radius:12px;margin:.7rem 0;box-shadow:var(--sh);border:1px solid var(--bd)}
+.graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
+.graphbtn:hover{filter:brightness(1.08);background:linear-gradient(135deg,#3b6fd4,#7c4fd0);border-color:transparent}.graphbtn.on{background:var(--glass);color:var(--fg);border-color:var(--bd2);box-shadow:none}
+.chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.chartsel{font-size:1.05rem;font-weight:650;padding:.55rem 1rem;border-radius:12px;min-width:min(380px,100%)}.chartsub{color:var(--mut);margin:.8rem 0 .4rem}
+.chart{width:100%;height:auto;display:block}.chart .grid{stroke:var(--bd);stroke-width:1}.chart .tick,.chart .xl,.chart .xs,.chart .axl{fill:var(--mut);font-size:12.5px}.chart .xl{fill:var(--fg);font-size:13px;font-weight:550}.chart .axl{font-size:12px;letter-spacing:.04em}
+.chart .tot{fill:var(--fg);font-size:12.5px;font-weight:650}.chart .seg{stroke:rgba(0,0,0,.28);stroke-width:.6}.chart .seg:hover,.chart .dot:hover{filter:brightness(1.18)}
+.chart .dot{stroke:rgba(0,0,0,.4);stroke-width:1;opacity:.92}.chart .avg{stroke:var(--fg);stroke-width:2;stroke-dasharray:5 4}.chart .cell:hover{stroke:var(--fg);stroke-width:1.5}
+.legend{display:flex;gap:.4rem 1.1rem;flex-wrap:wrap;margin:.4rem 0 0;font-size:13px;color:var(--mut)}.legend span{display:inline-flex;align-items:center;gap:.4rem}.legend i{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid var(--bd2)}
+.chartnote{color:var(--mut);font-size:13px;margin:.8rem 0 0}
 #dropveil{position:fixed;inset:0;z-index:99;display:grid;place-items:center;font-size:1.5rem;font-weight:650;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(10px);border:3px dashed var(--brand);margin:12px;border-radius:24px}
 #dropveil[hidden],[hidden]{display:none!important}
 </style>
@@ -175,13 +182,6 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   <p id=mtext>Get one-click access. A shortcut will appear on your Desktop so you can open MSECheck like any other app.</p>
   <div class=mbtns><button class="btn pri" id=madd type=button>Add shortcut</button><button class="btn ghost" id=mnot type=button>Not now</button></div>
   <button class=mlink id=mnever type=button>Don’t ask again</button></div></div>
-<div id=msemodal class=modal hidden role=dialog aria-modal=true aria-labelledby=mmtitle><div class="glass mcard">
-  <div class=mico>🖼</div><h3 id=mmtitle>Where is Magic Set Editor?</h3>
-  <p>MSECheck draws your cards with MSE itself, but couldn’t find it on this computer. Paste the path to <b>mse.exe</b> (usually in <i>C:\Program Files\Magic Set Editor</i>).</p>
-  <p><input type=text id=msepath placeholder="C:\Program Files\Magic Set Editor\mse.exe" style="width:100%"></p>
-  <p id=mseerr class=mut hidden style="color:var(--err)"></p>
-  <div class=mbtns><button class="btn pri" id=msego type=button>Use this path</button><button class="btn ghost" id=mseart type=button>Show stored art instead</button></div>
-  <button class=mlink id=msex type=button>Cancel</button></div></div>
 <div id=toast class="glass toast" hidden role=status></div>
 <div id=dropveil hidden>Drop your .mse-set file to check it</div>
 <header class=top><div class=topin id=topin>
@@ -196,7 +196,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
   </div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards for Magic cards… e.g. o:creature  t:elf  c:r  mv&lt;=2" hidden aria-label="Search cards for Magic cards" title="Scryfall-style search over the cards in your set.&#10;name  o:text  t:type  c:rg  m:{R}  mv>=3  pow>=3  tou  loy  r:rare  kw:flying  ft:flavor  a:artist  is:creature  has:findings&#10;sev:error  cat:credits  (red/blue/…)  -term  a or b  ( )  &quot;quoted phrase&quot;  /regex/  !&quot;exact name&quot;  ~ = card name">
-    <button id=imgs class=imgbtn type=button hidden title="Show the pictures stored in your .mse-set file instead of the card text">🖼 Display images</button>
+    <button id=graphs class=graphbtn type=button hidden title="Show graphs about your set instead of the cards">📊 Graphs</button>
     <button id=collapse class=cbtn type=button hidden title="Condense the results into a quick-look table">▤ Collapse all</button>
     <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
     <button id=theme class=switch role=switch aria-checked=false aria-label="Light mode" title="Light / dark mode">
@@ -238,7 +238,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <div><h4>Community</h4><span class=comm>Looking for additional feedback and the potential for people to play your custom cards? Check out the <b>MSEM</b> and <b>Revolution</b> Discord communities and connect with other custom Magic designers!</span></div>
   </div>
 </section>
-<section id=dash hidden><div id=summary class=glass></div><div id=cards></div></section>
+<section id=dash hidden><div id=summary class=glass></div><div id=cards></div><div id=charts hidden></div></section>
 </main>
 <script>
 setInterval(()=>{fetch('/api/ping').catch(()=>{})},4000);fetch('/api/ping').catch(()=>{});
@@ -248,7 +248,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtextv='',noScry=false,compact=false,showImgs=false,useRendered=false,RIMG=new Set(),rv=0;
+let D=null,FM={},sortMode='sev',qtextv='',noScry=false,compact=false,chartMode=false;
 /* Scryfall-style search over the cards in the set */
 const QCOL={w:'W',white:'W',u:'U',blue:'U',b:'B',black:'B',r:'R',red:'R',g:'G',green:'G'};
 const QRAR={c:0,common:0,u:1,uncommon:1,r:2,rare:2,m:3,mythic:3,s:4,special:4};
@@ -305,7 +305,7 @@ function qterm(key,op,val){
       vanilla:c=>!(c.rules||'').trim(),flagged:c=>c.findings.length>0,fixable:c=>c.findings.some(f=>f.can_apply),clean:c=>c.has_text&&!c.findings.length}[v];
     if(!m)throw new Error('Unknown “is:” value “'+val+'”');return m}
   case'has':{const v=val.toLowerCase();
-    const m={findings:c=>c.findings.length>0,text:c=>!!(c.rules||'').trim(),artist:c=>!!c.artist,flavor:c=>!!c.flavor,pt:c=>!!(c.power||c.toughness),image:c=>!!c.image}[v];
+    const m={findings:c=>c.findings.length>0,text:c=>!!(c.rules||'').trim(),artist:c=>!!c.artist,flavor:c=>!!c.flavor,pt:c=>!!(c.power||c.toughness)}[v];
     if(!m)throw new Error('Unknown “has:” value “'+val+'”');return m}
   case'sev':case'level':case'severity':{const v=val.toLowerCase(),want=/^err/.test(v)||/^like/.test(v)?'Likely error':/^rev|^need/.test(v)?'Needs review':/^sug/.test(v)?'Suggestion':null;
     if(!want)throw new Error('Use sev:error, sev:review or sev:suggestion');return c=>c.findings.some(f=>f.sev===want)}
@@ -392,8 +392,8 @@ async function post(path,body,raw){
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
 function setLoaded(v){$('#topin').classList.toggle('loaded',v)}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#imgs'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#imgs').hidden=false;setLoaded(true)}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -430,17 +430,16 @@ function findingHTML(f){
 function closeHTML(cm,title,empty){
   if(!cm||!cm.items||!cm.items.length)return empty||'';
   return `<div class=matches><h4>${esc(title)}</h4>${cm.note?`<p class=mut><small>${esc(cm.note)}</small></p>`:''}${cm.items.map(m=>`<div class=match>${m.img?`<img src="${esc(m.img)}" loading=lazy alt="" onerror="this.remove()">`:''}<b><a href="${esc(m.url)}" target=_blank rel=noopener>${esc(m.name)}</a></b> <span class=mut>${esc(m.mana)} ${esc(m.type)}${m.of?' · '+m.score+'% similar · shares '+m.shared+' of '+m.of+' distinct words':' · closest type line'}</span><pre class=rules>${esc(m.text)||'(no rules text)'}</pre></div>`).join('')}<small>A close match is a wording comparison, not proof of an error or of copying.</small></div>`}
-function imgSrc(c){if(!showImgs)return null;return useRendered?(RIMG.has(c.idx)?'/api/mimg?card='+c.idx+'&v='+rv:null):(c.image?'/api/img?card='+c.idx:null)}
 function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
   return `<article><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
   ${c.ignored?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span></header>
-  ${imgSrc(c)?`<img class=cardimg src="${imgSrc(c)}" loading=lazy alt="${esc(c.name)}">`:`<pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}`}
+  <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
-  <div class=acts>${c.scryfall?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
+  <div class=acts>${c.scryfall&&!noScry?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
 }
 const lazyIO=new IntersectionObserver(es=>es.forEach(async e=>{
   if(!e.isIntersecting)return;const el=e.target;lazyIO.unobserve(el);
@@ -463,7 +462,7 @@ function sheetHTML(list){
     return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
 function fixCount(){return D?D.cards.reduce((n,c)=>n+c.findings.filter(f=>f.can_apply&&on[f.sev]).length,0):0}
 function updFix(){const b=$('#fixall'),n=fixCount();b.textContent='✓ Fix all fixable'+(n?' ('+n+')':'');b.disabled=!n;if(!n)b.title='Nothing can be fixed automatically with the current filters'}
-function draw(){updFix();
+function draw(){updFix();if(chartMode){drawCharts();return}
   const only=$('#onlyissues').checked;
   const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qfn||qfn(v.c))).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
@@ -472,7 +471,103 @@ function draw(){updFix();
   $('#cards').innerHTML=ebn+(list.length?nav(list.length)+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+nav(list.length)
     :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`);
   document.querySelectorAll('.lazy').forEach(el=>lazyIO.observe(el))}
-async function upload(f){if(!f)return;pg=0;resetImgs();render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
+/* ---------- graphical analysis ---------- */
+const CCOL={W:'#efe6c8',U:'#4a90d9',B:'#8b7d99',R:'#e3493b',G:'#4caf6b',M:'#e0b03a',C:'#9aa0a6'};
+const CNAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',M:'Multicolour',C:'Colourless'};
+const CORDER=['W','U','B','R','G','M','C'];
+const ccol=c=>{const s=qinfo(c).cols;return s.size===0?'C':s.size>1?'M':[...s][0]};
+const isLand=c=>/land/.test(qinfo(c).type);
+const ptype=c=>{const t=qinfo(c).type;return /land/.test(t)?'Land':/creature/.test(t)?'Creature':/planeswalker/.test(t)?'Planeswalker':/battle/.test(t)?'Battle':/instant/.test(t)?'Instant':/sorcery/.test(t)?'Sorcery':/artifact/.test(t)?'Artifact':/enchantment/.test(t)?'Enchantment':'Other'};
+const prarity=c=>{const r=(c.rarity||'').toLowerCase();return /mythic/.test(r)?'Mythic':/uncommon/.test(r)?'Uncommon':/rare/.test(r)?'Rare':/common/.test(r)?'Common':/special|bonus/.test(r)?'Special':'Unknown'};
+const RAROD=['Common','Uncommon','Rare','Mythic','Special','Unknown'];
+const noRem=c=>(qinfo(c).low||'').replace(/\([^)]*\)/g,' ');
+const SW=900,SH=440,ML=58,MR=20,MT=30,MB=64;
+function niceMax(v){if(v<=5)return 5;const p=Math.pow(10,Math.floor(Math.log10(v))),m=v/p;return(m<=1?1:m<=2?2:m<=5?5:10)*p}
+function grid(top,fmt){let g='';const ph=SH-MT-MB;for(let i=0;i<=5;i++){const v=top/5*i,y=MT+ph*(1-v/top);g+=`<line class="grid" x1="${ML}" x2="${SW-MR}" y1="${y}" y2="${y}"/><text class="tick" x="${ML-8}" y="${y+4}" text-anchor="end">${fmt?fmt(v):Math.round(v*10)/10}</text>`}return g}
+function legendHTML(keys,colors,names){return `<div class="legend">${keys.map(k=>`<span><i style="background:${colors[k]}"></i>${esc(names[k])}</span>`).join('')}</div>`}
+function stacked(cats,keys,colors,names,opt){opt=opt||{};
+  const tot=cats.map(c=>keys.reduce((a,k)=>a+(c.vals[k]||0),0)),top=niceMax(Math.max(1,...tot)),pw=SW-ML-MR,ph=SH-MT-MB,step=pw/cats.length,bw=Math.min(74,step*.66);
+  let g=(opt.defs?'<defs>'+opt.defs+'</defs>':'')+grid(top);
+  cats.forEach((c,i)=>{const x=ML+step*i+(step-bw)/2;let acc=0;
+    keys.forEach(k=>{const n=c.vals[k]||0;if(!n)return;const h=ph*n/top,y=MT+ph*(1-(acc+n)/top);acc+=n;
+      g+=`<rect class="seg" x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="${c.fill||colors[k]}"><title>${esc(c.label)} · ${esc(names[k])}: ${n}</title></rect>`});
+    g+=`<text class="tot" x="${x+bw/2}" y="${MT+ph*(1-tot[i]/top)-7}" text-anchor="middle">${tot[i]||''}</text><text class="xl" x="${x+bw/2}" y="${SH-MB+22}" text-anchor="middle">${esc(c.label)}</text>`;
+    if(c.sub)g+=`<text class="xs" x="${x+bw/2}" y="${SH-MB+39}" text-anchor="middle">${esc(c.sub)}</text>`});
+  if(opt.xlabel)g+=`<text class="axl" x="${ML+pw/2}" y="${SH-8}" text-anchor="middle">${esc(opt.xlabel)}</text>`;
+  g+=`<text class="axl" transform="translate(14 ${MT+ph/2}) rotate(-90)" text-anchor="middle">Number of cards</text>`;
+  return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+(opt.legend===false?'':legendHTML(keys,colors,names))}
+function hbars(items,note){const rh=30,top=12,lw=170,w=SW-lw-70,h=top*2+rh*items.length,mx=Math.max(1,...items.map(i=>i.n));
+  let g='';items.forEach((it,i)=>{const y=top+i*rh,bw=Math.max(2,w*it.n/mx);
+    g+=`<text class="xl" x="${lw-10}" y="${y+rh/2+4}" text-anchor="end">${esc(it.label)}</text><rect class="seg" x="${lw}" y="${y+4}" width="${bw}" height="${rh-9}" rx="4" fill="${it.color||'var(--brand)'}"><title>${esc(it.label)}: ${it.n} card${it.n==1?'':'s'}</title></rect><text class="tot" x="${lw+bw+8}" y="${y+rh/2+4}">${it.n}</text>`});
+  return `<svg class="chart" viewBox="0 0 ${SW} ${h}" role="img">${g}</svg>`+(note||'')}
+const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*100)/100:0;
+const note=t=>`<p class="chartnote">${t}</p>`;
+
+function chMvCol(cs){const L=cs.filter(c=>!isLand(c)),B=['0','1','2','3','4','5','6','7+'];
+  const cats=B.map(l=>({label:l,vals:{}}));L.forEach(c=>{const m=qinfo(c).mv,i=Math.min(7,Math.floor(m)),k=ccol(c);cats[i].vals[k]=(cats[i].vals[k]||0)+1});
+  return stacked(cats,CORDER,CCOL,CNAME,{xlabel:'Mana value'})+note(`${L.length} non-land cards · average mana value ${avg(L.map(c=>qinfo(c).mv))}`)}
+function chTypeCol(cs){const T=['Creature','Instant','Sorcery','Artifact','Enchantment','Planeswalker','Battle','Land','Other'],m={};
+  cs.forEach(c=>{const t=ptype(c),k=ccol(c);(m[t]=m[t]||{})[k]=((m[t]||{})[k]||0)+1});
+  return stacked(T.filter(t=>m[t]).map(t=>({label:t,vals:m[t]})),CORDER,CCOL,CNAME)+note('Each card counts once, under its main type (an artifact creature counts as a creature).')}
+function chMvRar(cs){const L=cs.filter(c=>!isLand(c)),K=['0–1','2','3','4','5','6+'],KC={'0–1':'#f6c5bf','2':'#f09a90','3':'#ea7466','4':'#e3493b','5':'#b8352b','6+':'#7d2019'},KN={};K.forEach(k=>KN[k]=k);
+  const bk=m=>m<=1?'0–1':m>=6?'6+':String(Math.floor(m)),by={};
+  L.forEach(c=>{const r=prarity(c);(by[r]=by[r]||[]).push(c)});
+  const cats=RAROD.filter(r=>by[r]).map(r=>{const v={};by[r].forEach(c=>{const k=bk(qinfo(c).mv);v[k]=(v[k]||0)+1});return{label:r,sub:'avg MV '+avg(by[r].map(c=>qinfo(c).mv)),vals:v}});
+  return stacked(cats,K,KC,KN,{xlabel:'Rarity'})+note(L.some(c=>prarity(c)==='Unknown')?'Cards with no rarity set in MSE are grouped as “Unknown”. Lands are left out.':'Lands are left out.')}
+const PAIRS=[['W','U','Azorius'],['U','B','Dimir'],['B','R','Rakdos'],['R','G','Gruul'],['G','W','Selesnya'],['W','B','Orzhov'],['U','R','Izzet'],['B','G','Golgari'],['R','W','Boros'],['G','U','Simic']];
+function chPairs(cs){const defs=PAIRS.map(p=>`<linearGradient id="gp-${p[0]}${p[1]}" x1="0" x2="1" y1="0" y2="0"><stop offset="50%" stop-color="${CCOL[p[0]]}"/><stop offset="50%" stop-color="${CCOL[p[1]]}"/></linearGradient>`).join('');
+  const two=cs.filter(c=>qinfo(c).cols.size===2),cats=PAIRS.map(p=>({label:p[0]+p[1],sub:p[2],fill:`url(#gp-${p[0]}${p[1]})`,vals:{n:two.filter(c=>{const s=qinfo(c).cols;return s.has(p[0])&&s.has(p[1])}).length}}));
+  const three=cs.filter(c=>qinfo(c).cols.size>2).length,mono=cs.filter(c=>qinfo(c).cols.size===1).length;
+  return stacked(cats,['n'],{n:'#e3493b'},{n:'Cards'},{defs,legend:false,xlabel:'Colour pair'})+note(`Cards that are exactly two colours. Not shown: ${mono} one-colour cards and ${three} cards with three or more colours.`)}
+function chSize(cs){const cr=cs.filter(c=>/creature/.test(qinfo(c).type)),N=8,cell={};let odd=0,n=0,mx=0;
+  cr.forEach(c=>{const p=parseFloat(c.power),t=parseFloat(c.toughness);if(isNaN(p)||isNaN(t)){odd++;return}const a=Math.min(N-1,Math.max(0,Math.round(p))),b=Math.min(N-1,Math.max(0,Math.round(t))),k=a+','+b;cell[k]=(cell[k]||0)+1;mx=Math.max(mx,cell[k]);n++});
+  const cw=64,ch=44,x0=110,y0=40,W=SW,H=y0+ch*N+70;let g='';
+  for(let b=0;b<N;b++){g+=`<text class="xl" x="${x0-14}" y="${y0+ch*b+ch/2+4}" text-anchor="end">${b===N-1?N-1+'+':b}</text>`;
+    for(let a=0;a<N;a++){const v=cell[a+','+b]||0,o=v?.18+.82*v/mx:.05;
+      g+=`<rect class="cell" x="${x0+cw*a+2}" y="${y0+ch*b+2}" width="${cw-4}" height="${ch-4}" rx="6" fill="#e3493b" fill-opacity="${o}"><title>${a===N-1?N-1+'+':a} power / ${b===N-1?N-1+'+':b} toughness: ${v}</title></rect>`+(v?`<text class="tot" x="${x0+cw*a+cw/2}" y="${y0+ch*b+ch/2+4}" text-anchor="middle">${v}</text>`:'')}}
+  for(let a=0;a<N;a++)g+=`<text class="xl" x="${x0+cw*a+cw/2}" y="${y0-12}" text-anchor="middle">${a===N-1?N-1+'+':a}</text>`;
+  g+=`<text class="axl" x="${x0+cw*N/2}" y="${H-24}" text-anchor="middle">Power →</text><text class="axl" transform="translate(24 ${y0+ch*N/2}) rotate(-90)" text-anchor="middle">Toughness ↓</text>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`+note(`${n} creatures with numbers for both power and toughness${odd?` · ${odd} more have * or no stats and aren’t shown`:''}. Darker squares mean more creatures.`)}
+const MECH=['flying','first strike','double strike','deathtouch','haste','hexproof','indestructible','lifelink','menace','reach','trample','vigilance','defender','flash','ward','prowess','cycling','kicker','equip','scry','surveil','mill','landfall','convoke','delve','flashback','morph','megamorph','embalm','eternalize','escape','evolve','exploit','fabricate','fear','intimidate','infect','undying','persist','proliferate','populate','explore','investigate','amass','afflict','annihilator','bestow','cascade','changeling','crew','dash','disturb','enrage','fight','foretell','hideaway','madness','mentor','mutate','ninjutsu','offspring','overload','partner','plot','protection','rebound','renown','riot','saddle','shroud','skulk','spectacle','storm','suspend','toxic','training','transform','unearth','unleash','vanishing','wither','blitz','casualty','connive','craft','daybound','nightbound','disguise','squad','backup','bargain','treasure','food','clue','blood','incubate','adapt','learn','support','manifest','goad','venture','discover','cloak','impending','gift','valiant','menace'];
+function chMech(cs){const cust=(D.summary.custom_keywords||[]).map(x=>x.toLowerCase()),seen=new Set(),rows=[];
+  [...cust,...MECH].forEach(k=>{if(seen.has(k))return;seen.add(k);const r=new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');const n=cs.filter(c=>r.test(noRem(c))).length;if(n)rows.push({label:k.replace(/^./,x=>x.toUpperCase()),n,color:cust.includes(k)?'#4a90d9':null})});
+  rows.sort((a,b)=>b.n-a.n||a.label.localeCompare(b.label));
+  if(!rows.length)return '<div class="empty">No keywords found in the rules text.</div>';
+  return hbars(rows.slice(0,18),note(`Number of cards using each keyword or mechanic (top ${Math.min(18,rows.length)}). Reminder text isn’t counted.${cust.length?' <span class="legend"><span><i style="background:#4a90d9"></i>Custom keyword from your set</span></span>':''}`))}
+const REM=[['Destroy',/\bdestroy (?:up to \w+ )?(?:another )?target\b/],['Exile',/\bexile (?:up to \w+ )?(?:another )?target (?:\w+ )*?(?:creature|artifact|enchantment|permanent|planeswalker|battle|nonland)/],
+  ['Damage',/\bdeals? (?:\d+|x|that much|twice x) damage to (?:any target|target (?:\w+ )*?(?:creature|planeswalker|battle|permanent)|up to)/],['−X/−X',/\bgets? -(?:\d+|x)\/-(?:\d+|x)/],
+  ['Edict',/(?:target (?:player|opponent)|each opponent|defending player) sacrifices?/],['Bounce',/\breturn (?:up to \w+ )?target (?:\w+ )*?(?:creature|permanent|nonland permanent)s? to (?:its|their) owner/],
+  ['Fight',/\bfights?\b/],['Sweeper',/\b(?:destroy|exile) all\b|damage to each creature|each creature gets -/]];
+function chRemoval(cs){const m={};let any=0;
+  cs.forEach(c=>{const t=noRem(c),tt=t.split(qinfo(c).nm||'\u0000').join('~');let hit=false;REM.forEach(r=>{if(r[1].test(t)||r[1].test(tt)){hit=true;const k=ccol(c);(m[r[0]]=m[r[0]]||{})[k]=((m[r[0]]||{})[k]||0)+1}});if(hit)any++});
+  const cats=REM.filter(r=>m[r[0]]).map(r=>({label:r[0],vals:m[r[0]]}));
+  if(!cats.length)return '<div class="empty">No removal effects found in the rules text.</div>';
+  return stacked(cats,CORDER,CCOL,CNAME,{xlabel:'Removal type'})+note(`${any} card${any==1?'':'s'} with removal. A card that does more than one thing counts under each type. Found by matching common wording, so unusual templating can be missed.`)}
+function chComplex(cs){const rar=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),words=c=>noRem(c).trim().split(/\s+/).filter(Boolean).length,mx=Math.max(1,...cs.map(words)),top=niceMax(mx);
+  const pw=SW-ML-MR,ph=SH-MT-MB,step=pw/rar.length;let g=grid(top);
+  rar.forEach((r,i)=>{const L=cs.filter(c=>prarity(c)===r),cx=ML+step*i+step/2,a=avg(L.map(words)),ya=MT+ph*(1-a/top);
+    L.forEach(c=>{const j=(((c.idx*47)%100)/100-.5)*Math.min(110,step*.7),y=MT+ph*(1-words(c)/top);
+      g+=`<circle class="dot" cx="${cx+j}" cy="${y}" r="6" fill="${CCOL[ccol(c)]}"><title>${esc(c.name)}: ${words(c)} words</title></circle>`});
+    g+=`<line class="avg" x1="${cx-step*.36}" x2="${cx+step*.36}" y1="${ya}" y2="${ya}"/><text class="tot" x="${cx+step*.36+6}" y="${ya+4}">avg ${a}</text><text class="xl" x="${cx}" y="${SH-MB+22}" text-anchor="middle">${r}</text><text class="xs" x="${cx}" y="${SH-MB+39}" text-anchor="middle">${L.length} cards</text>`});
+  g+=`<text class="axl" transform="translate(14 ${MT+ph/2}) rotate(-90)" text-anchor="middle">Words of rules text</text><text class="axl" x="${ML+pw/2}" y="${SH-8}" text-anchor="middle">Rarity</text>`;
+  return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+legendHTML(CORDER,CCOL,CNAME)+note('Each dot is a card. Complexity is measured as the number of words in the rules text, without reminder text. The line marks each rarity’s average.')}
+const CHARTS=[{id:'mvcol',title:'Mana Value Distribution by Colour',sub:'How many cards cost each amount of mana, split by colour.',draw:chMvCol},
+  {id:'typecol',title:'Card Type Distribution by Colour',sub:'How many cards of each type there are, split by colour.',draw:chTypeCol},
+  {id:'mvrar',title:'Mana Value by Rarity',sub:'Each rarity’s cards grouped by mana value, with the average mana value underneath.',draw:chMvRar},
+  {id:'pairs',title:'Colour Pair Distribution',sub:'How many cards belong to each two-colour combination.',draw:chPairs},
+  {id:'size',title:'Creature Size Distribution',sub:'Creatures laid out by power and toughness.',draw:chSize},
+  {id:'mech',title:'Mechanic Frequency',sub:'The keywords and mechanics your set uses most.',draw:chMech},
+  {id:'removal',title:'Removal Distribution',sub:'The kinds of removal in your set, split by colour.',draw:chRemoval},
+  {id:'complex',title:'Complexity vs. Rarity',sub:'How much rules text cards have at each rarity.',draw:chComplex}];
+let chartId='mvcol';
+function drawCharts(){
+  const cs=D.cards.filter(c=>!qfn||qfn(c)),ch=CHARTS.find(x=>x.id===chartId);
+  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
+  $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
+function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'▤ Back to cards':'📊 Graphs';
+  ['#filters','#sort','#collapse'].forEach(s=>$(s).hidden=on);if(!on&&D){$('#filters').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false}
+  if(D){if(on)drawCharts();else draw()}}
+async function upload(f){if(!f)return;pg=0;if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
 $('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};
 let dragN=0;
 addEventListener('dragenter',e=>{e.preventDefault();dragN++;$('#dropveil').hidden=false});
@@ -491,7 +586,7 @@ async function pollOracle(){
 pollOracle();
 $('#showpaste').onclick=()=>{const b=$('#pastebox');b.hidden=!b.hidden;if(!b.hidden)$('#ctext').focus()};
 $('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();showHero()};
-$('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;resetImgs();render(r)}};
+$('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;if(chartMode)setChart(false);render(r)}};
 document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.dataset.sev]=cb.checked;pg=0;draw()});
 $('#onlyissues').onchange=()=>{pg=0;draw()};
 
@@ -502,32 +597,8 @@ $('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D
   if(r.applied)toast('✓ '+r.applied+' fix'+(r.applied>1?'es':'')+' applied to your working copy','Remember to <b style="display:inline">download the corrected MSE file again</b> so your changes are saved. Your original file isn’t changed.'+(r.skipped?' '+r.skipped+' couldn’t be applied automatically.':''),true);
   else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
-function setImgs(on){showImgs=on;$('#imgs').classList.toggle('on',on);$('#imgs').textContent=on?'🖼 Show text':'🖼 Display images';if(D)draw()}
-function resetImgs(){RIMG=new Set();useRendered=false;if(showImgs)setImgs(false)}
-async function mseGet(){try{return await (await fetch('/api/mse')).json()}catch(_){return null}}
-function artFallback(){if(D&&D.images){useRendered=false;setImgs(true);return true}return false}
-async function mseTick(){
-  const s=await mseGet();if(!s)return;
-  if(s.state==='running'){toast('Drawing your cards with Magic Set Editor…',esc(s.message),false);setTimeout(mseTick,900);return}
-  if(s.state==='done'){RIMG=new Set(s.have);rv++;useRendered=true;setImgs(true);toast('Cards drawn by Magic Set Editor','Showing '+s.done+' of '+s.total+' cards exactly as MSE draws them.',false);setTimeout(()=>{$('#toast').hidden=true},2800);return}
-  const art=artFallback();
-  toast('Magic Set Editor couldn’t draw the cards',esc(s.message||'')+(s.detail?'<br><small>'+esc(s.detail)+'</small>':'')+(art?'<br>Showing the art stored in the file instead.':''),false)}
-async function mseStart(){const r=await post('/api/mse',{action:'start'});if(r)mseTick()}
-$('#imgs').onclick=async()=>{
-  if(showImgs){setImgs(false);return}
-  if(!D)return;
-  if(D.mode==='text'){toast('Nothing to draw','Pasted rules text has no card frame. Open a .mse-set file to see its cards drawn.',false);return}
-  const s=await mseGet();
-  if(s&&s.state==='done'&&!s.stale){RIMG=new Set(s.have);useRendered=true;setImgs(true);return}
-  if(s&&s.state==='running'){mseTick();return}
-  if(!s||!s.found){$('#mseerr').hidden=true;$('#msemodal').hidden=false;$('#msepath').focus();return}
-  mseStart()};
-$('#msex').onclick=()=>{$('#msemodal').hidden=true};
-$('#mseart').onclick=()=>{$('#msemodal').hidden=true;if(!artFallback())toast('No stored art','This file has no pictures stored in it, so there is nothing to show without Magic Set Editor.',false)};
-$('#msego').onclick=async()=>{const e=$('#mseerr');e.hidden=true;
-  try{const r=await fetch('/api/mse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'setpath',path:$('#msepath').value})});const j=await r.json();
-    if(j.error){e.textContent=j.error;e.hidden=false;return}
-    $('#msemodal').hidden=true;mseStart()}catch(x){e.textContent=String(x);e.hidden=false}};
+$('#graphs').onclick=()=>setChart(!chartMode);
+
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
 $('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
 $('#q').oninput=e=>{setQuery(e.target.value);pg=0;draw()};
@@ -589,11 +660,6 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(PAGE.encode("utf-8"), "text/html; charset=utf-8")
         if u.path == "/api/shortcut":
             return self.js({"ask": shortcut.should_ask()})
-        if u.path == "/api/mse":
-            return self.js(mse_render.status())
-        if u.path == "/api/mimg":
-            b = mse_render.image(int(urllib.parse.parse_qs(u.query).get("card", ["-1"])[0]))
-            return self.send(b, "image/png") if b else self.send(b"No image", "text/plain", 404)
         if u.path == "/api/ping":
             HEARTBEAT["last"] = time.time()
             return self.js({"ok": True})
@@ -614,11 +680,6 @@ class Handler(BaseHTTPRequestHandler):
                 if u.path == "/api/export" and ST["last"]:
                     b, t, n = export(urllib.parse.parse_qs(u.query).get("fmt", ["csv"])[0])
                     return self.send(b, t, name=n)
-                if u.path == "/api/img" and ST["kind"]:
-                    r = card_image(int(urllib.parse.parse_qs(u.query).get("card", ["-1"])[0]))
-                    if r:
-                        return self.send(r[0], r[1])
-                    return self.send(b"No image", "text/plain", 404)
                 if u.path == "/api/download" and ST["kind"]:
                     b, t, n = corrected_download()
                     return self.send(b, t, name=n)
@@ -654,14 +715,6 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Upload a file or paste a card first.")
                 if u.path == "/api/recheck":
                     return self.js(analyze())
-                if u.path == "/api/mse":
-                    if body.get("action") == "setpath":
-                        return self.js({"path": mse_render.save_path(body.get("path"))})
-                    if ST["kind"] != "set":
-                        raise ValueError("Drawing cards needs a .mse-set file. Pasted text has no card frame to draw.")
-                    n = len(analyze()["cards"])
-                    mse_render.start(corrected_download()[0], n)
-                    return self.js({"ok": True})
                 if u.path == "/api/applyall":
                     applied, skipped = apply_all(set(body.get("sevs") or []))
                     return self.js({"result": analyze(), "applied": applied, "skipped": skipped})
