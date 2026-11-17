@@ -9,7 +9,7 @@ from .mse_parser import fval, make_cards, nk, parse_mse, render_field
 from .state import ST
 from .context import build_ctx, mk
 from .scryfall_data import ORACLE
-from .card_checks import check_card, check_flavor, check_structure
+from .card_checks import check_artist, check_card, check_flavor, check_structure
 from .design_risk import check_design, similar_query
 from .set_checks import check_set
 from .scryfall_links import card_query
@@ -67,7 +67,7 @@ def analyze():
         except Exception:
             pass
         try:
-            fl[c["idx"]] += check_flavor(c, ctx)
+            fl[c["idx"]] += (check_artist(c) if ST["kind"] != "text" else []) + check_flavor(c, ctx)
         except Exception as e:
             fl[c["idx"]].append(mk("Needs review", "Checker", "checker-error", c["name"], c["name"],
                                    "The flavor-text checks hit an unexpected problem on this card (%s). Please report it." % e))
