@@ -40,13 +40,19 @@ def available():
     return os.name == "nt" and getattr(sys, "frozen", False) and state.SHORTCUT_ENABLED
 
 
+def _exists():
+    d = _desktop_dir()
+    return any(os.path.exists(os.path.join(d, n)) for n in ("MSECheck.lnk", "MSECheck.url"))
+
+
 def should_ask():
+    """Ask unless the person said 'never' or the shortcut is really on the Desktop (a stale 'yes' note doesn't count)."""
     if not available():
         return False
     try:
-        if os.path.exists(_marker()) and open(_marker()).read().strip() in ("yes", "never"):
+        if os.path.exists(_marker()) and open(_marker()).read().strip() == "never":
             return False
-        if os.path.exists(os.path.join(_desktop_dir(), "MSECheck.lnk")):
+        if _exists():
             return False
     except Exception:
         pass

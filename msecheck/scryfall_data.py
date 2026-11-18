@@ -128,7 +128,7 @@ def _commit_oracle(b):
         KEYWORDS.update(k for k in kws if isinstance(k, str) and re.fullmatch(r"[a-z][a-z' \-]{2,}", k.strip()))   # never an empty/odd keyword
         TYPES.update(subtypes)
         VOCAB.update(w for w, t in b["vocab"].items() if b["df"][t] >= 2 and re.fullmatch(r"[a-z]{3,}", w))
-        ORACLE.update(b, cache={}, mcache={}, state="ready",
+        ORACLE.update(b, cache={}, mcache={}, face_names=None, state="ready",
                       message="Loaded %s unique cards" % format(b["doc_count"], ","))
     return b["doc_count"]
 

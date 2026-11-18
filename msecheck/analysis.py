@@ -127,7 +127,18 @@ def analyze():
                           "ignored": n_ign, "scryfall": qurl, "terms": qterms, "has_text": has_text, "filled": c["filled"],
                           "text_fields": [f["key"] for f in c["rules"] if f["plain"].strip()]})
     d = get_dict()
+    names = ORACLE.get("name_idx") or {}
+    overlaps = []
+    if names:
+        faces = ORACLE.get("face_names")
+        if faces is None:
+            faces = ORACLE["face_names"] = {f.strip() for k in names for f in k.split(" // ")}
+        for oc in out_cards:
+            n, ty = oc["name"].strip().lower(), oc["type"].lower()
+            if n and not re.search(r"token|emblem|basic", ty) and (n in names or n in faces) and oc["name"] not in overlaps:
+                overlaps.append(oc["name"])
     result = {
+        "name_overlaps": overlaps, "oracle_names": bool(names),
         "file": ST["filename"], "mode": ST["kind"], "version": VERSION, "edited": ST["edited"], "oracle_cards": len(ORACLE["texts"] or []), "similarity_ready": bool(ORACLE.get("records")), "oracle_state": ORACLE["state"],
         "summary": {"cards": len(cards), "clean": clean, "no_text": no_text, "with_findings": len(cards) - clean - no_text,
                     "severity": {k: sev_count.get(k, 0) for k in SEV_ORDER}, "total": sum(sev_count.values()),

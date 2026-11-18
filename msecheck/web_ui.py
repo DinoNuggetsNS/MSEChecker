@@ -164,8 +164,8 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
-.rarwrap{position:relative;margin-left:auto}
-.rarbtn{font-size:12px;padding:.3rem .6rem}.rarbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
+.rarwrap{position:relative;flex:1 1 128px;min-width:128px}.rarwrap .rarbtn{width:100%;justify-content:center}.filters{margin-right:calc(-.7rem + .3rem)}.short{text-align:center;margin:.6rem 0 0}
+.rarbtn{font-size:13px;padding:.38rem .5rem}.rarbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
 .rarn{background:#e8b93a;color:#2a1c00;border-radius:99px;font-size:11px;font-weight:750;padding:0 .4rem;line-height:1.5}
 .rarmenu{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
 .raropt{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:550}.raropt:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
@@ -173,13 +173,13 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
 .raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
-.healthbtn{font-size:12px;padding:.3rem .7rem;border-color:transparent;font-weight:650;color:#2a1c00;background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);box-shadow:0 3px 12px rgba(214,163,40,.35)}
+.healthbtn{border-color:transparent;font-weight:650;color:#2a1c00;background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);box-shadow:0 3px 12px rgba(214,163,40,.35)}
 .healthbtn:hover{filter:brightness(1.07);background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);border-color:transparent}
 .hcard{background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;width:min(640px,100%);max-height:88vh;overflow:auto;padding:1.6rem 1.6rem 1.2rem;position:relative;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2)}
 .hhead{display:flex;gap:1.1rem;align-items:center;margin-bottom:1rem}.hhead h3{margin:0;font-size:1.3rem;letter-spacing:-.025em}.hhead p{margin:.2rem 0 0;color:var(--mut);font-size:13px}
 .hscore{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:1.6rem;font-weight:750;color:var(--fg)}
 .hrow{display:grid;grid-template-columns:22px 1fr;gap:.2rem .6rem;padding:.6rem 0;border-top:1px solid var(--bd)}.hrow b{font-size:14px}.hrow span{color:var(--mut);font-size:13px;grid-column:2}
-.hdot{width:12px;height:12px;border-radius:50%;margin-top:4px}.hdot.hg{background:#5fd68a}.hdot.hw{background:#e8b93a}.hdot.hb{background:#e3493b}
+.hdot{width:12px;height:12px;border-radius:50%;margin-top:4px}.hdot.hn{background:#8a8f98}.hdot.hg{background:#5fd68a}.hdot.hw{background:#e8b93a}.hdot.hb{background:#e3493b}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
 .graphbtn:hover{filter:brightness(1.08);background:linear-gradient(135deg,#3b6fd4,#7c4fd0);border-color:transparent}.graphbtn.on{background:var(--glass);color:var(--fg);border-color:var(--bd2);box-shadow:none}
 .chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
@@ -259,6 +259,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <div><h4>Scryfall data</h4><b id=heroNum>…</b><span id=heroOracle>unique cards for closest-match references</span></div>
     <div><h4>Community</h4><span class=comm>Looking for additional feedback and the potential for people to play your custom cards? Check out the <b>MSEM</b> and <b>Revolution</b> Discord communities and connect with other custom Magic designers!</span></div>
   </div>
+  <p class=short><button id=mkshort class=mlink type=button hidden>🖥 Add a Desktop shortcut</button></p>
 </section>
 <section id=dash hidden><div id=summary class=glass></div><div id=cards></div><div id=charts hidden></div></section>
 </main>
@@ -498,6 +499,7 @@ const CCOL={W:'#efe6c8',U:'#4a90d9',B:'#8b7d99',R:'#e3493b',G:'#4caf6b',M:'#e0b0
 const CNAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',M:'Multicolour',C:'Colourless'};
 const CORDER=['W','U','B','R','G','M','C'];
 const ccol=c=>{const s=qinfo(c).cols;return s.size===0?'C':s.size>1?'M':[...s][0]};
+const isBasic=c=>/basic/.test(qinfo(c).type)&&/land/.test(qinfo(c).type);
 const isLand=c=>/land/.test(qinfo(c).type);
 const ptype=c=>{const t=qinfo(c).type;return /land/.test(t)?'Land':/creature/.test(t)?'Creature':/planeswalker/.test(t)?'Planeswalker':/battle/.test(t)?'Battle':/instant/.test(t)?'Instant':/sorcery/.test(t)?'Sorcery':/artifact/.test(t)?'Artifact':/enchantment/.test(t)?'Enchantment':'Other'};
 const prarity=c=>{const r=(c.rarity||'').toLowerCase();return /mythic/.test(r)?'Mythic':/uncommon/.test(r)?'Uncommon':/rare/.test(r)?'Rare':/special|bonus/.test(r)?'Special':r&&!/common/.test(r)?'Unknown':'Common'};
@@ -585,7 +587,7 @@ const CHARTS=[{id:'mvcol',title:'Mana Value Distribution by Colour',sub:'How man
   {id:'complex',title:'Complexity vs. Rarity',sub:'How much rules text cards have at each rarity.',draw:chComplex}];
 let chartId='mvcol';
 function drawCharts(){
-  const cs=D.cards.filter(c=>(!qfn||qfn(c))&&rfOk(c)),ch=CHARTS.find(x=>x.id===chartId);
+  const cs=D.cards.filter(c=>(!qfn||qfn(c))&&rfOk(c)&&!isBasic(c)),ch=CHARTS.find(x=>x.id===chartId);
   $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'▤ Back to cards':'📊 Graphs';
@@ -645,7 +647,7 @@ $('#rarmenu').addEventListener('click',e=>{if(e.target.id==='rarclr'){RF.clear()
 document.addEventListener('click',()=>rarOpen(false));document.addEventListener('keydown',e=>{if(e.key==='Escape')rarOpen(false)});
 /* ---------- set health report ---------- */
 function healthItems(){
-  const all=D.cards,cs=all.filter(c=>!isLand(c)),n=cs.length||1,I=[],add=(st,t,d)=>I.push({st,t,d});
+  const all=D.cards.filter(c=>!isBasic(c)),cs=all.filter(c=>!isLand(c)),n=cs.length||1,I=[],add=(st,t,d)=>I.push({st,t,d});
   const pc=x=>Math.round(100*x/n);
   const sev=D.summary.severity||{},err=sev['Likely error']||0;
   add(err?(err>10?'bad':'warn'):'good','Wording and rules errors',err?`${err} likely error${err>1?'s':''} still flagged. Use “Fix all fixable” or edit them in MSE.`:'No likely errors flagged.');
@@ -665,7 +667,9 @@ function healthItems(){
   const cx=cs.filter(c=>prarity(c)==='Common'&&noRem(c).split(/\s+/).filter(Boolean).length>35);
   add(cx.length>com*.15&&cx.length>2?'warn':'good','Common complexity',cx.length?`${cx.length} common${cx.length>1?'s have':' has'} long rules text (over 35 words): ${cx.slice(0,3).map(c=>c.name).join(', ')}${cx.length>3?'…':''}. Commons should be simple to read.`:'Commons have short, readable rules text.');
   const seen={},dup=[];all.forEach(c=>{const k=(c.name||'').trim().toLowerCase();if(!k)return;const ty=qinfo(c).type||'';if(/token|emblem|basic/.test(ty)||(!(c.cost||'').trim()&&!/land/.test(ty)&&new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(ty)))return;if(seen[k])dup.push(c.name);seen[k]=1});
-  add(dup.length?'bad':'good','Duplicate names',dup.length?`These names appear more than once: ${[...new Set(dup)].slice(0,5).join(', ')}.`:'Every card has a unique name.');
+  const ov=D.name_overlaps||[];
+  if(D.oracle_names)add(dup.length||ov.length?'bad':'good','Duplicate names',[dup.length?`Used more than once in your set: ${[...new Set(dup)].slice(0,5).join(', ')}.`:'',ov.length?`Same name as a real Magic card: ${ov.slice(0,6).join(', ')}${ov.length>6?` and ${ov.length-6} more`:''}.`:''].filter(Boolean).join(' ')||'Every name is unique and none match a real Magic card.');
+  else add(dup.length?'bad':'na','Duplicate names',(dup.length?`Used more than once in your set: ${[...new Set(dup)].slice(0,5).join(', ')}. `:'No repeats inside your set. ')+'Real Magic card names weren’t checked because the Scryfall data isn’t loaded.');
     return I}
 function showHealth(){
   if(!D)return;const I=healthItems(),score=Math.max(0,100-I.reduce((s,i)=>s+(i.st==='bad'?15:i.st==='warn'?4:0),0)),col=score>=85?'#5fd68a':score>=65?'#e8b93a':'#e3493b';
@@ -700,10 +704,11 @@ document.addEventListener('click',async e=>{
 /* Desktop shortcut question (Windows app only) */
 (async function(){
   let a;try{a=await (await fetch('/api/shortcut')).json()}catch(_){return}
-  if(!a.ask)return;
+  if(!a.ask&&!a.available)return;
   const m=$('#modal'),card=$('#mcard');$('#mlogo').src=$('#herologo').src;
-  const close=()=>{m.hidden=true};
-  setTimeout(()=>{m.hidden=false;$('#madd').focus()},700);
+  const close=()=>{m.hidden=true},open=()=>{m.hidden=false;$('#madd').focus()};
+  $('#mkshort').hidden=false;$('#mkshort').onclick=()=>{$('#mtitle').textContent='Add MSECheck to your Desktop?';$('#mtext').textContent='Get one-click access. A shortcut will appear on your Desktop so you can open MSECheck like any other app.';document.querySelector('.mbtns').hidden=false;$('#mnever').hidden=false;card.classList.remove('ok');open()};
+  if(a.ask)setTimeout(open,700);
   $('#mnot').onclick=close;
   $('#mnever').onclick=async()=>{close();try{await post('/api/shortcut',{action:'never'})}catch(_){}};
   $('#madd').onclick=async()=>{const b=$('#madd');b.disabled=true;b.textContent='Adding…';
@@ -736,7 +741,7 @@ class Handler(BaseHTTPRequestHandler):
         if u.path == "/":
             return self.send(PAGE.encode("utf-8"), "text/html; charset=utf-8")
         if u.path == "/api/shortcut":
-            return self.js({"ask": shortcut.should_ask()})
+            return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
         if u.path == "/api/ping":
             HEARTBEAT["last"] = time.time()
             return self.js({"ok": True})
