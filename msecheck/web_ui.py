@@ -186,6 +186,9 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .chartsel{font-size:1.05rem;font-weight:650;padding:.55rem 1rem;border-radius:12px;min-width:min(380px,100%)}.chartsub{color:var(--mut);margin:.8rem 0 .4rem}
 .chart{width:100%;height:auto;display:block}.chart .grid{stroke:var(--bd);stroke-width:1}.chart .tick,.chart .xl,.chart .xs,.chart .axl{fill:var(--mut);font-size:12.5px}.chart .xl{fill:var(--fg);font-size:13px;font-weight:550}.chart .axl{font-size:12px;letter-spacing:.04em}
 .chart .tot{fill:var(--fg);font-size:12.5px;font-weight:650}.chart .seg{stroke:rgba(0,0,0,.28);stroke-width:.6}.chart .seg:hover,.chart .dot:hover{filter:brightness(1.18)}
+.ctip{position:fixed;z-index:200;pointer-events:none;padding:.4rem .7rem;border-radius:10px;font-size:12.5px;line-height:1.35;background:color-mix(in srgb,var(--bg) 92%,var(--fg));border:1px solid var(--bd2);box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:260px}.ctip b{display:block;font-size:13.5px}
+.chart .seg.rr{stroke:color-mix(in srgb,var(--fg) 38%,transparent);stroke-width:1}
+.chart .dot{cursor:pointer;transition:r .12s}.chart .dot:hover{r:9;stroke:var(--fg)}
 .chart .dot{stroke:rgba(0,0,0,.4);stroke-width:1;opacity:.92}.chart .avg{stroke:var(--fg);stroke-width:2;stroke-dasharray:5 4}.chart .cell:hover{stroke:var(--fg);stroke-width:1.5}
 .legend{display:flex;gap:.4rem 1.1rem;flex-wrap:wrap;margin:.4rem 0 0;font-size:13px;color:var(--mut)}.legend span{display:inline-flex;align-items:center;gap:.4rem}.legend i{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid var(--bd2)}
 .chartnote{color:var(--mut);font-size:13px;margin:.8rem 0 0}
@@ -498,6 +501,7 @@ const ccol=c=>{const s=qinfo(c).cols;return s.size===0?'C':s.size>1?'M':[...s][0
 const isLand=c=>/land/.test(qinfo(c).type);
 const ptype=c=>{const t=qinfo(c).type;return /land/.test(t)?'Land':/creature/.test(t)?'Creature':/planeswalker/.test(t)?'Planeswalker':/battle/.test(t)?'Battle':/instant/.test(t)?'Instant':/sorcery/.test(t)?'Sorcery':/artifact/.test(t)?'Artifact':/enchantment/.test(t)?'Enchantment':'Other'};
 const prarity=c=>{const r=(c.rarity||'').toLowerCase();return /mythic/.test(r)?'Mythic':/uncommon/.test(r)?'Uncommon':/rare/.test(r)?'Rare':/special|bonus/.test(r)?'Special':r&&!/common/.test(r)?'Unknown':'Common'};
+const RCOL={Common:'#2b2b2e',Uncommon:'#c4ccd6',Rare:'#e8b93a',Mythic:'#ee6a2c',Special:'#b483d8',Unknown:'#b483d8'},RNAME={Common:'Common',Uncommon:'Uncommon',Rare:'Rare',Mythic:'Mythic rare',Special:'Other',Unknown:'Other'};
 const RAROD=['Common','Uncommon','Rare','Mythic','Special','Unknown'];
 const noRem=c=>(qinfo(c).low||'').replace(/\([^)]*\)/g,' ');
 const SW=900,SH=440,ML=58,MR=20,MT=30,MB=64;
@@ -509,7 +513,7 @@ function stacked(cats,keys,colors,names,opt){opt=opt||{};
   let g=(opt.defs?'<defs>'+opt.defs+'</defs>':'')+grid(top);
   cats.forEach((c,i)=>{const x=ML+step*i+(step-bw)/2;let acc=0;
     keys.forEach(k=>{const n=c.vals[k]||0;if(!n)return;const h=ph*n/top,y=MT+ph*(1-(acc+n)/top);acc+=n;
-      g+=`<rect class="seg" x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="${c.fill||colors[k]}"><title>${esc(c.label)} · ${esc(names[k])}: ${n}</title></rect>`});
+      g+=`<rect class="seg${opt.outline?' rr':''}" x="${x}" y="${y}" width="${bw}" height="${h}" rx="3" fill="${c.fill||colors[k]}"${opt.op?` fill-opacity="${opt.op[k]}"`:''}><title>${esc(c.label)} · ${esc(names[k])}: ${n}</title></rect>`});
     g+=`<text class="tot" x="${x+bw/2}" y="${MT+ph*(1-tot[i]/top)-7}" text-anchor="middle">${tot[i]||''}</text><text class="xl" x="${x+bw/2}" y="${SH-MB+22}" text-anchor="middle">${esc(c.label)}</text>`;
     if(c.sub)g+=`<text class="xs" x="${x+bw/2}" y="${SH-MB+39}" text-anchor="middle">${esc(c.sub)}</text>`});
   if(opt.xlabel)g+=`<text class="axl" x="${ML+pw/2}" y="${SH-8}" text-anchor="middle">${esc(opt.xlabel)}</text>`;
@@ -529,10 +533,11 @@ function chTypeCol(cs){const T=['Creature','Instant','Sorcery','Artifact','Encha
   cs.forEach(c=>{const t=ptype(c),k=ccol(c);(m[t]=m[t]||{})[k]=((m[t]||{})[k]||0)+1});
   return stacked(T.filter(t=>m[t]).map(t=>({label:t,vals:m[t]})),CORDER,CCOL,CNAME)+note('Each card counts once, under its main type (an artifact creature counts as a creature).')}
 function chMvRar(cs){const L=cs.filter(c=>!isLand(c)),K=['0–1','2','3','4','5','6+'],KC={'0–1':'#f6c5bf','2':'#f09a90','3':'#ea7466','4':'#e3493b','5':'#b8352b','6+':'#7d2019'},KN={};K.forEach(k=>KN[k]=k);
+  const OP={'0–1':.38,'2':.5,'3':.62,'4':.74,'5':.87,'6+':1};K.forEach(k=>KC[k]='rgba(150,155,165,'+OP[k]+')');
   const bk=m=>m<=1?'0–1':m>=6?'6+':String(Math.floor(m)),by={};
   L.forEach(c=>{const r=prarity(c);(by[r]=by[r]||[]).push(c)});
-  const cats=RAROD.filter(r=>by[r]).map(r=>{const v={};by[r].forEach(c=>{const k=bk(qinfo(c).mv);v[k]=(v[k]||0)+1});return{label:r,sub:'avg MV '+avg(by[r].map(c=>qinfo(c).mv)),vals:v}});
-  return stacked(cats,K,KC,KN,{xlabel:'Rarity'})+note(L.some(c=>prarity(c)==='Unknown')?'Cards with no rarity set in MSE are grouped as “Unknown”. Lands are left out.':'Lands are left out.')}
+  const cats=RAROD.filter(r=>by[r]).map(r=>{const v={};by[r].forEach(c=>{const k=bk(qinfo(c).mv);v[k]=(v[k]||0)+1});return{label:RNAME[r]||r,fill:RCOL[r],sub:'avg MV '+avg(by[r].map(c=>qinfo(c).mv)),vals:v}});
+  return stacked(cats,K,KC,KN,{xlabel:'Rarity',op:OP,outline:true})+note('Each column uses its rarity’s colour; darker shades mean higher mana value. Lands are left out.')}
 const PAIRS=[['W','U','Azorius'],['U','B','Dimir'],['B','R','Rakdos'],['R','G','Gruul'],['G','W','Selesnya'],['W','B','Orzhov'],['U','R','Izzet'],['B','G','Golgari'],['R','W','Boros'],['G','U','Simic']];
 function chPairs(cs){const defs=PAIRS.map(p=>`<linearGradient id="gp-${p[0]}${p[1]}" x1="0" x2="1" y1="0" y2="0"><stop offset="50%" stop-color="${CCOL[p[0]]}"/><stop offset="50%" stop-color="${CCOL[p[1]]}"/></linearGradient>`).join('');
   const two=cs.filter(c=>qinfo(c).cols.size===2),cats=PAIRS.map(p=>({label:p[0]+p[1],sub:p[2],fill:`url(#gp-${p[0]}${p[1]})`,vals:{n:two.filter(c=>{const s=qinfo(c).cols;return s.has(p[0])&&s.has(p[1])}).length}}));
@@ -566,10 +571,10 @@ function chComplex(cs){const rar=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),wor
   const pw=SW-ML-MR,ph=SH-MT-MB,step=pw/rar.length;let g=grid(top);
   rar.forEach((r,i)=>{const L=cs.filter(c=>prarity(c)===r),cx=ML+step*i+step/2,a=avg(L.map(words)),ya=MT+ph*(1-a/top);
     L.forEach(c=>{const j=(((c.idx*47)%100)/100-.5)*Math.min(110,step*.7),y=MT+ph*(1-words(c)/top);
-      g+=`<circle class="dot" cx="${cx+j}" cy="${y}" r="6" fill="${CCOL[ccol(c)]}"><title>${esc(c.name)}: ${words(c)} words</title></circle>`});
+      g+=`<circle class="dot" cx="${cx+j}" cy="${y}" r="6" fill="${CCOL[ccol(c)]}" data-tip="${esc(c.name)}"></circle>`});
     g+=`<line class="avg" x1="${cx-step*.36}" x2="${cx+step*.36}" y1="${ya}" y2="${ya}"/><text class="tot" x="${cx+step*.36+6}" y="${ya+4}">avg ${a}</text><text class="xl" x="${cx}" y="${SH-MB+22}" text-anchor="middle">${r}</text><text class="xs" x="${cx}" y="${SH-MB+39}" text-anchor="middle">${L.length} cards</text>`});
   g+=`<text class="axl" transform="translate(14 ${MT+ph/2}) rotate(-90)" text-anchor="middle">Words of rules text</text><text class="axl" x="${ML+pw/2}" y="${SH-8}" text-anchor="middle">Rarity</text>`;
-  return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+legendHTML(CORDER,CCOL,CNAME)+note('Each dot is a card. Complexity is measured as the number of words in the rules text, without reminder text. The line marks each rarity’s average.')}
+  return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+legendHTML(CORDER,CCOL,CNAME)+note('Each dot is a card; hover a dot to see its name. Complexity is measured as the number of words in the rules text, without reminder text. The line marks each rarity’s average.')}
 const CHARTS=[{id:'mvcol',title:'Mana Value Distribution by Colour',sub:'How many cards cost each amount of mana, split by colour.',draw:chMvCol},
   {id:'typecol',title:'Card Type Distribution by Colour',sub:'How many cards of each type there are, split by colour.',draw:chTypeCol},
   {id:'mvrar',title:'Mana Value by Rarity',sub:'Each rarity’s cards grouped by mana value, with the average mana value underneath.',draw:chMvRar},
@@ -618,8 +623,14 @@ $('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D
 $('#collapse').onclick=()=>setCompact(!compact);
 $('#graphs').onclick=()=>setChart(!chartMode);
 
+
+/* chart dot hover label */
+(()=>{let tip=null;const hide=()=>{if(tip){tip.remove();tip=null}},place=e=>{if(!tip)return;const w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.min(innerWidth-w-8,e.clientX+14)+'px';tip.style.top=(e.clientY-h-12<4?e.clientY+18:e.clientY-h-12)+'px'};
+  document.addEventListener('mouseover',e=>{const d=e.target.closest&&e.target.closest('.chart [data-tip]');if(!d){hide();return}
+    hide();tip=document.createElement('div');tip.className='ctip';tip.innerHTML='<b>'+esc(d.dataset.tip)+'</b>';document.body.appendChild(tip);place(e)});
+  document.addEventListener('mousemove',place);document.addEventListener('scroll',hide,true)})();
 /* ---------- rarity filter ---------- */
-const RFS=[['Common','Common','#2b2b2e'],['Uncommon','Uncommon','#c4ccd6'],['Rare','Rare','#e8b93a'],['Mythic','Mythic rare','#ee6a2c'],['Other','Other','#b483d8']];
+const RFS=[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic rare',RCOL.Mythic],['Other','Other',RCOL.Special]];
 let RF=new Set();
 const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r};
 const rfOk=c=>!RF.size||RF.has(rkey(c));
