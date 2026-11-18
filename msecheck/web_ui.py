@@ -38,12 +38,12 @@ small{color:var(--mut)}.mut{color:var(--mut)}
 ::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:9px;border:3px solid transparent;background-clip:content-box}
 /* header */
 header.top{position:sticky;top:0;z-index:50;background:var(--head);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border-bottom:1px solid var(--bd)}
-.topin{max-width:1180px;margin:auto;padding:.6rem 1.2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.topin{max-width:1180px;margin:auto;padding:.6rem 1.2rem;display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:.6rem;color:var(--fg);font-weight:650;font-size:17px;letter-spacing:-.02em;text-decoration:none!important}
 .brand img{height:32px;width:auto;display:block}
 .pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;border:1px solid var(--bd);color:var(--mut);background:var(--glass2)}
-.filters{display:flex;gap:.4rem;flex-wrap:wrap;margin-left:.4rem}
-.chip{white-space:nowrap;display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;padding:.32rem .8rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass2);font-size:13px;font-weight:550;transition:.15s;color:var(--mut)}
+.filters{display:flex;gap:.3rem;flex-wrap:wrap;margin-left:.2rem}
+.chip{white-space:nowrap;display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;padding:.3rem .56rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass2);font-size:12.5px;font-weight:550;transition:.15s;color:var(--mut)}
 .chip input{display:none}.chip i{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.9}
 .chip b{font-weight:650;font-variant-numeric:tabular-nums;color:var(--fg)}
 .chip:hover{border-color:var(--bd2)}
@@ -164,6 +164,15 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
+.rarwrap{position:relative;margin-left:auto}
+.rarbtn{font-size:12px;padding:.3rem .6rem}.rarbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
+.rarn{background:#e8b93a;color:#2a1c00;border-radius:99px;font-size:11px;font-weight:750;padding:0 .4rem;line-height:1.5}
+.rarmenu{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
+.raropt{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:550}.raropt:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
+.raropt input{accent-color:var(--brand);width:15px;height:15px;margin:0}
+.raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
+.raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
+.rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
 .healthbtn{font-size:12px;padding:.3rem .7rem;border-color:transparent;font-weight:650;color:#2a1c00;background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);box-shadow:0 3px 12px rgba(214,163,40,.35)}
 .healthbtn:hover{filter:brightness(1.07);background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);border-color:transparent}
 .hcard{background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;width:min(640px,100%);max-height:88vh;overflow:auto;padding:1.6rem 1.6rem 1.2rem;position:relative;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2)}
@@ -201,6 +210,8 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <label class="chip g" title="Hide the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Remove Scryfall comparisons</label>
     <button id=fixall class=fixbtn type=button title="Apply every automatic fix to your working copy">✓ Fix all fixable</button>
   </div>
+  <div id=rarwrap class=rarwrap hidden><button id=rarbtn class=rarbtn type=button aria-haspopup=true aria-expanded=false title="Show only cards of the rarities you tick">◆ Sort by rarity <span id=rarn class=rarn hidden></span> ▾</button>
+    <div id=rarmenu class="glass rarmenu" hidden role=menu></div></div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards for Magic cards… e.g. o:creature  t:elf  c:r  mv&lt;=2" hidden aria-label="Search cards for Magic cards" title="Scryfall-style search over the cards in your set.&#10;name  o:text  t:type  c:rg  m:{R}  mv>=3  pow>=3  tou  loy  r:rare  kw:flying  ft:flavor  a:artist  is:creature  has:findings&#10;sev:error  cat:credits  (red/blue/…)  -term  a or b  ( )  &quot;quoted phrase&quot;  /regex/  !&quot;exact name&quot;  ~ = card name">
     <button id=health class=healthbtn type=button hidden title="A quick health report on your set's balance">✚ Set health</button>
@@ -400,8 +411,8 @@ async function post(path,body,raw){
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
 function setLoaded(v){$('#topin').classList.toggle('loaded',v)}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs','#health'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;$('#health').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs','#health','#rarwrap'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;$('#health').hidden=false;$('#rarwrap').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -472,7 +483,7 @@ function fixCount(){return D?D.cards.reduce((n,c)=>n+c.findings.filter(f=>f.can_
 function updFix(){const b=$('#fixall'),n=fixCount();b.textContent='✓ Fix all fixable'+(n?' ('+n+')':'');b.disabled=!n;if(!n)b.title='Nothing can be fixed automatically with the current filters'}
 function draw(){updFix();if(chartMode){drawCharts();return}
   const only=$('#onlyissues').checked;
-  const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qfn||qfn(v.c))).sort(CMP[sortMode]),
+  const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qfn||qfn(v.c))&&rfOk(v.c)).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
   if(pg>=pages)pg=pages-1;if(pg<0)pg=0;
   const ebn=qerr?`<div class=warn>Search: ${esc(qerr)}. Showing all cards until it’s fixed.</div>`:'';
@@ -569,7 +580,7 @@ const CHARTS=[{id:'mvcol',title:'Mana Value Distribution by Colour',sub:'How man
   {id:'complex',title:'Complexity vs. Rarity',sub:'How much rules text cards have at each rarity.',draw:chComplex}];
 let chartId='mvcol';
 function drawCharts(){
-  const cs=D.cards.filter(c=>!qfn||qfn(c)),ch=CHARTS.find(x=>x.id===chartId);
+  const cs=D.cards.filter(c=>(!qfn||qfn(c))&&rfOk(c)),ch=CHARTS.find(x=>x.id===chartId);
   $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'▤ Back to cards':'📊 Graphs';
@@ -606,6 +617,21 @@ $('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D
   else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
 $('#graphs').onclick=()=>setChart(!chartMode);
+
+/* ---------- rarity filter ---------- */
+const RFS=[['Common','Common','#2b2b2e'],['Uncommon','Uncommon','#c4ccd6'],['Rare','Rare','#e8b93a'],['Mythic','Mythic rare','#ee6a2c'],['Other','Other','#b483d8']];
+let RF=new Set();
+const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r};
+const rfOk=c=>!RF.size||RF.has(rkey(c));
+function rarMenu(){const cnt={};D.cards.forEach(c=>{const k=rkey(c);cnt[k]=(cnt[k]||0)+1});
+  $('#rarmenu').innerHTML=RFS.map(r=>`<label class="raropt"><input type="checkbox" data-r="${r[0]}"${RF.has(r[0])?' checked':''}><i style="background:${r[2]}"></i>${r[1]}<b>${cnt[r[0]]||0}</b></label>`).join('')+'<button class="rarclr" type="button" id="rarclr">Show all rarities</button>';
+  $('#rarbtn').classList.toggle('act',RF.size>0);const n=$('#rarn');n.hidden=!RF.size;n.textContent=RF.size}
+function rarOpen(on){$('#rarmenu').hidden=!on;$('#rarbtn').setAttribute('aria-expanded',on);if(on)rarMenu()}
+$('#rarbtn').onclick=e=>{e.stopPropagation();rarOpen($('#rarmenu').hidden)};
+$('#rarmenu').onclick=e=>e.stopPropagation();
+$('#rarmenu').onchange=e=>{const r=e.target.dataset.r;if(!r)return;e.target.checked?RF.add(r):RF.delete(r);pg=0;rarMenu();draw()};
+$('#rarmenu').addEventListener('click',e=>{if(e.target.id==='rarclr'){RF.clear();pg=0;rarMenu();draw()}});
+document.addEventListener('click',()=>rarOpen(false));document.addEventListener('keydown',e=>{if(e.key==='Escape')rarOpen(false)});
 /* ---------- set health report ---------- */
 function healthItems(){
   const all=D.cards,cs=all.filter(c=>!isLand(c)),n=cs.length||1,I=[],add=(st,t,d)=>I.push({st,t,d});
