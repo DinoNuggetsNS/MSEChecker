@@ -114,7 +114,11 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .tile b{display:block;font-size:1.7rem;letter-spacing:-.03em;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12.5px;color:var(--mut)}
 .tile.e b{color:var(--err)}.tile.r b{color:var(--rev)}.tile.s b{color:var(--sug)}.tile.o b{color:var(--ok)}
-.dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dets p{margin:.5rem 0 0}
+.dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dgrid{display:grid;gap:1rem;margin-top:.9rem;padding:1rem 1.1rem;border-radius:14px;border:1px solid var(--bd);background:var(--glass2)}
+.dgrid h5{margin:0 0 .4rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
+.dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchip{display:inline-flex;gap:.4rem;align-items:center;padding:.18rem .65rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass);color:var(--fg);font-size:12.5px;font-weight:550}
+.dchip b{color:var(--mut);font-weight:650}.dchip.kw{border-color:#4a90d955;color:#6fa8e6}
+.drow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}.dval{color:var(--fg);font-size:13.5px;font-weight:550}
 .warn{margin-top:.9rem;padding:.7rem 1rem;border-radius:12px;border:1px solid var(--err);color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent);font-weight:550}
 article{background:var(--glass);border:1px solid var(--bd);border-radius:var(--r);padding:1.15rem 1.3rem;margin:.9rem 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 article header{display:flex;flex-wrap:wrap;gap:.3rem .8rem;align-items:baseline}
@@ -164,7 +168,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
-.rarwrap{position:relative;flex:1 1 128px;min-width:128px}.rarwrap .rarbtn{width:100%;justify-content:center}.filters{margin-right:calc(-.7rem + .3rem)}.short{text-align:center;margin:.6rem 0 0}
+.rarwrap{position:relative;flex:1 1 128px;min-width:128px}.rarwrap .rarbtn{width:100%;justify-content:center}#filters[hidden]~.rarwrap{flex:0 0 auto;min-width:0;margin-left:auto}#filters[hidden]~.rarwrap .rarbtn{width:auto}.filters{margin-right:calc(-.7rem + .3rem)}.short{text-align:center;margin:.6rem 0 0}
 .rarbtn{font-size:13px;padding:.38rem .5rem}.rarbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
 .rarn{background:#e8b93a;color:#2a1c00;border-radius:99px;font-size:11px;font-weight:750;padding:0 .4rem;line-height:1.5}
 .rarmenu{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
@@ -430,7 +434,13 @@ function render(d){
   <div class=tiles>${t('',s.cards,'cards')}${t('e',sv['Likely error'],'likely errors')}${t('r',sv['Needs review'],'need review')}${t('s',sv['Suggestion'],'suggestions')}
   ${t('',s.with_findings,'cards with findings')}${t('o',s.clean,'checked, no findings')}${t('',s.no_text,'not checked (empty text)')}${t('',s.ignored,'ignored')}</div>
   ${s.game&&s.game!=='magic'?`<div class=warn>This file is for the game “${esc(s.game)}”, not Magic. Results may be meaningless.</div>`:''}
-  <details class=dets><summary>Details</summary><p>${s.categories.map(c=>esc(c[0])+': '+c[1]).join(' · ')||'Nothing flagged.'}<br>Rules-text fields read: ${s.text_fields.map(x=>esc(x[0])+' ('+x[1]+' cards)').join(', ')||'none found'}<br>Spell check: ${esc(s.spellcheck)} · Scryfall card data: ${d.oracle_cards?d.oracle_cards.toLocaleString()+' unique cards loaded':(d.oracle_state==='loading'?'still loading…':'not loaded')}${s.custom_keywords.length?' · Custom keywords: '+s.custom_keywords.map(esc).join(', '):''}</p></details>`;
+  <details class=dets><summary>Details</summary><div class=dgrid>
+    <section><h5>Findings by category</h5><div class=dchips>${s.categories.map(c=>`<span class=dchip>${esc(c[0])} <b>${c[1]}</b></span>`).join('')||'<span class=mut>Nothing flagged.</span>'}</div></section>
+    <section><h5>Rules-text fields read</h5><div class=dchips>${s.text_fields.map(x=>`<span class=dchip>${esc(String(x[0]).replace(/_/g,' '))} <b>${x[1]}</b></span>`).join('')||'<span class=mut>None found.</span>'}</div></section>
+    <div class=drow><section><h5>Spell check</h5><span class=dval>${esc(s.spellcheck)}</span></section>
+    <section><h5>Scryfall card data</h5><span class=dval>${d.oracle_cards?d.oracle_cards.toLocaleString()+' unique cards loaded':(d.oracle_state==='loading'?'Still loading…':'Not loaded')}</span></section></div>
+    ${s.custom_keywords.length?`<section><h5>Custom keywords</h5><div class=dchips>${[...new Set(s.custom_keywords)].map(k=>`<span class="dchip kw">${esc(k)}</span>`).join('')}</div></section>`:''}
+  </div></details>`;
   draw();
 }
 function findingHTML(f){

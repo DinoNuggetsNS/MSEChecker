@@ -4,7 +4,7 @@ from .vocabulary import VOCAB, dl, get_dict
 from .templating import CREATURE_KW, NEEDS_COST, NEEDS_NUMBER, REF_AURA, REF_EQUIP, REF_KICK, REF_MODAL, REF_PW, REF_REVEAL, REF_SAGA, REF_SEARCH, REF_VEH, REF_X, RULES, SPELL, SYM_OK, TEMPLATES, _DUR_PHRASE, _DUR_RULES, _in_paren, _types, ref
 from .mse_parser import nk
 from .context import is_known, is_kw_line, kw_of_part, mk, near_keyword, suggest_word
-from .scryfall_data import stat_text
+from .scryfall_data import ORACLE, keyword_block, stat_text
 
 
 # ----------------------------------------------------------------------------------------
@@ -112,8 +112,49 @@ def check_flavor(card, ctx):
     return out
 
 
+def _kw_wrong(a, b):
+    """True when real cards almost always write b before a (never the other way round)."""
+    p = ORACLE.get("kw_pairs") or {}
+    r, f = p.get((b, a), 0), p.get((a, b), 0)
+    return r >= 3 and r >= 4 * f
+
+
+def _kw_order(card, ctx):
+    if not ORACLE.get("kw_pairs"):
+        return []
+    out = []
+    for fld in card["rules"]:
+        lines = fld["plain"].split("\n")
+        block = keyword_block(lines, lambda p: kw_of_part(p, ctx))
+        seq = []
+        for li, ks in block:
+            seq += [(li, k) for k in ks]
+        bad = next(((a, b) for i, a in enumerate(seq) for b in seq[i + 1:] if _kw_wrong(a[1], b[1])), None)
+        if not bad:
+            continue
+        (la, ka), (lb, kb) = bad
+        fix = None
+        if la == lb and "(" not in lines[la] and ";" not in lines[la]:
+            parts = [x.strip() for x in lines[la].split(",") if x.strip()]
+            ks = [kw_of_part(x, ctx) for x in parts]
+            for _ in range(len(parts) ** 2):
+                sw = next((i for i in range(len(parts) - 1) if _kw_wrong(ks[i], ks[i + 1])), None)
+                if sw is None:
+                    break
+                parts[sw], parts[sw + 1], ks[sw], ks[sw + 1] = parts[sw + 1], parts[sw], ks[sw + 1], ks[sw]
+            new = ", ".join([parts[0][:1].upper() + parts[0][1:]] + [x[:1].lower() + x[1:] for x in parts[1:]])
+            if new != lines[la].strip():
+                fix = {"field": fld["key"], "old": lines[la].strip(), "new": new, "all": False}
+        p = ORACLE["kw_pairs"]
+        out.append(mk("Needs review", "Keyword order", "keyword-order", lines[la], ka.capitalize() + " … " + kb if la != lb else lines[la].strip(),
+                      "On real cards “%s” is written before “%s” (%d cards one way, %d the other), but here it comes after. Keywords on a card "
+                      "follow a fairly fixed order." % (kb, ka, p.get((kb, ka), 0), p.get((ka, kb), 0)), fix, None, fld["key"]))
+    return out
+
+
 def check_card(card, ctx):
     out = []
+    out += _kw_order(card, ctx)
     for fld in card["rules"]:
         key = fld["key"]
         lines = fld["plain"].split("\n")

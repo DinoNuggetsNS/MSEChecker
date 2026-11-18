@@ -10,7 +10,7 @@ from .state import LOCK
 # ----------------------------------------------------------------------------------------
 # Optional real-card statistics from Scryfall's Oracle Cards bulk file
 # ----------------------------------------------------------------------------------------
-ORACLE = {"texts": None, "cache": {}, "mcache": {}, "records": [], "postings": {}, "idf": {}, "doc_count": 0,
+ORACLE = {"kw_pairs": {}, "texts": None, "cache": {}, "mcache": {}, "records": [], "postings": {}, "idf": {}, "doc_count": 0,
           "token_sets": [], "norms": [], "vocab": {}, "rev": [], "df": Counter(), "type_sets": [], "name_idx": {},
           "state": "idle", "message": "", "path": ""}
 STATS = {  # rule id -> (trigger regex, companion regex, description of companion)
@@ -121,6 +121,38 @@ def _build_oracle(stream):
                 type_sets=[frozenset(re.findall(r"[a-z]+", r["type"].lower())) for r in records])
 
 
+def keyword_block(lines, base):
+    """The leading run of keyword-only lines: [(line_index, [keyword, ...])]. `base(part)` maps one comma part to its keyword or None."""
+    out = []
+    for i, line in enumerate(lines):
+        s = re.sub(r"\([^)]*\)", "", line).strip()
+        if not s:
+            continue
+        parts = [p for p in re.split(r"[;,]", s) if p.strip()]
+        ks = [base(p) for p in parts]
+        if not parts or not all(ks):
+            break
+        out.append((i, ks))
+    return out
+
+
+def _kw_pairs(records):
+    ks = sorted(KEYWORDS, key=len, reverse=True)
+
+    def base(p):
+        p = p.strip().lower()
+        return next((k for k in ks if p.startswith(k) and (len(p) == len(k) or not p[len(k)].isalpha())), None)
+    pairs = Counter()
+    for r in records:
+        seq = []
+        for _, k in keyword_block(r["text"].split("\n"), base):
+            seq += [x for x in k if x not in seq]
+        for i in range(len(seq)):
+            for j in range(i + 1, len(seq)):
+                pairs[(seq[i], seq[j])] += 1
+    return pairs
+
+
 def _commit_oracle(b):
     kws, subtypes = b.pop("kws"), b.pop("subtypes")
     with LOCK:
@@ -128,6 +160,7 @@ def _commit_oracle(b):
         KEYWORDS.update(k for k in kws if isinstance(k, str) and re.fullmatch(r"[a-z][a-z' \-]{2,}", k.strip()))   # never an empty/odd keyword
         TYPES.update(subtypes)
         VOCAB.update(w for w, t in b["vocab"].items() if b["df"][t] >= 2 and re.fullmatch(r"[a-z]{3,}", w))
+        b["kw_pairs"] = _kw_pairs(b["records"])
         ORACLE.update(b, cache={}, mcache={}, face_names=None, state="ready",
                       message="Loaded %s unique cards" % format(b["doc_count"], ","))
     return b["doc_count"]
