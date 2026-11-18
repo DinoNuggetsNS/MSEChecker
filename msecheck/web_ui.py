@@ -497,7 +497,7 @@ const CORDER=['W','U','B','R','G','M','C'];
 const ccol=c=>{const s=qinfo(c).cols;return s.size===0?'C':s.size>1?'M':[...s][0]};
 const isLand=c=>/land/.test(qinfo(c).type);
 const ptype=c=>{const t=qinfo(c).type;return /land/.test(t)?'Land':/creature/.test(t)?'Creature':/planeswalker/.test(t)?'Planeswalker':/battle/.test(t)?'Battle':/instant/.test(t)?'Instant':/sorcery/.test(t)?'Sorcery':/artifact/.test(t)?'Artifact':/enchantment/.test(t)?'Enchantment':'Other'};
-const prarity=c=>{const r=(c.rarity||'').toLowerCase();return /mythic/.test(r)?'Mythic':/uncommon/.test(r)?'Uncommon':/rare/.test(r)?'Rare':/common/.test(r)?'Common':/special|bonus/.test(r)?'Special':'Unknown'};
+const prarity=c=>{const r=(c.rarity||'').toLowerCase();return /mythic/.test(r)?'Mythic':/uncommon/.test(r)?'Uncommon':/rare/.test(r)?'Rare':/special|bonus/.test(r)?'Special':r&&!/common/.test(r)?'Unknown':'Common'};
 const RAROD=['Common','Uncommon','Rare','Mythic','Special','Unknown'];
 const noRem=c=>(qinfo(c).low||'').replace(/\([^)]*\)/g,' ');
 const SW=900,SH=440,ML=58,MR=20,MT=30,MB=64;
@@ -639,9 +639,8 @@ function healthItems(){
   const sev=D.summary.severity||{},err=sev['Likely error']||0;
   add(err?(err>10?'bad':'warn'):'good','Wording and rules errors',err?`${err} likely error${err>1?'s':''} still flagged. Use “Fix all fixable” or edit them in MSE.`:'No likely errors flagged.');
   const rar={};cs.forEach(c=>{const r=prarity(c);rar[r]=(rar[r]||0)+1});
-  const unk=rar.Unknown||0,com=rar.Common||0,top=(rar.Rare||0)+(rar.Mythic||0);
-  if(unk>n*.5)add('warn','Rarity','Most cards have no rarity set in MSE, so rarity checks are skipped.');
-  else{const cp=pc(com),tp=pc(top);add(cp<30||tp>25?'warn':'good','Rarity spread',`${cp}% commons, ${pc(rar.Uncommon||0)}% uncommons, ${tp}% rares and mythics. ${cp<30?'Few commons: ':tp>25?'Lots of rares: ':''}${cp<30||tp>25?'sets usually have a base of commons and few rares.':'Looks like a typical shape.'}${unk?` (${unk} with no rarity.)`:''}`)}
+  const com=rar.Common||0,top=(rar.Rare||0)+(rar.Mythic||0),cp=pc(com),tp=pc(top);
+  add(cp<30||tp>25?'warn':'good','Rarity spread',`${cp}% commons, ${pc(rar.Uncommon||0)}% uncommons, ${tp}% rares and mythics. ${cp<30?'Few commons: ':tp>25?'Lots of rares: ':''}${cp<30||tp>25?'sets usually have a base of commons and few rares.':'Looks like a typical shape.'} Cards with no rarity in MSE count as common.`);
   const mono={W:0,U:0,B:0,R:0,G:0};cs.forEach(c=>{const s=qinfo(c).cols;if(s.size===1)mono[[...s][0]]++});
   const mv=Object.values(mono),mx=Math.max(...mv),mn=Math.min(...mv);
   if(mx>=5)add(mn<mx*.6?'warn':'good','Colour balance',`One-colour cards: ${Object.keys(mono).map(k=>CNAME[k]+' '+mono[k]).join(', ')}. ${mn<mx*.6?CNAME[Object.keys(mono).find(k=>mono[k]===mn)]+' has noticeably fewer than '+CNAME[Object.keys(mono).find(k=>mono[k]===mx)]+'.':'Evenly spread.'}`);
@@ -654,14 +653,13 @@ function healthItems(){
   add(a>3.8||a<2.2||hp>25?'warn':'good','Mana curve',`Average mana value ${a}, with ${hp}% of cards costing 5 or more. ${a>3.8||hp>25?'Top-heavy: add cheaper cards.':a<2.2?'Very low: the set may lack late-game power.':'Looks reasonable.'}`);
   const cx=cs.filter(c=>prarity(c)==='Common'&&noRem(c).split(/\s+/).filter(Boolean).length>35);
   add(cx.length>com*.15&&cx.length>2?'warn':'good','Common complexity',cx.length?`${cx.length} common${cx.length>1?'s have':' has'} long rules text (over 35 words): ${cx.slice(0,3).map(c=>c.name).join(', ')}${cx.length>3?'…':''}. Commons should be simple to read.`:'Commons have short, readable rules text.');
-  const seen={},dup=[];all.forEach(c=>{const k=(c.name||'').trim().toLowerCase();if(!k)return;if(seen[k])dup.push(c.name);seen[k]=1});
+  const seen={},dup=[];all.forEach(c=>{const k=(c.name||'').trim().toLowerCase();if(!k)return;const ty=qinfo(c).type||'';if(/token|emblem|basic/.test(ty)||(!(c.cost||'').trim()&&!/land/.test(ty)&&new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(ty)))return;if(seen[k])dup.push(c.name);seen[k]=1});
   add(dup.length?'bad':'good','Duplicate names',dup.length?`These names appear more than once: ${[...new Set(dup)].slice(0,5).join(', ')}.`:'Every card has a unique name.');
-  const nt=D.summary.no_text||0;if(nt)add('warn','Cards with no rules text',`${nt} card${nt>1?'s were':' was'} not checked because the text is empty.`);
-  return I}
+    return I}
 function showHealth(){
-  if(!D)return;const I=healthItems(),score=Math.max(0,100-I.reduce((s,i)=>s+(i.st==='bad'?15:i.st==='warn'?7:0),0)),col=score>=85?'#5fd68a':score>=65?'#e8b93a':'#e3493b';
+  if(!D)return;const I=healthItems(),score=Math.max(0,100-I.reduce((s,i)=>s+(i.st==='bad'?15:i.st==='warn'?4:0),0)),col=score>=85?'#5fd68a':score>=65?'#e8b93a':'#e3493b';
   const m=document.createElement('div');m.className='modal';m.setAttribute('role','dialog');
-  m.innerHTML=`<div class="glass hcard"><div class="hhead"><div class="hscore" style="background:conic-gradient(${col} ${score*3.6}deg,color-mix(in srgb,var(--fg) 12%,transparent) 0)"><div style="background:var(--bg);width:66px;height:66px;border-radius:50%;display:grid;place-items:center">${score}</div></div><div><h3>Set health report</h3><p>${esc(D.file||'Your set')} · ${D.cards.length} cards. A rough guide to balance, not a rule: every set is different.</p></div></div>${I.map(i=>`<div class="hrow"><i class="hdot h${i.st[0]}"></i><b>${esc(i.t)}</b><span>${esc(i.d)}</span></div>`).join('')}<div class="mbtns" style="margin-top:1rem"><button class="pri" id="hclose">Close</button></div></div>`;
+  m.innerHTML=`<div class="glass hcard"><div class="hhead"><div class="hscore" role="img" aria-label="Set health: ${score>=85?'high':score>=65?'medium':'low'}" style="background:conic-gradient(${col} ${score*3.6}deg,color-mix(in srgb,var(--fg) 12%,transparent) 0)"><div style="background:color-mix(in srgb,var(--bg) 94%,var(--fg));width:66px;height:66px;border-radius:50%"></div></div><div><h3>Set health report</h3><p>${esc(D.file||'Your set')} · ${D.cards.length} cards. A rough guide to balance, not a rule: every set is different.</p></div></div>${I.map(i=>`<div class="hrow"><i class="hdot h${i.st[0]}"></i><b>${esc(i.t)}</b><span>${esc(i.d)}</span></div>`).join('')}<div class="mbtns" style="margin-top:1rem"><button class="pri" id="hclose">Close</button></div></div>`;
   document.body.appendChild(m);const x=()=>{m.remove();document.removeEventListener('keydown',k)},k=e=>{if(e.key==='Escape')x()};
   document.addEventListener('keydown',k);m.onclick=e=>{if(e.target===m)x()};m.querySelector('#hclose').onclick=x}
 $('#health').onclick=showHealth;
