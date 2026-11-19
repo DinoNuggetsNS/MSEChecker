@@ -178,11 +178,10 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
 .updbtn{padding:.28rem .7rem;border-radius:99px;font-size:12.5px;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid var(--accent);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 40%,transparent);cursor:pointer;white-space:nowrap}
 .updbtn[disabled]{opacity:.7;cursor:wait}
-.extrasbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .62rem;border-radius:99px;font-size:12.5px;font-weight:600;color:#14161a;background:#f1f2f4;border:1px solid #f1f2f4;box-shadow:none;transition:.18s}
-.extrasbtn:hover{background:#fff;border-color:#fff}.extrasbtn .car{display:inline-block;transition:transform .2s;font-size:10px}
-.extrasbtn.open{background:#fff;border-color:#fff}
-:root[data-theme=light] .extrasbtn{color:#fff;background:#23262b;border-color:#23262b}
-:root[data-theme=light] .extrasbtn:hover,:root[data-theme=light] .extrasbtn.open{background:#000;border-color:#000}
+.extrasbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .62rem;border-radius:99px;font-size:12.5px;font-weight:550;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.6);box-shadow:none;transition:.18s}
+.extrasbtn:hover,.extrasbtn.open{border-color:#fff;background:rgba(255,255,255,.12)}.extrasbtn .car{display:inline-block;transition:transform .2s;font-size:10px}
+:root[data-theme=light] .extrasbtn{color:#111;background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.55)}
+:root[data-theme=light] .extrasbtn:hover,:root[data-theme=light] .extrasbtn.open{border-color:#000;background:rgba(0,0,0,.09)}
 .filters.chartmode .chip{display:none}
 .extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
