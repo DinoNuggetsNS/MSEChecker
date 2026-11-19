@@ -152,16 +152,45 @@ def _kw_order(card, ctx):
     return out
 
 
+_INVIS = "\u00a0\u200b\u200c\u200d\u2060\ufeff"
+
+
+def _quote_map(card):
+    """Look at the card's whole rules text at once, so a quotation that spans several lines (a poem, a quoted ability) is judged as a block
+    instead of line by line. Returns ({(field_index, line_index): in_block}, {(field_index, line_index) of the line to blame, or empty}).
+    Quotes are only called unbalanced when the opening and closing marks don't match over the WHOLE card."""
+    inblock, depth, opener = {}, 0, None
+    straight = 0
+    for fi, fld in enumerate(card["rules"]):
+        for li, line in enumerate(fld["plain"].split("\n")):
+            ln = re.sub("([\u201c\u201d])(?:\\1|[" + _INVIS + "])+", r"\1", line)     # a doubled mark (““ or ””) counts once
+            o, c = ln.count("\u201c"), ln.count("\u201d")
+            straight += line.count('"')
+            before = depth
+            depth = max(0, depth + o - c)
+            inblock[(fi, li)] = before > 0 or depth > 0
+            if before == 0 and depth > 0:
+                opener = (fi, li)
+    blame = set()
+    if depth > 0 and opener is not None:
+        blame.add(opener)
+    return inblock, blame, straight % 2 == 1
+
+
 def check_card(card, ctx):
     out = []
     out += _kw_order(card, ctx)
-    for fld in card["rules"]:
+    inblock, qblame, odd_straight = _quote_map(card)
+    for fi, fld in enumerate(card["rules"]):
         key = fld["key"]
         lines = fld["plain"].split("\n")
         for i, line in enumerate(lines):
             s = line.strip()
             if not s:
                 continue
+            if not re.sub("[\u201c\u201d\"\\s" + _INVIS + "]", "", s):
+                continue        # a line holding only quote marks / invisible characters has nothing to check
+            in_q = inblock.get((fi, i), False)
             nxt = lines[i + 1] if i + 1 < len(lines) else ""
             nxt_any = nxt
             if not nxt.strip():
@@ -229,9 +258,8 @@ def check_card(card, ctx):
                     "Unmatched parenthesis on this line.")
             if line.count("{") != line.count("}"):
                 add("Likely error", "Punctuation", "brace-mismatch", "{", "Unmatched curly brace on this line.")
-            if line.count('"') % 2 or line.count("\u201c") != line.count("\u201d"):
-                add("Needs review", "Punctuation", "quote-mismatch", '"', "Unmatched quotation mark on this line "
-                    "(quoted abilities spanning several lines can be a false alarm).")
+            if (fi, i) in qblame or (odd_straight and line.count('"') % 2 and i == max(j for j, x in enumerate(lines) if '"' in x)):
+                add("Needs review", "Punctuation", "quote-mismatch", '"', "A quotation opened here is never closed anywhere on this card.")
             for m in re.finditer(r"\{([^{}]*)\}", line):
                 if not SYM_OK.match(m.group(1)):
                     add("Needs review", "Symbols", "bad-symbol", m.group(0), "Unrecognised mana/ability symbol.")
@@ -243,11 +271,12 @@ def check_card(card, ctx):
                     add("Suggestion", "Keyword consistency", "kw-case", w,
                         "Keywords are capitalised at the start of an ability line.", fx(w, w.capitalize(), False))
             else:
-                if re.match(r"[a-z]", s):
+                if re.match(r"[a-z]", s) and not in_q:
                     add("Needs review", "Capitalization", "lowercase-start", s[:20],
                         "This ability starts with a lowercase letter.")
                 core = re.sub(r"[\"”’')\]\s]+$", "", s)      # a closing ] (bracketed, removable text) is not the end of the sentence
-                if core and core[-1] not in ".!?:—-…;" and not s.endswith(")") and not s.startswith("•"):
+                if (core and core[-1] not in ".!?:—-…;" and not s.endswith(")") and not s.startswith("•") and not in_q
+                        and not re.search(r"[,;][\"\u201d\u2019']$", s)):     # a comma inside the closing quote continues into the next sentence
                     words = s.split()
                     tail = " ".join(words[-4:])
                     mp_idx = len(out)

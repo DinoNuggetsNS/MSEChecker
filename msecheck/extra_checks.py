@@ -133,12 +133,8 @@ def check_extra_card(card, ctx):
     if "defender" in kws and re.search(r"\bwhenever [^.]*\battacks\b", low) and "can attack as though" not in low:
         add("Suggestion", "Redundant keywords", "defender-attacks", first.strip(), "defender", "This creature has defender, so it can't attack, but its text triggers when it attacks.", key)
 
-    # ---- fit ----
-    words = len(re.findall(r"\S+", re.sub(r"\([^)]*\)", " ", rules)))
+    # ---- flavor ----
     fl = " ".join(f["plain"] for f in card["flavor"])
-    if len(rules) + len(fl) > 430 or words > 95:
-        add("Suggestion", "Text fit", "text-overflow", name, "%d characters" % (len(rules) + len(fl)),
-            "This card has a lot of text (%d characters of rules and flavor). It may not fit in the text box. Trim it or split it." % (len(rules) + len(fl)))
     ft = re.sub(r"(?m)^\s*[—–-].*$", "", fl).strip()
     if len(ft.split()) >= 4 and re.search(r"[A-Za-z0-9]$", ft):
         add("Suggestion", "Flavor text", "flavor-no-end-punct", fl.strip().split("\n")[0], ft[-12:], "The flavor text doesn't end with punctuation (a period, a closing quote…).")
