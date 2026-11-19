@@ -21,12 +21,12 @@ PAGE = r"""<!doctype html><html lang=en data-theme=dark><meta charset=utf-8><met
 --bd:rgba(255,255,255,.11);--bd2:rgba(255,255,255,.2);--head:rgba(10,10,12,.72);--sh:0 10px 40px rgba(0,0,0,.35);
 --lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#ff8b80;
 --mark:rgba(255,196,80,.28);--del:rgba(255,107,94,.3);--ins:rgba(84,210,128,.28);
---fade:radial-gradient(900px 640px at 6% 70%,rgba(128,52,176,.80),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(86,70,226,.50),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(244,96,128,.90),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(252,150,100,.75),transparent 64%),radial-gradient(620px 420px at 12% 6%,rgba(106,46,150,.35),transparent 72%)}
+--fade:radial-gradient(900px 640px at 6% 70%,rgba(120,18,24,.85),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(150,24,30,.38),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(227,73,59,.85),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(255,110,84,.65),transparent 64%),radial-gradient(620px 420px at 12% 6%,rgba(90,14,20,.40),transparent 72%)}
 :root[data-theme=light]{color-scheme:light;--bg:#fbf8f7;--fg:#16161a;--mut:#62626d;--glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.55);--inset:rgba(20,20,30,.045);
 --bd:rgba(20,20,30,.1);--bd2:rgba(20,20,30,.2);--head:rgba(251,248,247,.78);--sh:0 10px 34px rgba(60,30,30,.1);
 --lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#d63a2c;
 --mark:rgba(255,200,60,.45);--del:rgba(239,100,90,.3);--ins:rgba(80,190,110,.32);
---fade:radial-gradient(900px 640px at 6% 70%,rgba(160,96,210,.40),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(120,110,240,.24),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(250,120,150,.50),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(255,170,120,.45),transparent 64%)}
+--fade:radial-gradient(900px 640px at 6% 70%,rgba(214,70,60,.30),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(227,73,59,.14),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(227,73,59,.42),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(255,120,96,.38),transparent 64%)}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
@@ -80,7 +80,7 @@ main{max-width:1180px;margin:auto;padding:0 1.2rem 4rem}
 .eyebrow{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .85rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass);font-size:12.5px;font-weight:550;color:var(--mut)}
 .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--brand);box-shadow:0 0 10px var(--brand)}
 h1{font-size:clamp(2.4rem,5.2vw,4.1rem);line-height:1.04;letter-spacing:-.045em;font-weight:720;margin:1.1rem 0 1rem}
-h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 em{font-style:normal;background:linear-gradient(120deg,#ff9a8f 0%,#e3493b 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{font-size:16.5px;color:var(--mut);max-width:34em;margin:0 0 1.6rem}
 .cta{display:flex;gap:.8rem;flex-wrap:wrap}.hint{color:var(--mut);font-size:13px;margin:1rem 0 0}
 .paste{padding:1rem;margin-top:1.2rem;max-width:34em}.paste p{margin:.4rem 0}.paste input{width:100%}
