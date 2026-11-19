@@ -150,6 +150,8 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .mico img{width:46px;height:auto;border-radius:6px}
 .mcard h3{margin:0 0 .5rem;font-size:1.3rem;letter-spacing:-.025em;font-weight:700}.mcard p{margin:0 0 1.3rem;color:var(--mut);font-size:14px}
 .mbtns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+#mkshort{border-color:var(--bd2);background:var(--glass2)}
+.short{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;margin-top:1.2rem}.short .btn{margin:0}
 .mlink{background:none;border:0;color:var(--mut);font-size:12.5px;margin-top:1rem;padding:.2rem .4rem;font-weight:500}.mlink:hover{color:var(--fg);background:none;text-decoration:underline}
 .mcard.ok .mico{box-shadow:0 10px 30px rgba(95,214,138,.4)}
 @keyframes mfade{from{opacity:0}}@keyframes mpop{from{opacity:0;transform:translateY(14px) scale(.96)}}
@@ -176,8 +178,6 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
 .raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
-.updbtn{padding:.28rem .7rem;border-radius:99px;font-size:12.5px;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid var(--accent);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 40%,transparent);cursor:pointer;white-space:nowrap}
-.updbtn[disabled]{opacity:.7;cursor:wait}
 .extrasbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .62rem;border-radius:99px;font-size:12.5px;font-weight:550;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.6);box-shadow:none;transition:.18s}
 .extrasbtn:hover,.extrasbtn.open{border-color:#fff;background:rgba(255,255,255,.12)}.extrasbtn .car{display:inline-block;transition:transform .2s;font-size:10px}
 :root[data-theme=light] .extrasbtn{color:#111;background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.55)}
@@ -209,7 +209,6 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 <div id=dropveil hidden>Drop your .mse-set file to check it</div>
 <header class=top><div class=topin id=topin>
   <a class=brand href="#" id=home><img alt="" id=brandlogo><span>MSECheck</span><small id=ver class=pill>v5.2</small></a>
-  <button id=upd class=updbtn type=button hidden>Update available</button>
   <div id=filters class=filters hidden>
     <label class="chip e"><input type=checkbox data-sev="Likely error" checked><i></i>Errors <b id=cE>0</b></label>
     <label class="chip r"><input type=checkbox data-sev="Needs review" checked><i></i>Review <b id=cR>0</b></label>
@@ -259,7 +258,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <div><h4>Scryfall data</h4><b id=heroNum>…</b><span id=heroOracle>unique cards for closest-match references</span></div>
     <div><h4>Community</h4><span class=comm>Looking for additional feedback and the potential for people to play your custom cards? Check out the <b>MSEM</b> and <b>Revolution</b> Discord communities and connect with other custom Magic designers!</span></div>
   </div>
-  <p class=short><button id=mkshort class=mlink type=button hidden>Add a Desktop shortcut</button></p>
+  <p class=short><button id=mkshort class=btn type=button hidden>Add a Desktop shortcut</button><button id=upd class="btn pri" type=button hidden>Update to newest version</button></p>
 </section>
 <section id=dash hidden><div id=summary class=glass></div><div id=cards></div><div id=charts hidden></div></section>
 </main>
@@ -665,9 +664,11 @@ document.addEventListener('click',async e=>{
 
 /* in-app update (Windows app only) */
 (async()=>{let u;try{u=await (await fetch('/api/update')).json()}catch(_){return}
-  if(!u||!u.enabled||!u.newer)return;const b=$('#upd');b.hidden=false;b.title='Newest: '+u.latest+' (you have '+u.current+')';
+  if(!u||!u.enabled)return;const b=$('#upd');b.hidden=false;
+  if(!u.newer){b.textContent='You have the newest version';b.disabled=true;b.className='btn ghost';return}
+  b.title='Newest: '+u.latest+' (you have '+u.current+')';
   b.onclick=async()=>{b.disabled=true;b.textContent='Updating… the app will restart';let r;try{r=await post('/api/update',{})}catch(_){return}
-    if(r&&!r.ok){b.disabled=false;b.textContent='Update failed - click to retry';alert(r.message)}}})();
+    if(r&&!r.ok){b.disabled=false;b.textContent='Update to newest version'}}})();
 /* Desktop shortcut question (Windows app only) */
 (async function(){
   let a;try{a=await (await fetch('/api/shortcut')).json()}catch(_){return}
