@@ -1,5 +1,5 @@
 """MSECheck - web ui."""
-import json, time, urllib.parse
+import json, os, re, time, urllib.parse
 from http.server import BaseHTTPRequestHandler
 from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
@@ -8,6 +8,23 @@ from .reports import export
 from . import shortcut, symbols_data, updater
 import base64
 _SYMBOLS_PNG = base64.b64decode("".join(symbols_data.PNG_B64))
+
+
+def _sets_dir():
+    import os, sys
+    here = os.path.dirname(os.path.abspath(sys.argv[0])) if sys.argv and sys.argv[0] else os.getcwd()
+    for d in (getattr(sys, "_MEIPASS", None), here, os.getcwd()):
+        if d and os.path.isfile(os.path.join(d, "setsdata", "index.json")):
+            return os.path.join(d, "setsdata")
+    return None
+
+
+def _sets_index():
+    d = _sets_dir()
+    try:
+        return json.load(open(os.path.join(d, "index.json"), encoding="utf-8")) if d else []
+    except Exception:
+        return []
 
 
 # ----------------------------------------------------------------------------------------
@@ -36,6 +53,11 @@ body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--fade),var(--bg)}
 body.plain::before{background:var(--bg)}
 body.plain #floaters{display:none}
+body.lens #floaters{z-index:40}body.lens .fsym{pointer-events:auto;opacity:.3;cursor:help;transition:opacity .15s}body.lens .fsym:hover{opacity:.95}
+#brandlogo,#herologo{cursor:pointer}
+#settip{position:fixed;z-index:60;pointer-events:none;padding:.45rem .7rem;border-radius:10px;background:var(--glass2);border:1px solid var(--bd2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:260px}
+#settip b{display:block;font-weight:650}#settip span{color:var(--mut);font-size:12px}
+#lenshint{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:60;padding:.4rem .9rem;border-radius:99px;background:var(--glass2);border:1px solid var(--bd2);font-size:12.5px;color:var(--mut)}
 #floaters{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
 .fsym{position:absolute;left:0;top:0;width:var(--s);height:var(--s);background:var(--fg);opacity:.085;will-change:transform;-webkit-mask:url(/symbols.png) no-repeat;mask:url(/symbols.png) no-repeat;-webkit-mask-size:calc(var(--s)*12) calc(var(--s)*10);mask-size:calc(var(--s)*12) calc(var(--s)*10);-webkit-mask-position:calc(var(--s)*var(--cx)*-1) calc(var(--s)*var(--cy)*-1);mask-position:calc(var(--s)*var(--cx)*-1) calc(var(--s)*var(--cy)*-1)}
 body,main,article,pre,.f,.tile{-webkit-user-select:text;user-select:text}
@@ -381,8 +403,8 @@ async function post(path,body,raw){
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
 function setLoaded(v){$('#topin').classList.toggle('loaded',v);document.body.classList.toggle('plain',v)}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sortwrap','#collapse','#extrabar'].forEach(s=>$(s).hidden=true);$('#extras').classList.remove('open');$('#extras').setAttribute('aria-expanded',false);setLoaded(false);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sortwrap').hidden=false;$('#collapse').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
+function showHero(){window.__lensOff&&window.__lensOff();$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sortwrap','#collapse','#extrabar'].forEach(s=>$(s).hidden=true);$('#extras').classList.remove('open');$('#extras').setAttribute('aria-expanded',false);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){window.__lensOff&&window.__lensOff();$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sortwrap').hidden=false;$('#collapse').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -601,22 +623,36 @@ $('#graphs').onclick=()=>setChart(!chartMode);
 
 /* ---------- floating set symbols (home page background) ---------- */
 (()=>{
-  const COUNT=117,COLS=12;let last=-1;
+  const COUNT=117,COLS=12;let last=-1,SETS=[],lens=false;const els=[];
   if(matchMedia('(prefers-reduced-motion: reduce)').matches||!Element.prototype.animate)return;
   const layer=document.createElement('div');layer.id='floaters';layer.setAttribute('aria-hidden','true');document.body.prepend(layer);
   const rnd=(a,b)=>a+Math.random()*(b-a);
+  const tip=document.createElement('div');tip.id='settip';tip.hidden=true;document.body.appendChild(tip);
+  const hint=document.createElement('div');hint.id='lenshint';hint.hidden=true;hint.textContent='Hover a floating set symbol to see its name and year. Click the magnifier or press Esc to stop.';document.body.appendChild(hint);
   function spawn(el,initial){
-    const W=innerWidth,H=innerHeight,s=rnd(46,76);let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;
-    el.style.setProperty('--s',s+'px');el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS));
+    const W=innerWidth,H=innerHeight,s=rnd(46,76);
+    if(SETS.length){let i;do{i=Math.floor(Math.random()*SETS.length)}while(i===last&&SETS.length>1);last=i;const S=SETS[i];el._set=S;
+      const u='url(/set/'+S.c+'.svg)';el.style.cssText+=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}
+    else{let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;el._set=null;el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS))}
+    el.style.setProperty('--s',s+'px');
     const side=Math.floor(Math.random()*4);let x0,y0,x1,y1;
     if(side===0){x0=-s;y0=rnd(0,H);x1=W+s;y1=rnd(0,H)}else if(side===1){x0=W+s;y0=rnd(0,H);x1=-s;y1=rnd(0,H)}
     else if(side===2){x0=rnd(0,W);y0=-s;x1=rnd(0,W);y1=H+s}else{x0=rnd(0,W);y0=H+s;x1=rnd(0,W);y1=-s}
     const dur=Math.hypot(x1-x0,y1-y0)/rnd(14,34)*1000,r0=rnd(0,360),r1=r0+rnd(-140,140);
     const a=el.animate([{transform:`translate(${x0}px,${y0}px) rotate(${r0}deg)`},{transform:`translate(${x1}px,${y1}px) rotate(${r1}deg)`}],{duration:dur,easing:'linear',fill:'forwards'});
     if(initial)a.currentTime=rnd(0,.95)*dur;
-    a.onfinish=()=>spawn(el,false)}
+    a.playbackRate=lens?.25:1;el._a=a;a.onfinish=()=>spawn(el,false)}
   const n=Math.max(10,Math.min(22,Math.round(innerWidth*innerHeight/60000)));
-  for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);spawn(el,true)}
+  const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);els.push(el);spawn(el,true);
+    el.onmouseenter=()=>{if(!lens||!el._set)return;el._a.pause();tip.innerHTML='<b></b><span></span>';tip.firstChild.textContent=el._set.n;tip.lastChild.textContent='Released '+el._set.y;tip.hidden=false};
+    el.onmousemove=e=>{tip.style.left=Math.min(innerWidth-270,e.clientX+16)+'px';tip.style.top=Math.min(innerHeight-70,e.clientY+16)+'px'};
+    el.onmouseleave=()=>{tip.hidden=true;if(el._a.playState==='paused')el._a.play()}}};
+  function setLens(on){if(on&&!SETS.length)return;lens=on;document.body.classList.toggle('lens',on);hint.hidden=!on;tip.hidden=true;els.forEach(e=>{if(e._a){e._a.playbackRate=on?.25:1;if(e._a.playState==='paused')e._a.play()}})}
+  window.__setLens=setLens;
+  [$('#herologo')].forEach(l=>{l.onclick=()=>{if(!$('#hero').hidden)setLens(!lens)}});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lens)setLens(false)});
+  window.__lensOff=()=>{if(lens)setLens(false)};
+  fetch('/sets.json').then(r=>r.json()).catch(()=>[]).then(j=>{SETS=Array.isArray(j)?j:[];start()})
 })();
 /* ---------- search filters: rarity / colour / type ---------- */
 const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r};
@@ -719,6 +755,22 @@ class Handler(BaseHTTPRequestHandler):
             return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
         if u.path == "/api/update":
             return self.js(updater.check())
+        if u.path == "/sets.json":
+            return self.js(_sets_index())
+        m = re.fullmatch(r"/set/([a-z0-9_]{2,8})\.svg", u.path)
+        if m:
+            d = _sets_dir()
+            fp = os.path.join(d, m.group(1) + ".svg") if d else None
+            if fp and os.path.isfile(fp):
+                data = open(fp, "rb").read()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/svg+xml")
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "max-age=86400")
+                self.end_headers()
+                return self.wfile.write(data)
+            self.send_error(404)
+            return
         if u.path == "/api/ping":
             HEARTBEAT["last"] = time.time()
             return self.js({"ok": True})

@@ -21,6 +21,9 @@ jobs:
         run: pip install -r requirements.txt -r requirements-build.txt
       - name: Download Scryfall Oracle Cards
         run: python tools/fetch_oracle.py oracle-cards.jsonl.gz
+      - name: Download set symbols (names and years for the hover tips)
+        run: python tools/fetch_sets.py setsdata
+        continue-on-error: true
       - name: Stamp build tag
         shell: pwsh
         run: |
@@ -29,7 +32,7 @@ jobs:
           "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
       - name: Build MSECheck.exe
         run: >
-          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;."
+          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;." --add-data "setsdata;setsdata"
           --collect-all webview --collect-all spellchecker
           --add-data "oracle-cards.jsonl.gz;." MSECheck.py
       - name: Smoke test the exe

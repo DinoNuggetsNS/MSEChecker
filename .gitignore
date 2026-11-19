@@ -8,3 +8,4 @@ dist/
 *-cards-*.json
 *-cards-*.json.gz
 *-cards-*.jsonl
+setsdata/
