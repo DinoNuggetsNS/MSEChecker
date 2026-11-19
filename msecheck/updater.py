@@ -104,6 +104,10 @@ def apply():
                          shell=True, close_fds=True, creationflags=0x08000000 | 0x00000008)
     except Exception:
         pass
-    subprocess.Popen([exe], cwd=folder, close_fds=True, creationflags=0x00000008 | 0x00000200)   # DETACHED_PROCESS | NEW_GROUP
+    # Start the NEW exe as a completely fresh program. A one-file PyInstaller app that launches an exe inherits its own
+    # unpack-folder variables, which makes the child run the OLD code again - so strip them and ask PyInstaller to reset.
+    env = {k: v for k, v in os.environ.items() if not (k.startswith("_PYI") or k.startswith("_MEI") or k in ("_MEIPASS2", "PYINSTALLER_RESET_ENVIRONMENT"))}
+    env["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    subprocess.Popen([exe], cwd=folder, env=env, close_fds=True, creationflags=0x00000008 | 0x00000200)   # DETACHED_PROCESS | NEW_GROUP
     threading.Timer(0.6, lambda: os._exit(0)).start()
     return True, info["latest"]

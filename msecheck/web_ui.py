@@ -644,7 +644,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     const dur=Math.hypot(x1-x0,y1-y0)/rnd(14,34)*1000,r0=rnd(0,360),r1=r0+rnd(-140,140);
     const a=el.animate([{transform:`translate(${x0}px,${y0}px) rotate(${r0}deg)`},{transform:`translate(${x1}px,${y1}px) rotate(${r1}deg)`}],{duration:dur,easing:'linear',fill:'forwards'});
     if(initial)a.currentTime=rnd(0,.95)*dur;
-    a.playbackRate=lens?.25:1;el._a=a;a.onfinish=()=>spawn(el,false)}
+    el._a=a;a.onfinish=()=>spawn(el,false)}
   const n=Math.max(10,Math.min(22,Math.round(innerWidth*innerHeight/60000)));
   const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);els.push(el);spawn(el,true)}};
   /* the magnifier: grab it, drag it anywhere, and whatever set symbol is under the glass shows its name and year */
@@ -659,7 +659,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
       tip.style.left=Math.max(8,Math.min(innerWidth-270,g.x+g.r+10))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-70,g.y-20))+'px'}else tip.hidden=true;
     raf=requestAnimationFrame(scan)}
   function setLens(on){lens=on;document.body.classList.toggle('lens',on);hint.hidden=!on;tip.hidden=true;
-    els.forEach(e=>{e.classList.remove('hit');if(e._a)e._a.playbackRate=on?.25:1});
+    els.forEach(e=>e.classList.remove('hit'));
     if(!on){held=false;logo.classList.remove('held');logo.style.left=logo.style.top='';}}
   window.__lensOff=()=>{if(lens)setLens(false)};
   tip.innerHTML='<b></b><span></span>';
