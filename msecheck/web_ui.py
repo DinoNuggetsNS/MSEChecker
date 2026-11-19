@@ -55,6 +55,7 @@ body.plain::before{background:var(--bg)}
 body.plain #floaters{display:none}
 body.lens #floaters{z-index:40}body.lens .fsym{pointer-events:auto;opacity:.3;cursor:help;transition:opacity .15s}body.lens .fsym:hover{opacity:.95}
 #brandlogo,#herologo{cursor:pointer}
+.herologo{transition:width .35s ease}body.lens .herologo{width:min(100%,130px)}
 #settip{position:fixed;z-index:60;pointer-events:none;padding:.45rem .7rem;border-radius:10px;background:var(--glass2);border:1px solid var(--bd2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:260px}
 #settip b{display:block;font-weight:650}#settip span{color:var(--mut);font-size:12px}
 #lenshint{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:60;padding:.4rem .9rem;border-radius:99px;background:var(--glass2);border:1px solid var(--bd2);font-size:12.5px;color:var(--mut)}
