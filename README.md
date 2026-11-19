@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/logo.png" alt="MSECheck logo" width="160"></p>
+
 # MSECheck
 
 MSECheck checks custom Magic: The Gathering sets made in **Magic Set Editor** (`.mse-set` files). It looks for typos, templating mistakes, rules problems and design risks, and builds a Scryfall search link for every card.

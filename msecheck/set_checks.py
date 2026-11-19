@@ -5,6 +5,8 @@ from itertools import combinations
 from .vocabulary import KEYWORDS, dl
 from .templating import COUNTER_STOP, KNOWN_COUNTERS, TYPES, ref
 from .context import mk
+from .scryfall_data import ORACLE
+from .state import ST
 
 
 # ----------------------------------------------------------------------------------------
@@ -46,9 +48,41 @@ def norm_reminder(s, name=""):
     return re.sub(r"\s+", " ", re.sub(r"[^\w#@]+", " ", s)).strip()
 
 
+def _real_names(cards, add):
+    """A set card that borrows a real Magic card's name must do exactly what the real card does."""
+    names = ORACLE.get("name_idx") or {}
+    if not names or ST["kind"] == "text":
+        return
+    faces = ORACLE.get("face_names")
+    if faces is None:
+        faces = ORACLE["face_names"] = {f.strip(): i for k, i in names.items() for f in k.split(" // ")}
+    recs = ORACLE["records"]
+    norm = lambda t, nm: re.sub(r"[^a-z0-9~]", "", re.sub(r"\([^)]*\)", "", t.lower().replace(nm.lower(), "~")))
+    for c in cards:
+        nm = c["name"].strip()
+        n, ty = nm.lower(), (c["supertype"] + " " + c["subtype"]).lower()
+        if not n or re.search(r"token|emblem|basic", ty):
+            continue
+        i = names.get(n)
+        if i is None:
+            i = faces.get(n)
+        if i is None:
+            continue
+        real = norm(recs[i]["text"].replace(recs[i]["name"], "~"), nm)
+        mine = norm("\n".join(f["plain"] for f in c["rules"] if f["plain"].strip()), nm)
+        if mine == real or (mine and n not in names and mine in real):    # identical effect: fine
+            continue
+        shown = re.sub(r"\s+", " ", recs[i]["text"].replace(recs[i]["name"], nm)).strip()
+        add(c["idx"], "Likely error", "Real card names", "real-card-name", nm, nm,
+            "“%s” is the name of a real Magic card, but this card doesn't do what the real card does. Reusing a real card's name is only "
+            "fine when the rules text is exactly the same. The real card reads: “%s”" % (nm, (shown[:180] + "…") if len(shown) > 180 else shown or "(no rules text)"))
+
+
 def check_set(cards, ctx, fl):
     def add(idx, *a, **k):
         fl[idx].append(mk(*a, **k))
+
+    _real_names(cards, add)
 
     # naming consistency
     by = defaultdict(list)

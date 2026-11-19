@@ -127,31 +127,7 @@ def analyze():
                           "ignored": n_ign, "ign_whole": c["idx"] in ST.get("ign_whole", ()), "scryfall": qurl, "terms": qterms, "has_text": has_text, "filled": c["filled"],
                           "text_fields": [f["key"] for f in c["rules"] if f["plain"].strip()]})
     d = get_dict()
-    names = ORACLE.get("name_idx") or {}
-    overlaps = []
-    if names:
-        faces = ORACLE.get("face_names")
-        if faces is None:
-            faces = ORACLE["face_names"] = {f.strip(): i for k, i in names.items() for f in k.split(" // ")}
-        norm = lambda t, nm: re.sub(r"[^a-z0-9~]", "", re.sub(r"\([^)]*\)", "", t.lower().replace(nm.lower(), "~")))
-        recs = ORACLE["records"]
-        for oc in out_cards:
-            nm = oc["name"].strip()
-            n, ty = nm.lower(), oc["type"].lower()
-            if not n or re.search(r"token|emblem|basic", ty) or nm in overlaps:
-                continue
-            i = names.get(n)
-            if i is None:
-                i = faces.get(n)
-            if i is None:
-                continue
-            real, mine = norm(recs[i]["text"].replace(recs[i]["name"], "~"), nm), norm(oc["rules"], nm)
-            # Reusing a real card's name is fine when the card does exactly what the real card does.
-            if mine == real or (mine and n not in names and mine in real):
-                continue
-            overlaps.append(nm)
     result = {
-        "name_overlaps": overlaps, "oracle_names": bool(names),
         "file": ST["filename"], "mode": ST["kind"], "version": VERSION, "edited": ST["edited"], "oracle_cards": len(ORACLE["texts"] or []), "similarity_ready": bool(ORACLE.get("records")), "oracle_state": ORACLE["state"],
         "summary": {"cards": len(cards), "clean": clean, "no_text": no_text, "with_findings": len(cards) - clean - no_text,
                     "severity": {k: sev_count.get(k, 0) for k in SEV_ORDER}, "total": sum(sev_count.values()),
