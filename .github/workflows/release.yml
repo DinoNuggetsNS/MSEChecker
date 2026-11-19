@@ -23,7 +23,7 @@ jobs:
         run: python tools/fetch_oracle.py oracle-cards.jsonl.gz
       - name: Build MSECheck.exe
         run: >
-          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico
+          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;."
           --collect-all webview --collect-all spellchecker
           --add-data "oracle-cards.jsonl.gz;." MSECheck.py
       - name: Smoke test the exe

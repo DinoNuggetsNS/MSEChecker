@@ -60,6 +60,12 @@ def main():
         from . import shortcut
         sys.exit(0 if shortcut.create()[0] else 1)
     state.SHORTCUT_ENABLED = not a.no_shortcut
+    try:
+        import threading
+        from . import shortcut as _sc
+        threading.Thread(target=_sc.refresh, daemon=True).start()
+    except Exception:
+        pass
     state.DESIGN_RISK = not a.no_design_risk
     dirs = []
     for d in (app_dir(), os.getcwd(), getattr(sys, "_MEIPASS", None)):   # _MEIPASS: data bundled inside the .exe

@@ -59,15 +59,42 @@ def should_ask():
     return True
 
 
+def _icon():
+    """Copy the bundled logo icon next to the app data (named by size, so Windows drops any cached old icon); fall back to the exe."""
+    exe = sys.executable
+    try:
+        import shutil
+        src = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(exe)), "MSECheck.ico")
+        if os.path.exists(src):
+            os.makedirs(_folder(), exist_ok=True)
+            dst = os.path.join(_folder(), "MSECheck-logo-%d.ico" % os.path.getsize(src))
+            if not os.path.exists(dst):
+                shutil.copyfile(src, dst)
+            return dst + ",0"
+    except Exception as e:
+        _log("icon copy failed: %r" % (e,))
+    return exe + ",0"
+
+
+def refresh():
+    """If a Desktop shortcut already exists, rewrite it so it shows the current logo."""
+    try:
+        if available() and os.path.exists(os.path.join(_desktop_dir(), "MSECheck.lnk")):
+            create()
+    except Exception as e:
+        _log("refresh failed: %r" % (e,))
+
+
 def create():
     """Create Desktop\\MSECheck.lnk. Returns (ok, message)."""
     exe = sys.executable
+    icon = _icon()
     desk = _desktop_dir()
     lnk = os.path.join(desk, "MSECheck.lnk")
     q = lambda t: t.replace("'", "''")
     ps = ("$ErrorActionPreference='Stop';$s=(New-Object -ComObject WScript.Shell).CreateShortcut('%s');"
-          "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s,0';$s.Description='MSECheck';$s.Save()"
-          % (q(lnk), q(exe), q(os.path.dirname(exe)), q(exe)))
+          "$s.TargetPath='%s';$s.WorkingDirectory='%s';$s.IconLocation='%s';$s.Description='MSECheck';$s.Save()"
+          % (q(lnk), q(exe), q(os.path.dirname(exe)), q(icon)))
     err = ""
     try:
         r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", ps],
@@ -84,7 +111,7 @@ def create():
     try:
         url = os.path.join(desk, "MSECheck.url")
         with open(url, "w", encoding="utf-8") as f:
-            f.write("[InternetShortcut]\nURL=file:///%s\nIconFile=%s\nIconIndex=0\n" % (exe.replace("\\", "/"), exe))
+            f.write("[InternetShortcut]\nURL=file:///%s\nIconFile=%s\nIconIndex=0\n" % (exe.replace("\\", "/"), icon.rsplit(",", 1)[0]))
         _log("fallback .url written: %s" % url)
         if os.path.exists(url):
             _remember("yes")
