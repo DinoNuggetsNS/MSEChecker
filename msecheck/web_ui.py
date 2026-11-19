@@ -5,7 +5,7 @@ from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
 from .analysis import analyze, load_text, load_upload
 from .reports import export
-from . import shortcut, symbols_data
+from . import shortcut, symbols_data, updater
 import base64
 _SYMBOLS_PNG = base64.b64decode("".join(symbols_data.PNG_B64))
 
@@ -22,12 +22,12 @@ PAGE = r"""<!doctype html><html lang=en data-theme=dark><meta charset=utf-8><met
 --brand:#a2d7f2;--brand2:#6fb8e0;--r:16px}
 :root[data-theme=dark]{color-scheme:dark;--bg:#0a0a0c;--fg:#f4f4f6;--mut:#a3a3ad;--glass:rgba(255,255,255,.055);--glass2:rgba(255,255,255,.04);--inset:rgba(0,0,0,.28);
 --bd:rgba(255,255,255,.11);--bd2:rgba(255,255,255,.2);--head:rgba(10,10,12,.72);--sh:0 10px 40px rgba(0,0,0,.35);
---lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#f4e45c;--ok:#5fd68a;--accent:#a2d7f2;
+--lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#a2d7f2;
 --mark:rgba(255,196,80,.28);--del:rgba(255,107,94,.3);--ins:rgba(84,210,128,.28);
 --fade:linear-gradient(transparent,transparent)}
 :root[data-theme=light]{color-scheme:light;--bg:#fbf8f7;--fg:#16161a;--mut:#62626d;--glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.55);--inset:rgba(20,20,30,.045);
 --bd:rgba(20,20,30,.1);--bd2:rgba(20,20,30,.2);--head:rgba(251,248,247,.78);--sh:0 10px 34px rgba(60,30,30,.1);
---lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#8a7300;--ok:#1f7a3d;--accent:#2b7fb0;
+--lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#2b7fb0;
 --mark:rgba(255,200,60,.45);--del:rgba(239,100,90,.3);--ins:rgba(80,190,110,.32);
 --fade:linear-gradient(transparent,transparent)}
 *{box-sizing:border-box}
@@ -176,9 +176,13 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
 .raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
-.extrasbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .62rem;border-radius:99px;font-size:12.5px;font-weight:550;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:none;transition:.18s}
-.extrasbtn:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}.extrasbtn .car{display:inline-block;transition:transform .2s;font-size:10px}
-.extrasbtn.open{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent),0 0 16px color-mix(in srgb,var(--accent) 45%,transparent),inset 0 0 12px color-mix(in srgb,var(--accent) 15%,transparent)}
+.updbtn{padding:.28rem .7rem;border-radius:99px;font-size:12.5px;font-weight:600;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid var(--accent);box-shadow:0 0 12px color-mix(in srgb,var(--accent) 40%,transparent);cursor:pointer;white-space:nowrap}
+.updbtn[disabled]{opacity:.7;cursor:wait}
+.extrasbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .62rem;border-radius:99px;font-size:12.5px;font-weight:600;color:#14161a;background:#f1f2f4;border:1px solid #f1f2f4;box-shadow:none;transition:.18s}
+.extrasbtn:hover{background:#fff;border-color:#fff}.extrasbtn .car{display:inline-block;transition:transform .2s;font-size:10px}
+.extrasbtn.open{background:#fff;border-color:#fff}
+:root[data-theme=light] .extrasbtn{color:#fff;background:#23262b;border-color:#23262b}
+:root[data-theme=light] .extrasbtn:hover,:root[data-theme=light] .extrasbtn.open{background:#000;border-color:#000}
 .filters.chartmode .chip{display:none}
 .extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
@@ -206,6 +210,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 <div id=dropveil hidden>Drop your .mse-set file to check it</div>
 <header class=top><div class=topin id=topin>
   <a class=brand href="#" id=home><img alt="" id=brandlogo><span>MSECheck</span><small id=ver class=pill>v5.2</small></a>
+  <button id=upd class=updbtn type=button hidden>Update available</button>
   <div id=filters class=filters hidden>
     <label class="chip e"><input type=checkbox data-sev="Likely error" checked><i></i>Errors <b id=cE>0</b></label>
     <label class="chip r"><input type=checkbox data-sev="Needs review" checked><i></i>Review <b id=cR>0</b></label>
@@ -659,6 +664,11 @@ document.addEventListener('click',async e=>{
   else if(a==='resetign')render(await post('/api/resetign'));
 });
 
+/* in-app update (Windows app only) */
+(async()=>{let u;try{u=await (await fetch('/api/update')).json()}catch(_){return}
+  if(!u||!u.enabled||!u.newer)return;const b=$('#upd');b.hidden=false;b.title='Newest: '+u.latest+' (you have '+u.current+')';
+  b.onclick=async()=>{b.disabled=true;b.textContent='Updating… the app will restart';let r;try{r=await post('/api/update',{})}catch(_){return}
+    if(r&&!r.ok){b.disabled=false;b.textContent='Update failed - click to retry';alert(r.message)}}})();
 /* Desktop shortcut question (Windows app only) */
 (async function(){
   let a;try{a=await (await fetch('/api/shortcut')).json()}catch(_){return}
@@ -707,6 +717,8 @@ class Handler(BaseHTTPRequestHandler):
             return self.wfile.write(_SYMBOLS_PNG)
         if u.path == "/api/shortcut":
             return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
+        if u.path == "/api/update":
+            return self.js(updater.check())
         if u.path == "/api/ping":
             HEARTBEAT["last"] = time.time()
             return self.js({"ok": True})
@@ -749,6 +761,9 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError("Paste some rules text first.")
                     load_text(body.get("name", ""), body["text"])
                     return self.js(analyze())
+                if u.path == "/api/update":
+                    ok, msg = updater.apply()
+                    return self.js({"ok": ok, "message": msg})
                 if u.path == "/api/shortcut":
                     if body.get("action") == "create":
                         ok, msg = shortcut.create()

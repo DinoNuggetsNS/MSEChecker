@@ -21,6 +21,12 @@ jobs:
         run: pip install -r requirements.txt -r requirements-build.txt
       - name: Download Scryfall Oracle Cards
         run: python tools/fetch_oracle.py oracle-cards.jsonl.gz
+      - name: Stamp build tag
+        shell: pwsh
+        run: |
+          $tag = if ($env:GITHUB_REF -like "refs/tags/*") { $env:GITHUB_REF_NAME } else { "v" + (Get-Date -Format "yyyy.MM.dd-HHmm") }
+          Set-Content -Path msecheck/build.py -Value "TAG = '$tag'" -Encoding ascii
+          "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
       - name: Build MSECheck.exe
         run: >
           python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;."
@@ -46,5 +52,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $tag = if ($env:GITHUB_REF -like "refs/tags/*") { $env:GITHUB_REF_NAME } else { "v" + (Get-Date -Format "yyyy.MM.dd-HHmm") }
+          $tag = $env:TAG
           gh release create $tag dist\MSECheck.exe --title "MSECheck $tag" --notes "Download **MSECheck.exe** and double-click it. Includes Scryfall Oracle Cards data as of the build date." --repo $env:GITHUB_REPOSITORY
