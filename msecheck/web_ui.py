@@ -3,7 +3,7 @@ import json, time, urllib.parse
 from http.server import BaseHTTPRequestHandler
 from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
-from .analysis import analyze, apply_all, apply_fix, corrected_download, load_text, load_upload
+from .analysis import analyze, load_text, load_upload
 from .reports import export
 from . import shortcut, symbols_data
 import base64
@@ -171,7 +171,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 @media(max-width:640px){.srow{grid-template-columns:1fr 1fr;gap:.3rem .8rem}.srow>:nth-child(3){grid-column:1/-1}.shead>:nth-child(3){display:none}}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
-.sortwrap{position:relative;margin-left:auto}.sortbtn{font-size:13px}.sortbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
+.sortwrap{position:relative;flex:1 1 140px;min-width:140px}.sortbtn{font-size:13px;width:100%;justify-content:center}.filters{margin-right:calc(-.7rem + .3rem)}.sortwrap.chartmode{flex:0 0 auto;min-width:0;margin-left:auto}.sortwrap.chartmode .sortbtn{width:auto}.sortbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
 .sortmenu{right:0;left:auto;top:calc(100% + 8px);width:min(660px,92vw);display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.4rem .9rem;padding:.9rem 1rem .6rem}
 .fsec h6{margin:0 0 .3rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
 .fclr{grid-column:1/-1}.sortwrap.chartmode .sortsec{display:none}.sortmenu .raropt{padding:.35rem .4rem}.sortmenu .rarclr{margin-top:.4rem}
@@ -182,8 +182,10 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
 .raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
-.extrasbtn{background:#b9b9c2;color:#141418;border:1px solid #a6a6b0;font-weight:650;box-shadow:none}
-.extrasbtn:hover{background:#c6c6ce;border-color:#b3b3bd}.extrasbtn .car{display:inline-block;transition:transform .2s}.extrasbtn.open .car{transform:rotate(180deg)}
+.extrasbtn{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .62rem;border-radius:99px;font-size:12.5px;font-weight:550;color:var(--mut);background:var(--glass2);border:1px solid var(--bd);box-shadow:none;transition:.18s}
+.extrasbtn:hover{border-color:var(--bd2);background:var(--glass2)}.extrasbtn .car{display:inline-block;transition:transform .2s;font-size:10px}
+.extrasbtn.open{color:#fff;border-color:rgba(255,255,255,.75);background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.3),0 0 16px rgba(255,255,255,.42),inset 0 0 12px rgba(255,255,255,.12)}.extrasbtn.open .car{transform:rotate(180deg)}
+:root[data-theme=light] .extrasbtn.open{color:#111;border-color:#111;background:rgba(0,0,0,.06);box-shadow:0 0 0 1px rgba(0,0,0,.3),0 0 14px rgba(0,0,0,.28),inset 0 0 10px rgba(0,0,0,.06)}
 .filters.chartmode .chip{display:none}
 .extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
@@ -228,11 +230,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
       <svg class=moon viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg><i class=knob></i></button>
   </div>
   <div id=extrabar class=extrabar hidden>
-    <button id=graphs class=graphbtn type=button title="Show graphs about your set instead of the cards">📊 Graphs</button>
-    <button type=button data-act=recheck title="Run every check again on the working copy">↻ Recheck</button>
-    <button type=button data-act=revert>Revert edits</button>
-    <button type=button data-act=resetign>Reset ignores</button>
-    <button type=button class=pri data-act=download>⬇ Download corrected copy</button>
+    <button id=graphs class=graphbtn type=button title="Show graphs about your set instead of the cards">Graphs</button>
   </div>
 </div></header>
 <main>
@@ -268,7 +266,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <div><h4>Scryfall data</h4><b id=heroNum>…</b><span id=heroOracle>unique cards for closest-match references</span></div>
     <div><h4>Community</h4><span class=comm>Looking for additional feedback and the potential for people to play your custom cards? Check out the <b>MSEM</b> and <b>Revolution</b> Discord communities and connect with other custom Magic designers!</span></div>
   </div>
-  <p class=short><button id=mkshort class=mlink type=button hidden>🖥 Add a Desktop shortcut</button></p>
+  <p class=short><button id=mkshort class=mlink type=button hidden>Add a Desktop shortcut</button></p>
 </section>
 <section id=dash hidden><div id=summary class=glass></div><div id=cards></div><div id=charts hidden></div></section>
 </main>
@@ -433,9 +431,9 @@ function render(d){
   $('#ver').textContent='v'+d.version;showDash();
   $('#cE').textContent=sv['Likely error'];$('#cR').textContent=sv['Needs review'];$('#cS').textContent=sv['Suggestion'];
   const t=(cls,n,l)=>`<div class="tile ${cls}"><b>${n}</b><span>${l}</span></div>`;
-  $('#summary').innerHTML=`<div class=sumhead><div><div class=eyebrow2>Analysis</div><h2>${esc(d.file)}</h2>${d.edited?'<small>Working copy edited. Your original is untouched.</small>':''}</div>
+  $('#summary').innerHTML=`<div class=sumhead><div><div class=eyebrow2>Analysis</div><h2>${esc(d.file)}</h2></div>
   <div class=acts2><button data-act=newcheck>＋ New check</button><button data-act=recheck>↻ Recheck</button><span class=sep></span>
-    <button class=pri data-act=download>⬇ Download corrected copy</button><button data-act=revert>Revert edits</button><button data-act=resetign>Reset ignores</button></div></div>
+    <button data-act=resetign>Reset ignores</button></div></div>
   <div class=tiles>${t('',s.cards,'cards')}${t('e',sv['Likely error'],'likely errors')}${t('r',sv['Needs review'],'need review')}${t('s',sv['Suggestion'],'suggestions')}
   ${t('',s.with_findings,'cards with findings')}${t('o',s.clean,'checked, no findings')}${t('',s.no_text,'not checked (empty text)')}${t('',s.ignored,'ignored')}</div>
   ${s.game&&s.game!=='magic'?`<div class=warn>This file is for the game “${esc(s.game)}”, not Magic. Results may be meaningless.</div>`:''}
@@ -455,7 +453,6 @@ function findingHTML(f){
    <div><small>Before:</small> ${f.before_html}</div><div><small>After:</small> ${f.after_html}</div>`}
   h+=`<div class=acts>`;
   if(f.after)h+=`<button data-act=copy data-id="${f.id}">Copy wording</button>`;
-  if(f.can_apply)h+=`<button data-act=apply data-id="${f.id}">Apply to working copy…</button>`;
   h+=`<button data-act=ign data-scope=card data-id="${f.id}">Ignore on this card</button>
   <button data-act=ign data-scope=text data-id="${f.id}">Ignore this exact issue everywhere</button>
   <button data-act=ign data-scope=rule data-id="${f.id}">Ignore this type of issue everywhere</button></div>`;
@@ -484,6 +481,7 @@ const lazyIO=new IntersectionObserver(es=>es.forEach(async e=>{
   try{const r=await (await fetch('/api/close?'+(el.dataset.f?'f='+encodeURIComponent(el.dataset.f):'card='+el.dataset.card))).json();
     el.innerHTML=r.empty?'<p class=mut><small>Found no rules text.</small></p>':closeHTML(r.close,el.dataset.title,el.dataset.f||D.oracle_cards?'':'<p class=mut><small>Scryfall card data isn’t loaded, so the closest real cards can’t be shown.</small></p>')}
   catch(_){el.innerHTML=''}}),{rootMargin:'600px'});
+let fromList=false;
 let pg=0;const PS=()=>compact?60:20;
 function nav(total){const pages=Math.max(1,Math.ceil(total/PS())),a=pg*PS()+1,b=Math.min(total,(pg+1)*PS());
   return `<div class=pager><button data-act=prev ${pg<=0?'disabled':''}>← Previous ${PS()}</button><span class=mut>Cards ${total?a:0}–${b} of ${total} · page ${pg+1} of ${pages}</span><button data-act=next ${pg>=pages-1?'disabled':''}>Next ${PS()} →</button></div>`}
@@ -504,7 +502,8 @@ function draw(){if(chartMode){drawCharts();return}
     pages=Math.max(1,Math.ceil(list.length/PS()));
   if(pg>=pages)pg=pages-1;if(pg<0)pg=0;
   const ebn=qerr?`<div class=warn>Search: ${esc(qerr)}. Showing all cards until it’s fixed.</div>`:'';
-  $('#cards').innerHTML=ebn+(list.length?nav(list.length)+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+nav(list.length)
+  let NV;
+  $('#cards').innerHTML=ebn+(list.length?(NV=fromList&&!compact?'<div class=pager><button data-act=backlist>← Back to collapsed list</button></div>':nav(list.length))+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+NV
     :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`);
   document.querySelectorAll('.lazy').forEach(el=>lazyIO.observe(el))}
 /* ---------- graphical analysis ---------- */
@@ -603,7 +602,7 @@ function drawCharts(){
   const cs=D.cards.filter(c=>(!qfn||qfn(c))&&rfOk(c)&&!isBasic(c)),ch=CHARTS.find(x=>x.id===chartId);
   $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
-function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'▤ Back to cards':'📊 Graphs';
+function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'Back to cards':'Graphs';
   $('#filters').classList.toggle('chartmode',on);$('#collapse').hidden=on||!D;$('#sortwrap').classList.toggle('chartmode',on)
   if(D){if(on)drawCharts();else draw()}}
 async function upload(f){if(!f)return;pg=0;Object.values(FILT).forEach(f=>f.set.clear());if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
@@ -630,8 +629,8 @@ document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.datas
 $('#onlyissues').onchange=()=>{pg=0;draw()};
 
 function toast(title,text,withDl){const t=$('#toast');
-  t.innerHTML=`<b>${title}</b><p>${text}</p><div class=tb>${withDl?'<button class=pri data-act=toastdl>Download corrected copy</button>':''}<button data-act=toastx>Got it</button></div>`;t.hidden=false}
-$('#collapse').onclick=()=>setCompact(!compact);
+  t.innerHTML=`<b>${title}</b><p>${text}</p><div class=tb><button data-act=toastx>Got it</button></div>`;t.hidden=false}
+$('#collapse').onclick=()=>{fromList=false;setCompact(!compact)};
 $('#graphs').onclick=()=>setChart(!chartMode);
 
 
@@ -688,23 +687,19 @@ $('#extras').onclick=e=>{e.stopPropagation();const bar=$('#extrabar'),on=bar.hid
 
 
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
-$('#q').oninput=e=>{setQuery(e.target.value);pg=0;draw()};
+$('#q').oninput=e=>{fromList=false;setQuery(e.target.value);pg=0;draw()};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
   if(a==='toastx'){$('#toast').hidden=true;return}
   if(a==='igncard'){render(await post('/api/ignorecard',{idx:b.dataset.idx,on:b.dataset.on==='1'}));return}
-  if(a==='toastdl'){$('#toast').hidden=true;location.href='/api/download';return}
   if(a==='newcheck'){showHero();return}
-  if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){$('#q').value='!"'+(c.name||'')+'"';setQuery($('#q').value);setCompact(false);window.scrollTo({top:$('#cards').offsetTop-80})}return}
+  if(a==='backlist'){fromList=false;$('#q').value='';setQuery('');setCompact(true);window.scrollTo({top:0});return}
+  if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){$('#q').value='!"'+(c.name||'')+'"';setQuery($('#q').value);fromList=true;setCompact(false);window.scrollTo({top:$('#cards').offsetTop-$('header.top').offsetHeight-12})}return}
   if(a==='copy'){try{await navigator.clipboard.writeText(f.after);b.textContent='Copied ✓'}catch(_){prompt('Copy this wording:',f.after)}}
-  else if(a==='apply'){if(confirm('Apply to the working copy?\n\nBefore: '+f.detected+'\nAfter:  '+f.after+'\n\nYour original file is not modified.')){
-    const r=await post('/api/apply',{id});if(r){render(r.result);if(r.count>1)alert('Replaced '+r.count+' matching occurrences in this field.')}}}
   else if(a==='ign')render(await post('/api/ignore',{id,scope:b.dataset.scope}));
   else if(a==='recheck')render(await post('/api/recheck'));
   else if(a==='export')location.href='/api/export?fmt='+b.dataset.fmt;
-  else if(a==='download'){if(confirm('This creates a NEW file with your applied corrections. The original is never overwritten. Continue?'))location.href='/api/download'}
-  else if(a==='revert'){if(confirm('Discard all applied edits and return to the uploaded version?'))render(await post('/api/revert'))}
   else if(a==='resetign')render(await post('/api/resetign'));
 });
 
@@ -776,9 +771,6 @@ class Handler(BaseHTTPRequestHandler):
                 if u.path == "/api/export" and ST["last"]:
                     b, t, n = export(urllib.parse.parse_qs(u.query).get("fmt", ["csv"])[0])
                     return self.send(b, t, name=n)
-                if u.path == "/api/download" and ST["kind"]:
-                    b, t, n = corrected_download()
-                    return self.send(b, t, name=n)
             except Exception as e:
                 return self.js({"error": str(e)}, 400)
         self.send(b"Not found", "text/plain", 404)
@@ -811,12 +803,6 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError("Upload a file or paste a card first.")
                 if u.path == "/api/recheck":
                     return self.js(analyze())
-                if u.path == "/api/applyall":
-                    applied, skipped = apply_all(set(body.get("sevs") or []))
-                    return self.js({"result": analyze(), "applied": applied, "skipped": skipped})
-                if u.path == "/api/apply":
-                    n = apply_fix(body["id"])
-                    return self.js({"result": analyze(), "count": n})
                 if u.path == "/api/ignore":
                     f = ST["findings"][body["id"]]
                     {"card": lambda: ST["ign_card"].add((f["card"], f["key"])), "text": lambda: ST["ign_text"].add(f["key"]),
@@ -828,9 +814,6 @@ class Handler(BaseHTTPRequestHandler):
                     return self.js(analyze())
                 if u.path == "/api/resetign":
                     ST["ign_card"], ST["ign_text"], ST["ign_rule"], ST["ign_whole"] = set(), set(), set(), set()
-                    return self.js(analyze())
-                if u.path == "/api/revert":
-                    ST["text"], ST["edited"] = ST["orig_text"], False
                     return self.js(analyze())
                 self.js({"error": "Unknown endpoint"}, 404)
             except Exception as e:

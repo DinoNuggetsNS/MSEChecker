@@ -26,8 +26,7 @@ That's it. Nothing else to install. The app already includes Scryfall's **Oracle
    - **Likely error** - probably wrong.
    - **Needs review** - worth a look.
    - **Suggestion** - optional polish.
-4. Use **Apply** on a finding to fix it, or **Ignore** to hide it. **Download corrected copy** saves a new file; the original is never overwritten.
-5. **CSV**, **HTML** and **Text** export the full report.
+4. Use **Copy wording** on a finding and make the change in MSE yourself, or **Ignore** to hide it. MSECheck only reads your set; it never edits or saves it.
 
 ### Card data (Scryfall)
 
