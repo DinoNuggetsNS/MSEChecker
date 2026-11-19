@@ -5,7 +5,9 @@ from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
 from .analysis import analyze, apply_all, apply_fix, corrected_download, load_text, load_upload
 from .reports import export
-from . import shortcut
+from . import shortcut, symbols_data
+import base64
+_SYMBOLS_PNG = base64.b64decode("".join(symbols_data.PNG_B64))
 
 
 # ----------------------------------------------------------------------------------------
@@ -21,17 +23,20 @@ PAGE = r"""<!doctype html><html lang=en data-theme=dark><meta charset=utf-8><met
 --bd:rgba(255,255,255,.11);--bd2:rgba(255,255,255,.2);--head:rgba(10,10,12,.72);--sh:0 10px 40px rgba(0,0,0,.35);
 --lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#ff8b80;
 --mark:rgba(255,196,80,.28);--del:rgba(255,107,94,.3);--ins:rgba(84,210,128,.28);
---fade:radial-gradient(900px 640px at 6% 70%,rgba(120,18,24,.85),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(150,24,30,.38),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(227,73,59,.85),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(255,110,84,.65),transparent 64%),radial-gradient(620px 420px at 12% 6%,rgba(90,14,20,.40),transparent 72%)}
+--fade:linear-gradient(transparent,transparent)}
 :root[data-theme=light]{color-scheme:light;--bg:#fbf8f7;--fg:#16161a;--mut:#62626d;--glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.55);--inset:rgba(20,20,30,.045);
 --bd:rgba(20,20,30,.1);--bd2:rgba(20,20,30,.2);--head:rgba(251,248,247,.78);--sh:0 10px 34px rgba(60,30,30,.1);
 --lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#d63a2c;
 --mark:rgba(255,200,60,.45);--del:rgba(239,100,90,.3);--ins:rgba(80,190,110,.32);
---fade:radial-gradient(900px 640px at 6% 70%,rgba(214,70,60,.30),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(227,73,59,.14),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(227,73,59,.42),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(255,120,96,.38),transparent 64%)}
+--fade:linear-gradient(transparent,transparent)}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--fade),var(--bg)}
 body.plain::before{background:var(--bg)}
+body.plain #floaters{display:none}
+#floaters{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
+.fsym{position:absolute;left:0;top:0;width:var(--s);height:var(--s);background:var(--fg);opacity:.085;will-change:transform;-webkit-mask:url(/symbols.png) no-repeat;mask:url(/symbols.png) no-repeat;-webkit-mask-size:calc(var(--s)*12) calc(var(--s)*10);mask-size:calc(var(--s)*12) calc(var(--s)*10);-webkit-mask-position:calc(var(--s)*var(--cx)*-1) calc(var(--s)*var(--cy)*-1);mask-position:calc(var(--s)*var(--cx)*-1) calc(var(--s)*var(--cy)*-1)}
 body,main,article,pre,.f,.tile{-webkit-user-select:text;user-select:text}
 ::selection{background:rgba(227,73,59,.35)}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
@@ -80,7 +85,7 @@ main{max-width:1180px;margin:auto;padding:0 1.2rem 4rem}
 .eyebrow{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .85rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass);font-size:12.5px;font-weight:550;color:var(--mut)}
 .eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--brand);box-shadow:0 0 10px var(--brand)}
 h1{font-size:clamp(2.4rem,5.2vw,4.1rem);line-height:1.04;letter-spacing:-.045em;font-weight:720;margin:1.1rem 0 1rem}
-h1 em{font-style:normal;background:linear-gradient(120deg,#ff9a8f 0%,#e3493b 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{font-size:16.5px;color:var(--mut);max-width:34em;margin:0 0 1.6rem}
 .cta{display:flex;gap:.8rem;flex-wrap:wrap}.hint{color:var(--mut);font-size:13px;margin:1rem 0 0}
 .paste{padding:1rem;margin-top:1.2rem;max-width:34em}.paste p{margin:.4rem 0}.paste input{width:100%}
@@ -643,6 +648,26 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   document.addEventListener('mouseover',e=>{const d=e.target.closest&&e.target.closest('.chart [data-tip]');if(!d){hide();return}
     hide();tip=document.createElement('div');tip.className='ctip';tip.innerHTML='<b>'+esc(d.dataset.tip)+'</b>';document.body.appendChild(tip);place(e)});
   document.addEventListener('mousemove',place);document.addEventListener('scroll',hide,true)})();
+
+/* ---------- floating set symbols (home page background) ---------- */
+(()=>{
+  const COUNT=117,COLS=12;let last=-1;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||!Element.prototype.animate)return;
+  const layer=document.createElement('div');layer.id='floaters';layer.setAttribute('aria-hidden','true');document.body.prepend(layer);
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  function spawn(el,initial){
+    const W=innerWidth,H=innerHeight,s=rnd(46,76);let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;
+    el.style.setProperty('--s',s+'px');el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS));
+    const side=Math.floor(Math.random()*4);let x0,y0,x1,y1;
+    if(side===0){x0=-s;y0=rnd(0,H);x1=W+s;y1=rnd(0,H)}else if(side===1){x0=W+s;y0=rnd(0,H);x1=-s;y1=rnd(0,H)}
+    else if(side===2){x0=rnd(0,W);y0=-s;x1=rnd(0,W);y1=H+s}else{x0=rnd(0,W);y0=H+s;x1=rnd(0,W);y1=-s}
+    const dur=Math.hypot(x1-x0,y1-y0)/rnd(14,34)*1000,r0=rnd(0,360),r1=r0+rnd(-140,140);
+    const a=el.animate([{transform:`translate(${x0}px,${y0}px) rotate(${r0}deg)`},{transform:`translate(${x1}px,${y1}px) rotate(${r1}deg)`}],{duration:dur,easing:'linear',fill:'forwards'});
+    if(initial)a.currentTime=rnd(0,.95)*dur;
+    a.onfinish=()=>spawn(el,false)}
+  const n=Math.max(10,Math.min(22,Math.round(innerWidth*innerHeight/60000)));
+  for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);spawn(el,true)}
+})();
 /* ---------- rarity filter ---------- */
 const RFS=[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic rare',RCOL.Mythic],['Other','Other',RCOL.Special]];
 let RF=new Set();
@@ -753,6 +778,13 @@ class Handler(BaseHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path)
         if u.path == "/":
             return self.send(PAGE.encode("utf-8"), "text/html; charset=utf-8")
+        if u.path == "/symbols.png":
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", str(len(_SYMBOLS_PNG)))
+            self.send_header("Cache-Control", "max-age=86400")
+            self.end_headers()
+            return self.wfile.write(_SYMBOLS_PNG)
         if u.path == "/api/shortcut":
             return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
         if u.path == "/api/ping":
