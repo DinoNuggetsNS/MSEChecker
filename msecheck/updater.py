@@ -43,13 +43,26 @@ def check(force=False):
 
 
 def cleanup():
-    """Delete the previous exe left behind by an update."""
-    try:
-        old = os.path.join(os.path.dirname(sys.executable), "MSECheck.old.exe")
-        if available() and os.path.exists(old):
-            os.remove(old)
-    except Exception:
-        pass
+    """Delete the exe left behind by an update. The old copy may still be shutting down, so keep retrying for a while."""
+    if not available():
+        return
+    folder = os.path.dirname(sys.executable)
+
+    def run():
+        import time
+        for _ in range(60):
+            left = False
+            for n in ("MSECheck.old.exe", "MSECheck.new.exe"):
+                fp = os.path.join(folder, n)
+                if os.path.exists(fp):
+                    try:
+                        os.remove(fp)
+                    except Exception:
+                        left = True
+            if not left:
+                return
+            time.sleep(1)
+    threading.Thread(target=run, daemon=True).start()
 
 
 def apply():
@@ -85,6 +98,12 @@ def apply():
         except Exception:
             pass
         return False, "Couldn't update (%s). Download MSECheck.exe from the Releases page instead." % e
+    # a tiny hidden helper deletes the old exe as soon as this copy has exited (a running exe can't delete itself)
+    try:
+        subprocess.Popen('cmd /c "for /l %%i in (1,1,60) do (del /f /q "%s" 2>nul & if not exist "%s" exit & ping -n 2 127.0.0.1 >nul)"' % (old, old),
+                         shell=True, close_fds=True, creationflags=0x08000000 | 0x00000008)
+    except Exception:
+        pass
     subprocess.Popen([exe], cwd=folder, close_fds=True, creationflags=0x00000008 | 0x00000200)   # DETACHED_PROCESS | NEW_GROUP
     threading.Timer(0.6, lambda: os._exit(0)).start()
     return True, info["latest"]

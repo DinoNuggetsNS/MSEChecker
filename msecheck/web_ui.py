@@ -53,10 +53,12 @@ body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--fade),var(--bg)}
 body.plain::before{background:var(--bg)}
 body.plain #floaters{display:none}
-body.lens #floaters{z-index:40}body.lens .fsym{pointer-events:auto;opacity:.3;cursor:help;transition:opacity .15s}body.lens .fsym:hover{opacity:.95}
-#brandlogo,#herologo{cursor:pointer}
-.herologo{transition:width .35s ease}body.lens .herologo{width:min(100%,130px)}
-#settip{position:fixed;z-index:60;pointer-events:none;padding:.45rem .7rem;border-radius:10px;background:var(--glass2);border:1px solid var(--bd2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:260px}
+body.lens .fsym{opacity:.3;transition:opacity .15s}body.lens .fsym.hit{opacity:.95}
+#herologo{cursor:grab;touch-action:none;-webkit-user-drag:none;user-select:none}#brandlogo{cursor:pointer}
+.herologo.held{position:fixed!important;z-index:70;width:120px!important;max-width:none;animation:none!important;cursor:grabbing;transition:none;filter:drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff) drop-shadow(0 8px 14px rgba(0,0,0,.45))}
+:root[data-theme=light] .herologo.held{filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
+.herologo{transition:width .35s ease}
+#settip{position:fixed;z-index:80;pointer-events:none;padding:.45rem .7rem;border-radius:10px;background:var(--glass2);border:1px solid var(--bd2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:260px}
 #settip b{display:block;font-weight:650}#settip span{color:var(--mut);font-size:12px}
 #lenshint{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:60;padding:.4rem .9rem;border-radius:99px;background:var(--glass2);border:1px solid var(--bd2);font-size:12.5px;color:var(--mut)}
 #floaters{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
@@ -629,7 +631,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   const layer=document.createElement('div');layer.id='floaters';layer.setAttribute('aria-hidden','true');document.body.prepend(layer);
   const rnd=(a,b)=>a+Math.random()*(b-a);
   const tip=document.createElement('div');tip.id='settip';tip.hidden=true;document.body.appendChild(tip);
-  const hint=document.createElement('div');hint.id='lenshint';hint.hidden=true;hint.textContent='Hover a floating set symbol to see its name and year. Click the magnifier or press Esc to stop.';document.body.appendChild(hint);
+  const hint=document.createElement('div');hint.id='lenshint';hint.hidden=true;hint.textContent='Drag the magnifier over a floating set symbol to see its name and year. Double-click it or press Esc to put it back.';document.body.appendChild(hint);
   function spawn(el,initial){
     const W=innerWidth,H=innerHeight,s=rnd(46,76);
     if(SETS.length){let i;do{i=Math.floor(Math.random()*SETS.length)}while(i===last&&SETS.length>1);last=i;const S=SETS[i];el._set=S;
@@ -644,15 +646,34 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     if(initial)a.currentTime=rnd(0,.95)*dur;
     a.playbackRate=lens?.25:1;el._a=a;a.onfinish=()=>spawn(el,false)}
   const n=Math.max(10,Math.min(22,Math.round(innerWidth*innerHeight/60000)));
-  const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);els.push(el);spawn(el,true);
-    el.onmouseenter=()=>{if(!lens||!el._set)return;el._a.pause();tip.innerHTML='<b></b><span></span>';tip.firstChild.textContent=el._set.n;tip.lastChild.textContent='Released '+el._set.y;tip.hidden=false};
-    el.onmousemove=e=>{tip.style.left=Math.min(innerWidth-270,e.clientX+16)+'px';tip.style.top=Math.min(innerHeight-70,e.clientY+16)+'px'};
-    el.onmouseleave=()=>{tip.hidden=true;if(el._a.playState==='paused')el._a.play()}}};
-  function setLens(on){if(on&&!SETS.length)return;lens=on;document.body.classList.toggle('lens',on);hint.hidden=!on;tip.hidden=true;els.forEach(e=>{if(e._a){e._a.playbackRate=on?.25:1;if(e._a.playState==='paused')e._a.play()}})}
-  window.__setLens=setLens;
-  [$('#herologo')].forEach(l=>{l.onclick=()=>{if(!$('#hero').hidden)setLens(!lens)}});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lens)setLens(false)});
+  const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);els.push(el);spawn(el,true)}};
+  /* the magnifier: grab it, drag it anywhere, and whatever set symbol is under the glass shows its name and year */
+  const logo=$('#herologo');let held=false,off=[0,0],raf=0;
+  const glass=()=>{const r=logo.getBoundingClientRect();return{x:r.left+r.width*.4,y:r.top+r.height*.39,r:r.width*.3}};
+  function scan(){
+    if(!held){raf=0;return}
+    const g=glass();let best=null,bd=1e9;
+    els.forEach(e=>{e.classList.remove('hit');if(!e._set)return;const r=e.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,d=Math.hypot(cx-g.x,cy-g.y);
+      if(d<g.r+r.width*.2&&d<bd){bd=d;best=e}});
+    if(best){best.classList.add('hit');tip.firstChild.textContent=best._set.n;tip.lastChild.textContent='Released '+best._set.y;tip.hidden=false;
+      tip.style.left=Math.max(8,Math.min(innerWidth-270,g.x+g.r+10))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-70,g.y-20))+'px'}else tip.hidden=true;
+    raf=requestAnimationFrame(scan)}
+  function setLens(on){lens=on;document.body.classList.toggle('lens',on);hint.hidden=!on;tip.hidden=true;
+    els.forEach(e=>{e.classList.remove('hit');if(e._a)e._a.playbackRate=on?.25:1});
+    if(!on){held=false;logo.classList.remove('held');logo.style.left=logo.style.top='';}}
   window.__lensOff=()=>{if(lens)setLens(false)};
+  tip.innerHTML='<b></b><span></span>';
+  logo.addEventListener('pointerdown',e=>{
+    if(!SETS.length||$('#hero').hidden)return;e.preventDefault();
+    const r=logo.getBoundingClientRect(),w=120,h=w*r.height/r.width;
+    if(!held){setLens(true);held=true;logo.classList.add('held');off=[w*.4,h*.39];
+      logo.style.left=(e.clientX-off[0])+'px';logo.style.top=(e.clientY-off[1])+'px'}
+    else off=[e.clientX-r.left,e.clientY-r.top];
+    logo.setPointerCapture(e.pointerId);logo._drag=true;if(!raf)raf=requestAnimationFrame(scan)});
+  logo.addEventListener('pointermove',e=>{if(!logo._drag)return;logo.style.left=(e.clientX-off[0])+'px';logo.style.top=(e.clientY-off[1])+'px'});
+  logo.addEventListener('pointerup',()=>{logo._drag=false});
+  logo.addEventListener('dblclick',()=>setLens(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lens)setLens(false)});
   fetch('/sets.json').then(r=>r.json()).catch(()=>[]).then(j=>{SETS=Array.isArray(j)?j:[];start()})
 })();
 /* ---------- search filters: rarity / colour / type ---------- */
