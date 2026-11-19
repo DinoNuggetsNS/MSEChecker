@@ -160,10 +160,8 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .mcard.ok .mico{box-shadow:0 10px 30px rgba(95,214,138,.4)}
 @keyframes mfade{from{opacity:0}}@keyframes mpop{from{opacity:0;transform:translateY(14px) scale(.96)}}
 @media(prefers-reduced-motion:reduce){.modal,.mcard{animation:none}}
-.cbtn{border:1px solid transparent;font-weight:650;color:#17100f;background:linear-gradient(135deg,#fff 0%,#f6b3ac 48%,#e3493b 100%);box-shadow:0 4px 16px rgba(227,73,59,.3)}
-.cbtn:hover{filter:brightness(1.05);background:linear-gradient(135deg,#fff 0%,#f6b3ac 48%,#e3493b 100%);border-color:transparent}
-:root[data-theme=light] .cbtn{color:#fff;background:linear-gradient(135deg,#0d0d0f 0%,#5a1a16 48%,#e3493b 100%)}
-:root[data-theme=light] .cbtn:hover{background:linear-gradient(135deg,#0d0d0f 0%,#5a1a16 48%,#e3493b 100%)}
+.cbtn{font-weight:550;color:var(--fg);border:1px solid var(--bd2);background:color-mix(in srgb,var(--fg) 10%,transparent);box-shadow:none}
+.cbtn:hover{background:color-mix(in srgb,var(--fg) 16%,transparent)}
 .sheet{overflow:hidden;margin:.8rem 0;padding:0}
 .srow{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(160px,1.5fr) 150px;gap:1rem;padding:.5rem 1.1rem;align-items:center;font-size:14px;border-bottom:1px solid var(--bd)}
 .shead{position:sticky;top:0;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:650;background:var(--glass2)}
@@ -171,26 +169,20 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 .sgroup .srow{border-bottom:0;padding-top:.32rem;padding-bottom:.32rem}.sgroup .srow:first-child{padding-top:.55rem}.sgroup .srow:last-child{padding-bottom:.55rem}
 .sname{font-weight:650;letter-spacing:-.01em}.sgroup .none{color:var(--mut)}
 @media(max-width:640px){.srow{grid-template-columns:1fr 1fr;gap:.3rem .8rem}.srow>:nth-child(3){grid-column:1/-1}.shead>:nth-child(3){display:none}}
-.fixbtn{color:#eafff1;border-color:rgba(255,255,255,.12);background:linear-gradient(135deg,#0f4d2a,#14693a);box-shadow:0 4px 16px rgba(20,105,58,.4)}
-.fixbtn:hover{background:linear-gradient(135deg,#126033,#188046);border-color:rgba(255,255,255,.25)}.fixbtn:disabled{opacity:.45;box-shadow:none}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
-.rarwrap{position:relative;flex:1 1 128px;min-width:128px}.rarwrap .rarbtn{width:100%;justify-content:center}#filters[hidden]~.rarwrap{flex:0 0 auto;min-width:0;margin-left:auto}#filters[hidden]~.rarwrap .rarbtn{width:auto}.filters{margin-right:calc(-.7rem + .3rem)}.short{text-align:center;margin:.6rem 0 0}
-.rarbtn{font-size:13px;padding:.38rem .5rem}.rarbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
+.fwraps{display:flex;gap:.4rem}.fwrap{position:relative}.fwrap .rarmenu{left:0;right:auto}.fbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
 .rarn{background:#e8b93a;color:#2a1c00;border-radius:99px;font-size:11px;font-weight:750;padding:0 .4rem;line-height:1.5}
-.rarmenu{position:absolute;right:0;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
+.rarmenu{position:absolute;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
 .raropt{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:550}.raropt:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
 .raropt input{accent-color:var(--brand);width:15px;height:15px;margin:0}
 .raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
 .raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
-.healthbtn{border-color:transparent;font-weight:650;color:#2a1c00;background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);box-shadow:0 3px 12px rgba(214,163,40,.35)}
-.healthbtn:hover{filter:brightness(1.07);background:linear-gradient(135deg,#fbe9a6,#e8b93a 55%,#b98613);border-color:transparent}
-.hcard{background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;width:min(640px,100%);max-height:88vh;overflow:auto;padding:1.6rem 1.6rem 1.2rem;position:relative;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2)}
-.hhead{display:flex;gap:1.1rem;align-items:center;margin-bottom:1rem}.hhead h3{margin:0;font-size:1.3rem;letter-spacing:-.025em}.hhead p{margin:.2rem 0 0;color:var(--mut);font-size:13px}
-.hscore{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;flex:none;font-size:1.6rem;font-weight:750;color:var(--fg)}
-.hrow{display:grid;grid-template-columns:22px 1fr;gap:.2rem .6rem;padding:.6rem 0;border-top:1px solid var(--bd)}.hrow b{font-size:14px}.hrow span{color:var(--mut);font-size:13px;grid-column:2}
-.hdot{width:12px;height:12px;border-radius:50%;margin-top:4px}.hdot.hn{background:#8a8f98}.hdot.hg{background:#5fd68a}.hdot.hw{background:#e8b93a}.hdot.hb{background:#e3493b}
+.extrasbtn{background:#fff;color:#111;border:1px solid #d9d9df;font-weight:650;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.extrasbtn:hover{background:#f1f1f4;border-color:#c8c8d0}.extrasbtn .car{display:inline-block;transition:transform .2s}.extrasbtn.open .car{transform:rotate(180deg)}
+#sort{flex:0 1 170px;margin-left:auto}.filters.chartmode .chip{display:none}
+.extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
 .graphbtn:hover{filter:brightness(1.08);background:linear-gradient(135deg,#3b6fd4,#7c4fd0);border-color:transparent}.graphbtn.on{background:var(--glass);color:var(--fg);border-color:var(--bd2);box-shadow:none}
 .chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
@@ -222,19 +214,23 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <label class="chip s"><input type=checkbox data-sev="Suggestion" checked><i></i>Suggestions <b id=cS>0</b></label>
     <label class="chip o"><input type=checkbox id=onlyissues checked title="Only show cards that have findings"><i></i>With findings</label>
     <label class="chip g" title="Hide the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Remove Scryfall comparisons</label>
-    <button id=fixall class=fixbtn type=button title="Apply every automatic fix to your working copy">✓ Fix all fixable</button>
+    <button id=extras class=extrasbtn type=button aria-expanded=false aria-controls=extrabar title="More tools">Extras <span class=car>▾</span></button>
   </div>
-  <div id=rarwrap class=rarwrap hidden><button id=rarbtn class=rarbtn type=button aria-haspopup=true aria-expanded=false title="Show only cards of the rarities you tick">◆ Sort by rarity <span id=rarn class=rarn hidden></span> ▾</button>
-    <div id=rarmenu class="glass rarmenu" hidden role=menu></div></div>
+  <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
   <div class=tools>
     <input type=search id=q placeholder="Search cards for Magic cards… e.g. o:creature  t:elf  c:r  mv&lt;=2" hidden aria-label="Search cards for Magic cards" title="Scryfall-style search over the cards in your set.&#10;name  o:text  t:type  c:rg  m:{R}  mv>=3  pow>=3  tou  loy  r:rare  kw:flying  ft:flavor  a:artist  is:creature  has:findings&#10;sev:error  cat:credits  (red/blue/…)  -term  a or b  ( )  &quot;quoted phrase&quot;  /regex/  !&quot;exact name&quot;  ~ = card name">
-    <button id=health class=healthbtn type=button hidden title="A quick health report on your set's balance">✚ Set health</button>
-    <button id=graphs class=graphbtn type=button hidden title="Show graphs about your set instead of the cards">📊 Graphs</button>
+    <div id=fwraps class=fwraps hidden></div>
     <button id=collapse class=cbtn type=button hidden title="Condense the results into a quick-look table">▤ Collapse all</button>
-    <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
     <button id=theme class=switch role=switch aria-checked=false aria-label="Light mode" title="Light / dark mode">
       <svg class=sun viewBox="0 0 24 24"><circle cx=12 cy=12 r=4></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
       <svg class=moon viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg><i class=knob></i></button>
+  </div>
+  <div id=extrabar class=extrabar hidden>
+    <button id=graphs class=graphbtn type=button title="Show graphs about your set instead of the cards">📊 Graphs</button>
+    <button type=button data-act=recheck title="Run every check again on the working copy">↻ Recheck</button>
+    <button type=button data-act=revert>Revert edits</button>
+    <button type=button data-act=resetign>Reset ignores</button>
+    <button type=button class=pri data-act=download>⬇ Download corrected copy</button>
   </div>
 </div></header>
 <main>
@@ -426,8 +422,8 @@ async function post(path,body,raw){
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
 function setLoaded(v){$('#topin').classList.toggle('loaded',v);document.body.classList.toggle('plain',v)}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs','#health','#rarwrap'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;$('#health').hidden=false;$('#rarwrap').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#fwraps','#extrabar'].forEach(s=>$(s).hidden=true);$('#extras').classList.remove('open');$('#extras').setAttribute('aria-expanded',false);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#fwraps').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -500,9 +496,7 @@ function sheetHTML(list){
     const c=v.c,nm=`<span class=sname>${esc(c.name||'(unnamed card)')}</span>`;
     if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
     return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
-function fixCount(){return D?D.cards.reduce((n,c)=>n+c.findings.filter(f=>f.can_apply&&on[f.sev]).length,0):0}
-function updFix(){const b=$('#fixall'),n=fixCount();b.textContent='✓ Fix all fixable'+(n?' ('+n+')':'');b.disabled=!n;if(!n)b.title='Nothing can be fixed automatically with the current filters'}
-function draw(){updFix();if(chartMode){drawCharts();return}
+function draw(){if(chartMode){drawCharts();return}
   const only=$('#onlyissues').checked;
   const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qfn||qfn(v.c))&&rfOk(v.c)).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
@@ -608,9 +602,9 @@ function drawCharts(){
   $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'▤ Back to cards':'📊 Graphs';
-  ['#filters','#sort','#collapse'].forEach(s=>$(s).hidden=on);if(!on&&D){$('#filters').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false}
+  $('#filters').classList.toggle('chartmode',on);['#sort','#collapse'].forEach(s=>$(s).hidden=on||!D)
   if(D){if(on)drawCharts();else draw()}}
-async function upload(f){if(!f)return;pg=0;if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
+async function upload(f){if(!f)return;pg=0;Object.values(FILT).forEach(f=>f.set.clear());if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
 $('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};
 let dragN=0;
 addEventListener('dragenter',e=>{e.preventDefault();dragN++;$('#dropveil').hidden=false});
@@ -635,10 +629,6 @@ $('#onlyissues').onchange=()=>{pg=0;draw()};
 
 function toast(title,text,withDl){const t=$('#toast');
   t.innerHTML=`<b>${title}</b><p>${text}</p><div class=tb>${withDl?'<button class=pri data-act=toastdl>Download corrected copy</button>':''}<button data-act=toastx>Got it</button></div>`;t.hidden=false}
-$('#fixall').onclick=async()=>{const sevs=Object.keys(on).filter(k=>on[k]);if(!D)return;
-  const r=await post('/api/applyall',{sevs});if(!r)return;render(r.result);
-  if(r.applied)toast('✓ '+r.applied+' fix'+(r.applied>1?'es':'')+' applied to your working copy','Remember to <b style="display:inline">download the corrected MSE file again</b> so your changes are saved. Your original file isn’t changed.'+(r.skipped?' '+r.skipped+' couldn’t be applied automatically.':''),true);
-  else toast('Nothing was fixed','No automatic fixes could be applied'+(r.skipped?' ('+r.skipped+' couldn’t be applied safely)':'')+'. Use “Copy wording” on a finding and edit it in MSE.',false)};
 $('#collapse').onclick=()=>setCompact(!compact);
 $('#graphs').onclick=()=>setChart(!chartMode);
 
@@ -668,53 +658,29 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   const n=Math.max(10,Math.min(22,Math.round(innerWidth*innerHeight/60000)));
   for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);spawn(el,true)}
 })();
-/* ---------- rarity filter ---------- */
-const RFS=[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic rare',RCOL.Mythic],['Other','Other',RCOL.Special]];
-let RF=new Set();
+/* ---------- search filters: rarity / colour / type ---------- */
 const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r};
-const rfOk=c=>!RF.size||RF.has(rkey(c));
-function rarMenu(){const cnt={};D.cards.forEach(c=>{const k=rkey(c);cnt[k]=(cnt[k]||0)+1});
-  $('#rarmenu').innerHTML=RFS.map(r=>`<label class="raropt"><input type="checkbox" data-r="${r[0]}"${RF.has(r[0])?' checked':''}><i style="background:${r[2]}"></i>${r[1]}<b>${cnt[r[0]]||0}</b></label>`).join('')+'<button class="rarclr" type="button" id="rarclr">Show all rarities</button>';
-  $('#rarbtn').classList.toggle('act',RF.size>0);const n=$('#rarn');n.hidden=!RF.size;n.textContent=RF.size}
-function rarOpen(on){$('#rarmenu').hidden=!on;$('#rarbtn').setAttribute('aria-expanded',on);if(on)rarMenu()}
-$('#rarbtn').onclick=e=>{e.stopPropagation();rarOpen($('#rarmenu').hidden)};
-$('#rarmenu').onclick=e=>e.stopPropagation();
-$('#rarmenu').onchange=e=>{const r=e.target.dataset.r;if(!r)return;e.target.checked?RF.add(r):RF.delete(r);pg=0;rarMenu();draw()};
-$('#rarmenu').addEventListener('click',e=>{if(e.target.id==='rarclr'){RF.clear();pg=0;rarMenu();draw()}});
-document.addEventListener('click',()=>rarOpen(false));document.addEventListener('keydown',e=>{if(e.key==='Escape')rarOpen(false)});
-/* ---------- set health report ---------- */
-function healthItems(){
-  const all=D.cards.filter(c=>!isBasic(c)),cs=all.filter(c=>!isLand(c)),n=cs.length||1,I=[],add=(st,t,d)=>I.push({st,t,d});
-  const pc=x=>Math.round(100*x/n);
-  const sev=D.summary.severity||{},err=sev['Likely error']||0;
-  add(err?(err>10?'bad':'warn'):'good','Wording and rules errors',err?`${err} likely error${err>1?'s':''} still flagged. Use “Fix all fixable” or edit them in MSE.`:'No likely errors flagged.');
-  const rar={};cs.forEach(c=>{const r=prarity(c);rar[r]=(rar[r]||0)+1});
-  const com=rar.Common||0,top=(rar.Rare||0)+(rar.Mythic||0),cp=pc(com),tp=pc(top);
-  add(cp<30||tp>25?'warn':'good','Rarity spread',`${cp}% commons, ${pc(rar.Uncommon||0)}% uncommons, ${tp}% rares and mythics. ${cp<30?'Few commons: ':tp>25?'Lots of rares: ':''}${cp<30||tp>25?'sets usually have a base of commons and few rares.':'Looks like a typical shape.'} Cards with no rarity in MSE count as common.`);
-  const mono={W:0,U:0,B:0,R:0,G:0};cs.forEach(c=>{const s=qinfo(c).cols;if(s.size===1)mono[[...s][0]]++});
-  const mv=Object.values(mono),mx=Math.max(...mv),mn=Math.min(...mv);
-  if(mx>=5)add(mn<mx*.6?'warn':'good','Colour balance',`One-colour cards: ${Object.keys(mono).map(k=>CNAME[k]+' '+mono[k]).join(', ')}. ${mn<mx*.6?CNAME[Object.keys(mono).find(k=>mono[k]===mn)]+' has noticeably fewer than '+CNAME[Object.keys(mono).find(k=>mono[k]===mx)]+'.':'Evenly spread.'}`);
-  const rem={};Object.keys(mono).forEach(k=>rem[k]=0);cs.forEach(c=>{const t=noRem(c);if(REM.some(r=>r[1].test(t))){const s=qinfo(c).cols;if(s.size===1)rem[[...s][0]]++}});
-  const nor=Object.keys(rem).filter(k=>!rem[k]&&mono[k]>=4);
-  if(mx>=5)add(nor.length?'warn':'good','Removal',nor.length?`No removal found in ${nor.map(k=>CNAME[k]).join(', ')}. Players in those colours may have no way to answer threats.`:`Every colour has removal (${Object.keys(rem).map(k=>CNAME[k]+' '+rem[k]).join(', ')}).`);
-  const cr=cs.filter(c=>/creature/.test(qinfo(c).type)).length,crp=pc(cr);
-  add(crp<30||crp>60?'warn':'good','Creature count',`${crp}% of non-land cards are creatures. ${crp<30?'That’s low: games may feel slow and spell-heavy.':crp>60?'That’s high: a set needs enough noncreature spells for variety.':'A healthy mix.'}`);
-  const mvs=cs.map(c=>qinfo(c).mv),a=avg(mvs),hi=mvs.filter(m=>m>=5).length,hp=pc(hi);
-  add(a>3.8||a<2.2||hp>25?'warn':'good','Mana curve',`Average mana value ${a}, with ${hp}% of cards costing 5 or more. ${a>3.8||hp>25?'Top-heavy: add cheaper cards.':a<2.2?'Very low: the set may lack late-game power.':'Looks reasonable.'}`);
-  const cx=cs.filter(c=>prarity(c)==='Common'&&noRem(c).split(/\s+/).filter(Boolean).length>35);
-  add(cx.length>com*.15&&cx.length>2?'warn':'good','Common complexity',cx.length?`${cx.length} common${cx.length>1?'s have':' has'} long rules text (over 35 words): ${cx.slice(0,3).map(c=>c.name).join(', ')}${cx.length>3?'…':''}. Commons should be simple to read.`:'Commons have short, readable rules text.');
-  const seen={},dup=[];all.forEach(c=>{const k=(c.name||'').trim().toLowerCase();if(!k)return;const ty=qinfo(c).type||'';if(/token|emblem|basic/.test(ty)||(!(c.cost||'').trim()&&!/land/.test(ty)&&new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b').test(ty)))return;if(seen[k])dup.push(c.name);seen[k]=1});
-  const ov=D.name_overlaps||[];
-  if(D.oracle_names)add(dup.length||ov.length?'bad':'good','Duplicate names',[dup.length?`Used more than once in your set: ${[...new Set(dup)].slice(0,5).join(', ')}.`:'',ov.length?`Same name as a real Magic card: ${ov.slice(0,6).join(', ')}${ov.length>6?` and ${ov.length-6} more`:''}.`:''].filter(Boolean).join(' ')||'Every name is unique and none match a real Magic card.');
-  else add(dup.length?'bad':'na','Duplicate names',(dup.length?`Used more than once in your set: ${[...new Set(dup)].slice(0,5).join(', ')}. `:'No repeats inside your set. ')+'Real Magic card names weren’t checked because the Scryfall data isn’t loaded.');
-    return I}
-function showHealth(){
-  if(!D)return;const I=healthItems(),score=Math.max(0,100-I.reduce((s,i)=>s+(i.st==='bad'?15:i.st==='warn'?4:0),0)),col=score>=85?'#5fd68a':score>=65?'#e8b93a':'#e3493b';
-  const m=document.createElement('div');m.className='modal';m.setAttribute('role','dialog');
-  m.innerHTML=`<div class="glass hcard"><div class="hhead"><div class="hscore" role="img" aria-label="Set health: ${score>=85?'high':score>=65?'medium':'low'}" style="background:conic-gradient(${col} ${score*3.6}deg,color-mix(in srgb,var(--fg) 12%,transparent) 0)"><div style="background:color-mix(in srgb,var(--bg) 94%,var(--fg));width:66px;height:66px;border-radius:50%"></div></div><div><h3>Set health report</h3><p>${esc(D.file||'Your set')} · ${D.cards.length} cards. A rough guide to balance, not a rule: every set is different.</p></div></div>${I.map(i=>`<div class="hrow"><i class="hdot h${i.st[0]}"></i><b>${esc(i.t)}</b><span>${esc(i.d)}</span></div>`).join('')}<div class="mbtns" style="margin-top:1rem"><button class="pri" id="hclose">Close</button></div></div>`;
-  document.body.appendChild(m);const x=()=>{m.remove();document.removeEventListener('keydown',k)},k=e=>{if(e.key==='Escape')x()};
-  document.addEventListener('keydown',k);m.onclick=e=>{if(e.target===m)x()};m.querySelector('#hclose').onclick=x}
-$('#health').onclick=showHealth;
+const FILT={
+  rar:{label:'Rarity',opts:[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic rare',RCOL.Mythic],['Other','Other',RCOL.Special]],has:(c,k)=>rkey(c)===k},
+  col:{label:'Colour',opts:[['W','White','#f4efd2'],['U','Blue','#4a90d9'],['B','Black','#3d3646'],['R','Red','#e3493b'],['G','Green','#3da66a'],['M','Multicolour','#e8b93a'],['C','Colourless','#aeb4bd']],
+    has:(c,k)=>{const s=qinfo(c).cols;return k==='M'?s.size>1:k==='C'?s.size===0:s.has(k)}},
+  typ:{label:'Type',opts:['creature','instant','sorcery','artifact','enchantment','land','planeswalker'].map(t=>[t,t[0].toUpperCase()+t.slice(1),null]),has:(c,k)=>(qinfo(c).type||'').includes(k)}
+};
+Object.values(FILT).forEach(f=>f.set=new Set());
+const rfOk=c=>Object.values(FILT).every(f=>!f.set.size||[...f.set].some(k=>f.has(c,k)));
+$('#fwraps').innerHTML=Object.entries(FILT).map(([id,f])=>`<div class="fwrap" data-f="${id}"><button class="fbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Show only cards that match the ${f.label.toLowerCase()}s you tick">${f.label} <span class="rarn" hidden></span> ▾</button><div class="glass rarmenu" hidden role="menu"></div></div>`).join('');
+function fMenu(id){const f=FILT[id],w=$(`.fwrap[data-f=${id}]`),cnt={};
+  if(D)D.cards.forEach(c=>f.opts.forEach(o=>{if(f.has(c,o[0]))cnt[o[0]]=(cnt[o[0]]||0)+1}));
+  w.querySelector('.rarmenu').innerHTML=f.opts.map(o=>`<label class="raropt"><input type="checkbox" data-k="${o[0]}"${f.set.has(o[0])?' checked':''}>${o[2]?`<i style="background:${o[2]}"></i>`:''}${o[1]}<b>${cnt[o[0]]||0}</b></label>`).join('')+'<button class="rarclr" type="button" data-clr="1">Show all</button>';
+  const b=w.querySelector('.fbtn');b.classList.toggle('act',f.set.size>0);const n=b.querySelector('.rarn');n.hidden=!f.set.size;n.textContent=f.set.size}
+function fOpen(id,on){document.querySelectorAll('.fwrap').forEach(w=>{const o=w.dataset.f===id&&on;w.querySelector('.rarmenu').hidden=!o;w.querySelector('.fbtn').setAttribute('aria-expanded',o)});if(on)fMenu(id)}
+$('#fwraps').addEventListener('click',e=>{e.stopPropagation();const w=e.target.closest('.fwrap');if(!w)return;const id=w.dataset.f,f=FILT[id];
+  if(e.target.closest('.fbtn')){fOpen(id,w.querySelector('.rarmenu').hidden);return}
+  if(e.target.dataset.clr){f.set.clear();pg=0;fMenu(id);draw()}});
+$('#fwraps').addEventListener('change',e=>{const w=e.target.closest('.fwrap');if(!w||!e.target.dataset.k)return;const f=FILT[w.dataset.f];
+  e.target.checked?f.set.add(e.target.dataset.k):f.set.delete(e.target.dataset.k);pg=0;fMenu(w.dataset.f);draw()});
+document.addEventListener('click',()=>fOpen(null,false));document.addEventListener('keydown',e=>{if(e.key==='Escape')fOpen(null,false)});
+$('#extras').onclick=e=>{e.stopPropagation();const bar=$('#extrabar'),on=bar.hidden;bar.hidden=!on;$('#extras').classList.toggle('open',on);$('#extras').setAttribute('aria-expanded',on)};
 
 
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
