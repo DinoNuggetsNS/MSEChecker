@@ -128,6 +128,12 @@ def make_cards(blocks):
         subs = [f for f in b.fields if re.fullmatch(r"sub type( \d+)?", nk(f.key))]
         sups = [f for f in b.fields if re.fullmatch(r"super type( \d+)?", nk(f.key))]
         n = len(cards)
+        # One entry per card face ("super type", "super type 2", ...), each with that face's own power/toughness.
+        faces = []
+        for suf in sorted({(re.search(r"(\d+)$", nk(f.key)) or [None, ""])[1] for f in sups}):
+            sp = " " + suf if suf else ""
+            ft = " ".join(plain(fval(f)).strip() for f in b.fields if re.fullmatch(r"(?:super|sub) type" + re.escape(sp), nk(f.key)))
+            faces.append({"type": ft.strip(), "power": P("power" + sp), "toughness": P("toughness" + sp), "suf": suf})
         # Planeswalker templates keep each loyalty cost (+2, 0, -1) in its own field ("loyalty cost 1", ...),
         # separate from the ability text, so the text itself often has no "+2:" in it.
         lcosts = {}
@@ -149,7 +155,7 @@ def make_cards(blocks):
             "idx": n, "name": P("name"), "supertype": " ".join(plain(fval(f)).strip() for f in sups).strip() or P("type"),
             "subtype": " ".join(plain(fval(f)).strip() for f in subs).strip(), "subkey": subs[0].key if subs else "sub type",
             "cost": P("casting cost"), "cost2": " ".join(plain(fval(f)).strip() for f in b.fields
-                                                          if re.fullmatch(r"casting cost \d+", nk(f.key))), "power": P("power"), "toughness": P("toughness"), "loyalty": P("loyalty"), "rarity": P("rarity"),
+                                                          if re.fullmatch(r"casting cost \d+", nk(f.key))), "power": P("power"), "toughness": P("toughness"), "loyalty": P("loyalty"), "rarity": P("rarity"), "faces": faces,
             "filled": [nk(f.key) for f in b.fields if fval(f).strip() and not re.match(
                 r"(time |stylesheet|has styling|styling data|image|card color|notes|rarity|illustrator)", nk(f.key))],
             "rules": rules, "loyalty_costs": list(lcosts.values()),

@@ -21,16 +21,17 @@ PAGE = r"""<!doctype html><html lang=en data-theme=dark><meta charset=utf-8><met
 --bd:rgba(255,255,255,.11);--bd2:rgba(255,255,255,.2);--head:rgba(10,10,12,.72);--sh:0 10px 40px rgba(0,0,0,.35);
 --lime:#c6e65a;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#ff7a6e;--rev:#ffbe5c;--sug:#74b2ff;--ok:#5fd68a;--accent:#ff8b80;
 --mark:rgba(255,196,80,.28);--del:rgba(255,107,94,.3);--ins:rgba(84,210,128,.28);
---fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.30),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.08),transparent 60%),linear-gradient(180deg,transparent 60%,rgba(227,73,59,.06) 100%)}
+--fade:radial-gradient(900px 640px at 6% 70%,rgba(128,52,176,.80),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(86,70,226,.50),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(244,96,128,.90),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(252,150,100,.75),transparent 64%),radial-gradient(620px 420px at 12% 6%,rgba(106,46,150,.35),transparent 72%)}
 :root[data-theme=light]{color-scheme:light;--bg:#fbf8f7;--fg:#16161a;--mut:#62626d;--glass:rgba(255,255,255,.66);--glass2:rgba(255,255,255,.55);--inset:rgba(20,20,30,.045);
 --bd:rgba(20,20,30,.1);--bd2:rgba(20,20,30,.2);--head:rgba(251,248,247,.78);--sh:0 10px 34px rgba(60,30,30,.1);
 --lime:#5c8500;--grad:linear-gradient(165deg,#8a4f9e 0%,#69598f 48%,#4d8c9f 100%);--err:#c62828;--rev:#a85a00;--sug:#1559b8;--ok:#1f7a3d;--accent:#d63a2c;
 --mark:rgba(255,200,60,.45);--del:rgba(239,100,90,.3);--ins:rgba(80,190,110,.32);
---fade:radial-gradient(1100px 650px at 12% 112%,rgba(227,73,59,.17),transparent 62%),radial-gradient(800px 520px at 92% -8%,rgba(227,73,59,.05),transparent 60%),linear-gradient(180deg,transparent 60%,rgba(227,73,59,.035) 100%)}
+--fade:radial-gradient(900px 640px at 6% 70%,rgba(160,96,210,.40),transparent 68%),radial-gradient(760px 560px at 48% 52%,rgba(120,110,240,.24),transparent 70%),radial-gradient(1000px 620px at 62% 112%,rgba(250,120,150,.50),transparent 62%),radial-gradient(760px 600px at 100% 96%,rgba(255,170,120,.45),transparent 64%)}
 *{box-sizing:border-box}
 html{background:var(--bg)}
 body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);-webkit-font-smoothing:antialiased;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--fade),var(--bg)}
+body.plain::before{background:var(--bg)}
 body,main,article,pre,.f,.tile{-webkit-user-select:text;user-select:text}
 ::selection{background:rgba(227,73,59,.35)}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
@@ -114,10 +115,11 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .tile b{display:block;font-size:1.7rem;letter-spacing:-.03em;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12.5px;color:var(--mut)}
 .tile.e b{color:var(--err)}.tile.r b{color:var(--rev)}.tile.s b{color:var(--sug)}.tile.o b{color:var(--ok)}
+.ignbtn{margin-left:auto;font-size:12px;padding:.2rem .65rem}.igncard{opacity:.6}.igncard .rules{display:none}
 .dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dgrid{display:grid;gap:1rem;margin-top:.9rem;padding:1rem 1.1rem;border-radius:14px;border:1px solid var(--bd);background:var(--glass2)}
 .dgrid h5{margin:0 0 .4rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
-.dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchip{display:inline-flex;gap:.4rem;align-items:center;padding:.18rem .65rem;border-radius:99px;border:1px solid var(--bd);background:var(--glass);color:var(--fg);font-size:12.5px;font-weight:550}
-.dchip b{color:var(--mut);font-weight:650}.dchip.kw{border-color:#4a90d955;color:#6fa8e6}
+.dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchips{gap:.25rem .65rem}.dchip{display:inline-flex;gap:.35rem;align-items:baseline;color:var(--fg);font-size:13.5px}
+.dchip b{color:var(--mut);font-weight:550}.dchip:not(:last-child)::after{content:"·";margin-left:.65rem;color:var(--mut)}.dchip.kw{color:var(--mut)}
 .drow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}.dval{color:var(--fg);font-size:13.5px;font-weight:550}
 .warn{margin-top:.9rem;padding:.7rem 1rem;border-radius:12px;border:1px solid var(--err);color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent);font-weight:550}
 article{background:var(--glass);border:1px solid var(--bd);border-radius:var(--r);padding:1.15rem 1.3rem;margin:.9rem 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
@@ -418,7 +420,7 @@ async function post(path,body,raw){
   try{const r=await fetch(path,{method:'POST',headers:raw?{}:{'Content-Type':'application/json'},body:raw?body:JSON.stringify(body||{})});
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
-function setLoaded(v){$('#topin').classList.toggle('loaded',v)}
+function setLoaded(v){$('#topin').classList.toggle('loaded',v);document.body.classList.toggle('plain',v)}
 function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#graphs','#health','#rarwrap'].forEach(s=>$(s).hidden=true);setLoaded(false);window.scrollTo(0,0)}
 function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#graphs').hidden=false;$('#health').hidden=false;$('#rarwrap').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
@@ -467,8 +469,8 @@ function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
-  return `<article><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
-  ${c.ignored?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span></header>
+  return `<article${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
+  ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class=ignbtn type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" title="${c.ign_whole?'Check this card again':'Skip every check for this card, for example a reminder token'}">${c.ign_whole?'Stop ignoring':'Ignore this card'}</button></header>${c.ign_whole?'<p class=mut>This card is being ignored, so none of its issues are shown or counted.</p>':''}
   <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
@@ -697,6 +699,7 @@ document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
   if(a==='toastx'){$('#toast').hidden=true;return}
+  if(a==='igncard'){render(await post('/api/ignorecard',{idx:b.dataset.idx,on:b.dataset.on==='1'}));return}
   if(a==='toastdl'){$('#toast').hidden=true;location.href='/api/download';return}
   if(a==='newcheck'){showHero();return}
   if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){$('#q').value='!"'+(c.name||'')+'"';setQuery($('#q').value);setCompact(false);window.scrollTo({top:$('#cards').offsetTop-80})}return}
@@ -818,8 +821,12 @@ class Handler(BaseHTTPRequestHandler):
                     {"card": lambda: ST["ign_card"].add((f["card"], f["key"])), "text": lambda: ST["ign_text"].add(f["key"]),
                      "rule": lambda: ST["ign_rule"].add(f["rule"])}[body["scope"]]()
                     return self.js(analyze())
+                if u.path == "/api/ignorecard":
+                    w = ST.setdefault("ign_whole", set())
+                    (w.add if body.get("on") else w.discard)(int(body["idx"]))
+                    return self.js(analyze())
                 if u.path == "/api/resetign":
-                    ST["ign_card"], ST["ign_text"], ST["ign_rule"] = set(), set(), set()
+                    ST["ign_card"], ST["ign_text"], ST["ign_rule"], ST["ign_whole"] = set(), set(), set(), set()
                     return self.js(analyze())
                 if u.path == "/api/revert":
                     ST["text"], ST["edited"] = ST["orig_text"], False

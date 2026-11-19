@@ -117,11 +117,14 @@ def check_set(cards, ctx, fl):
                     {"field": cards[i]["subkey"], "old": w.capitalize(), "new": best[1].capitalize(), "all": False},
                     ref(None, "cards with this creature type", "t:" + best[1]))
     has_pt = any(c["power"] for c in cards)
+    pt_sufs = {fc["suf"] for c in cards for fc in c.get("faces", ()) if fc["power"]}   # which faces' templates have P/T boxes
     for c in cards:
-        ty = (c["supertype"] + " " + c["subtype"]).lower()
-        if has_pt and "creature" in ty and not (c["power"] and c["toughness"]):
-            add(c["idx"], "Needs review", "Typeline consistency", "creature-no-pt", c["name"],
-                c["supertype"] + " " + c["subtype"], "Creature card without power/toughness.")
+        # Check each face on its own: a double-faced card may be a creature on one side and, say, an enchantment on the other.
+        fcs = c.get("faces") or [{"type": c["supertype"] + " " + c["subtype"], "power": c["power"], "toughness": c["toughness"], "suf": ""}]
+        for fc in fcs:
+            if fc["suf"] in pt_sufs and "creature" in fc["type"].lower() and not (fc["power"] and fc["toughness"]):
+                add(c["idx"], "Needs review", "Typeline consistency", "creature-no-pt", c["name"],
+                    fc["type"], "Creature card without power/toughness.")
 
     # per-line mechanics & references
     lines_by = []

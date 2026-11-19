@@ -425,8 +425,11 @@ def check_design(card, ctx):
     if "*" in pt and not re.search(r"(?:power|toughness)[^.]*\bequal to\b|\*/\*", full_low):
         add("Needs review", "dr-cda-missing", card["name"], key0, "*",
             "Power or toughness is * but no rule text says what * equals.")
-    if (card["power"] or card["toughness"]) and "creature" not in ty and "vehicle" not in ty and ty.strip() and "token" not in ty:
-        add("Suggestion", "dr-pt-noncreature", card["name"], key0, card["power"] + "/" + card["toughness"],
+    fcs = card.get("faces") or [{"type": ty, "power": card["power"], "toughness": card["toughness"]}]
+    stale = next((fc for fc in fcs if (fc["power"] or fc["toughness"]) and "creature" not in fc["type"].lower()
+                  and "vehicle" not in fc["type"].lower() and fc["type"].strip() and "token" not in fc["type"].lower()), None)
+    if stale:
+        add("Suggestion", "dr-pt-noncreature", card["name"], key0, stale["power"] + "/" + stale["toughness"],
             "This card has power/toughness filled in but is not a creature or Vehicle, so the values may be stale.")
     return out
 

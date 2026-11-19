@@ -87,7 +87,7 @@ def analyze():
         for n, f in enumerate(items):
             f["key"] = f["rule"] + "|" + (f["match"] or f["detected"])[:80].lower()
             f["id"] = "%d:%d" % (c["idx"], n)
-            ign = f["rule"] in ST["ign_rule"] or f["key"] in ST["ign_text"] or (c["idx"], f["key"]) in ST["ign_card"]
+            ign = f["rule"] in ST["ign_rule"] or f["key"] in ST["ign_text"] or (c["idx"], f["key"]) in ST["ign_card"] or c["idx"] in ST.get("ign_whole", ())
             after = None
             if f["fix"]:
                 o = f["fix"]["old"]
@@ -124,7 +124,7 @@ def analyze():
                           "rules": rules_text, "findings": res,
                           "power": c["power"], "toughness": c["toughness"], "loyalty": c.get("loyalty", ""), "rarity": c.get("rarity", ""),
                           "flavor": "\n".join(f["plain"] for f in c["flavor"]), "artist": c["artist"],
-                          "ignored": n_ign, "scryfall": qurl, "terms": qterms, "has_text": has_text, "filled": c["filled"],
+                          "ignored": n_ign, "ign_whole": c["idx"] in ST.get("ign_whole", ()), "scryfall": qurl, "terms": qterms, "has_text": has_text, "filled": c["filled"],
                           "text_fields": [f["key"] for f in c["rules"] if f["plain"].strip()]})
     d = get_dict()
     names = ORACLE.get("name_idx") or {}
@@ -165,7 +165,7 @@ def analyze():
 
 
 def load_upload(name, data):
-    ST.update(kind="set", filename=name, orig=data, ign_card=set(), ign_text=set(), ign_rule=set(), edited=False)
+    ST.update(kind="set", filename=name, orig=data, ign_whole=set(), ign_card=set(), ign_text=set(), ign_rule=set(), edited=False)
     raw = data
     if zipfile.is_zipfile(io.BytesIO(data)):
         z = zipfile.ZipFile(io.BytesIO(data))
@@ -183,7 +183,7 @@ def load_upload(name, data):
 
 def load_text(name, text):
     lines = ["card:", "\tname: " + (name or "(single card)"), "\trule text:"] + ["\t\t" + l.replace("\t", " ") for l in text.replace("\r\n", "\n").split("\n")]
-    ST.update(kind="text", filename="single card", orig=b"", ign_card=set(), ign_text=set(), ign_rule=set(), edited=False,
+    ST.update(kind="text", filename="single card", orig=b"", ign_whole=set(), ign_card=set(), ign_text=set(), ign_rule=set(), edited=False,
               bom=False, crlf=False)
     ST["orig_text"] = ST["text"] = "\n".join(lines)
 
