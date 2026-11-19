@@ -171,17 +171,20 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
 @media(max-width:640px){.srow{grid-template-columns:1fr 1fr;gap:.3rem .8rem}.srow>:nth-child(3){grid-column:1/-1}.shead>:nth-child(3){display:none}}
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:110;width:min(460px,calc(100% - 24px));padding:1rem 1.2rem;animation:mpop .35s cubic-bezier(.2,.9,.3,1.2);border-color:rgba(60,190,110,.5)}
 .toast b{display:block;font-size:15px;margin-bottom:.2rem}.toast p{margin:0 0 .8rem;color:var(--mut);font-size:13.5px}.toast .tb{display:flex;gap:.5rem;flex-wrap:wrap}
-.fwraps{display:flex;gap:.4rem}.fwrap{position:relative}.fwrap .rarmenu{left:0;right:auto}.fbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
+.sortwrap{position:relative;margin-left:auto}.sortbtn{font-size:13px}.sortbtn.act{border-color:#e8b93a;box-shadow:0 0 0 1px #e8b93a55}
+.sortmenu{right:0;left:auto;top:calc(100% + 8px);width:min(660px,92vw);display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.4rem .9rem;padding:.9rem 1rem .6rem}
+.fsec h6{margin:0 0 .3rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
+.fclr{grid-column:1/-1}.sortwrap.chartmode .sortsec{display:none}.sortmenu .raropt{padding:.35rem .4rem}.sortmenu .rarclr{margin-top:.4rem}
 .rarn{background:#e8b93a;color:#2a1c00;border-radius:99px;font-size:11px;font-weight:750;padding:0 .4rem;line-height:1.5}
-.rarmenu{position:absolute;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
+.rarmenu,.sortmenu{position:absolute;top:calc(100% + 8px);min-width:230px;padding:.4rem;z-index:80;background:color-mix(in srgb,var(--bg) 94%,var(--fg))!important;animation:mpop .2s ease}
 .raropt{display:flex;align-items:center;gap:.6rem;padding:.45rem .6rem;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:550}.raropt:hover{background:color-mix(in srgb,var(--fg) 8%,transparent)}
 .raropt input{accent-color:var(--brand);width:15px;height:15px;margin:0}
 .raropt i{width:14px;height:14px;border-radius:50%;flex:none;border:1px solid color-mix(in srgb,var(--fg) 35%,transparent)}
 .raropt b{margin-left:auto;color:var(--mut);font-weight:550;font-size:12px}
 .rarclr{display:block;width:100%;text-align:center;margin-top:.2rem;padding:.4rem;font-size:12px;color:var(--mut);background:none;border:0;border-top:1px solid var(--bd);border-radius:0}
-.extrasbtn{background:#fff;color:#111;border:1px solid #d9d9df;font-weight:650;box-shadow:0 2px 10px rgba(0,0,0,.18)}
-.extrasbtn:hover{background:#f1f1f4;border-color:#c8c8d0}.extrasbtn .car{display:inline-block;transition:transform .2s}.extrasbtn.open .car{transform:rotate(180deg)}
-#sort{flex:0 1 170px;margin-left:auto}.filters.chartmode .chip{display:none}
+.extrasbtn{background:#b9b9c2;color:#141418;border:1px solid #a6a6b0;font-weight:650;box-shadow:none}
+.extrasbtn:hover{background:#c6c6ce;border-color:#b3b3bd}.extrasbtn .car{display:inline-block;transition:transform .2s}.extrasbtn.open .car{transform:rotate(180deg)}
+.filters.chartmode .chip{display:none}
 .extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
 .graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
 .graphbtn:hover{filter:brightness(1.08);background:linear-gradient(135deg,#3b6fd4,#7c4fd0);border-color:transparent}.graphbtn.on{background:var(--glass);color:var(--fg);border-color:var(--bd2);box-shadow:none}
@@ -216,10 +219,9 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <label class="chip g" title="Hide the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Remove Scryfall comparisons</label>
     <button id=extras class=extrasbtn type=button aria-expanded=false aria-controls=extrabar title="More tools">Extras <span class=car>▾</span></button>
   </div>
-  <select id=sort hidden aria-label="Sort cards"><option value=sev>Sort: errors first</option><option value=set>Sort: set order</option><option value=name>Sort: name A–Z</option><option value=count>Sort: most findings</option></select>
+  <div id=sortwrap class=sortwrap hidden><button id=sortbtn class=sortbtn type=button aria-haspopup=true aria-expanded=false title="Sort the cards and filter them by rarity, colour and type">⇅ Sort &amp; filter <span id=sortn class=rarn hidden></span> ▾</button><div id=sortmenu class="glass sortmenu" hidden></div></div>
   <div class=tools>
     <input type=search id=q placeholder="Search cards for Magic cards… e.g. o:creature  t:elf  c:r  mv&lt;=2" hidden aria-label="Search cards for Magic cards" title="Scryfall-style search over the cards in your set.&#10;name  o:text  t:type  c:rg  m:{R}  mv>=3  pow>=3  tou  loy  r:rare  kw:flying  ft:flavor  a:artist  is:creature  has:findings&#10;sev:error  cat:credits  (red/blue/…)  -term  a or b  ( )  &quot;quoted phrase&quot;  /regex/  !&quot;exact name&quot;  ~ = card name">
-    <div id=fwraps class=fwraps hidden></div>
     <button id=collapse class=cbtn type=button hidden title="Condense the results into a quick-look table">▤ Collapse all</button>
     <button id=theme class=switch role=switch aria-checked=false aria-label="Light mode" title="Light / dark mode">
       <svg class=sun viewBox="0 0 24 24"><circle cx=12 cy=12 r=4></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
@@ -422,8 +424,8 @@ async function post(path,body,raw){
   const j=await r.json();if(j.error){alert(j.error);return null}return j}catch(e){alert('Request failed: '+e);return null}}
 function setCompact(v){compact=v;pg=0;const b=$('#collapse');b.textContent=v?'▦ Expand all':'▤ Collapse all';b.title=v?'Show the full cards again':'Condense the results into a quick-look table';if(D)draw()}
 function setLoaded(v){$('#topin').classList.toggle('loaded',v);document.body.classList.toggle('plain',v)}
-function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sort','#collapse','#fwraps','#extrabar'].forEach(s=>$(s).hidden=true);$('#extras').classList.remove('open');$('#extras').setAttribute('aria-expanded',false);setLoaded(false);window.scrollTo(0,0)}
-function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sort').hidden=false;$('#collapse').hidden=false;$('#fwraps').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
+function showHero(){$('#hero').hidden=false;$('#dash').hidden=true;$('#backres').hidden=!D;['#filters','#q','#sortwrap','#collapse','#extrabar'].forEach(s=>$(s).hidden=true);$('#extras').classList.remove('open');$('#extras').setAttribute('aria-expanded',false);setLoaded(false);window.scrollTo(0,0)}
+function showDash(){$('#hero').hidden=true;$('#dash').hidden=false;$('#filters').hidden=false;$('#q').hidden=false;$('#sortwrap').hidden=false;$('#collapse').hidden=false;setLoaded(true);if(chartMode)setChart(true)}
 function render(d){
   if(!d)return;D=d;FM={};
   d.cards.forEach(c=>c.findings.forEach(f=>FM[f.id]=f));
@@ -602,7 +604,7 @@ function drawCharts(){
   $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'▤ Back to cards':'📊 Graphs';
-  $('#filters').classList.toggle('chartmode',on);['#sort','#collapse'].forEach(s=>$(s).hidden=on||!D)
+  $('#filters').classList.toggle('chartmode',on);$('#collapse').hidden=on||!D;$('#sortwrap').classList.toggle('chartmode',on)
   if(D){if(on)drawCharts();else draw()}}
 async function upload(f){if(!f)return;pg=0;Object.values(FILT).forEach(f=>f.set.clear());if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
 $('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};
@@ -661,30 +663,31 @@ $('#graphs').onclick=()=>setChart(!chartMode);
 /* ---------- search filters: rarity / colour / type ---------- */
 const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r};
 const FILT={
-  rar:{label:'Rarity',opts:[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic rare',RCOL.Mythic],['Other','Other',RCOL.Special]],has:(c,k)=>rkey(c)===k},
+  rar:{label:'Rarity',opts:[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic',RCOL.Mythic],['Other','Other',RCOL.Special]],has:(c,k)=>rkey(c)===k},
   col:{label:'Colour',opts:[['W','White','#f4efd2'],['U','Blue','#4a90d9'],['B','Black','#3d3646'],['R','Red','#e3493b'],['G','Green','#3da66a'],['M','Multicolour','#e8b93a'],['C','Colourless','#aeb4bd']],
     has:(c,k)=>{const s=qinfo(c).cols;return k==='M'?s.size>1:k==='C'?s.size===0:s.has(k)}},
   typ:{label:'Type',opts:['creature','instant','sorcery','artifact','enchantment','land','planeswalker'].map(t=>[t,t[0].toUpperCase()+t.slice(1),null]),has:(c,k)=>(qinfo(c).type||'').includes(k)}
 };
 Object.values(FILT).forEach(f=>f.set=new Set());
 const rfOk=c=>Object.values(FILT).every(f=>!f.set.size||[...f.set].some(k=>f.has(c,k)));
-$('#fwraps').innerHTML=Object.entries(FILT).map(([id,f])=>`<div class="fwrap" data-f="${id}"><button class="fbtn" type="button" aria-haspopup="true" aria-expanded="false" title="Show only cards that match the ${f.label.toLowerCase()}s you tick">${f.label} <span class="rarn" hidden></span> ▾</button><div class="glass rarmenu" hidden role="menu"></div></div>`).join('');
-function fMenu(id){const f=FILT[id],w=$(`.fwrap[data-f=${id}]`),cnt={};
-  if(D)D.cards.forEach(c=>f.opts.forEach(o=>{if(f.has(c,o[0]))cnt[o[0]]=(cnt[o[0]]||0)+1}));
-  w.querySelector('.rarmenu').innerHTML=f.opts.map(o=>`<label class="raropt"><input type="checkbox" data-k="${o[0]}"${f.set.has(o[0])?' checked':''}>${o[2]?`<i style="background:${o[2]}"></i>`:''}${o[1]}<b>${cnt[o[0]]||0}</b></label>`).join('')+'<button class="rarclr" type="button" data-clr="1">Show all</button>';
-  const b=w.querySelector('.fbtn');b.classList.toggle('act',f.set.size>0);const n=b.querySelector('.rarn');n.hidden=!f.set.size;n.textContent=f.set.size}
-function fOpen(id,on){document.querySelectorAll('.fwrap').forEach(w=>{const o=w.dataset.f===id&&on;w.querySelector('.rarmenu').hidden=!o;w.querySelector('.fbtn').setAttribute('aria-expanded',o)});if(on)fMenu(id)}
-$('#fwraps').addEventListener('click',e=>{e.stopPropagation();const w=e.target.closest('.fwrap');if(!w)return;const id=w.dataset.f,f=FILT[id];
-  if(e.target.closest('.fbtn')){fOpen(id,w.querySelector('.rarmenu').hidden);return}
-  if(e.target.dataset.clr){f.set.clear();pg=0;fMenu(id);draw()}});
-$('#fwraps').addEventListener('change',e=>{const w=e.target.closest('.fwrap');if(!w||!e.target.dataset.k)return;const f=FILT[w.dataset.f];
-  e.target.checked?f.set.add(e.target.dataset.k):f.set.delete(e.target.dataset.k);pg=0;fMenu(w.dataset.f);draw()});
-document.addEventListener('click',()=>fOpen(null,false));document.addEventListener('keydown',e=>{if(e.key==='Escape')fOpen(null,false)});
+const SORTS=[['sev','Errors first'],['set','Set order'],['name','Name A–Z'],['count','Most findings']];
+function sortPanel(){
+  const sec=([id,f])=>{const cnt={};if(D)D.cards.forEach(c=>f.opts.forEach(o=>{if(f.has(c,o[0]))cnt[o[0]]=(cnt[o[0]]||0)+1}));
+    return `<div class="fsec" data-f="${id}"><h6>${f.label}</h6>${f.opts.map(o=>`<label class="raropt"><input type="checkbox" data-k="${o[0]}"${f.set.has(o[0])?' checked':''}>${o[2]?`<i style="background:${o[2]}"></i>`:''}${o[1]}<b>${cnt[o[0]]||0}</b></label>`).join('')}</div>`};
+  $('#sortmenu').innerHTML=`<div class="fsec sortsec"><h6>Sort by</h6>${SORTS.map(([v,l])=>`<label class="raropt"><input type="radio" name="sortr" value="${v}"${sortMode===v?' checked':''}>${l}</label>`).join('')}</div>`
+    +Object.entries(FILT).map(sec).join('')+'<div class="fclr"><button class="rarclr" type="button" data-clr="1">Clear all filters</button></div>';
+  const n=Object.values(FILT).reduce((a,f)=>a+f.set.size,0),b=$('#sortn');b.hidden=!n;b.textContent=n;$('#sortbtn').classList.toggle('act',n>0)}
+function sortOpen(on){$('#sortmenu').hidden=!on;$('#sortbtn').setAttribute('aria-expanded',on);if(on)sortPanel()}
+$('#sortbtn').onclick=e=>{e.stopPropagation();sortOpen($('#sortmenu').hidden)};
+$('#sortmenu').addEventListener('click',e=>{e.stopPropagation();if(e.target.dataset.clr){Object.values(FILT).forEach(f=>f.set.clear());pg=0;sortPanel();draw()}});
+$('#sortmenu').addEventListener('change',e=>{const t=e.target;
+  if(t.name==='sortr'){sortMode=t.value;pg=0;sortPanel();draw();return}
+  const sec=t.closest('.fsec[data-f]');if(!sec||!t.dataset.k)return;const f=FILT[sec.dataset.f];t.checked?f.set.add(t.dataset.k):f.set.delete(t.dataset.k);pg=0;sortPanel();draw()});
+document.addEventListener('click',()=>sortOpen(false));document.addEventListener('keydown',e=>{if(e.key==='Escape')sortOpen(false)});
 $('#extras').onclick=e=>{e.stopPropagation();const bar=$('#extrabar'),on=bar.hidden;bar.hidden=!on;$('#extras').classList.toggle('open',on);$('#extras').setAttribute('aria-expanded',on)};
 
 
 $('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
-$('#sort').onchange=e=>{sortMode=e.target.value;pg=0;draw()};
 $('#q').oninput=e=>{setQuery(e.target.value);pg=0;draw()};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
