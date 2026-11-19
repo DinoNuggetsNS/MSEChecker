@@ -64,8 +64,6 @@ def main():
         import threading
         from . import shortcut as _sc
         threading.Thread(target=_sc.refresh, daemon=True).start()
-        from . import updater as _up
-        _up.cleanup()
     except Exception:
         pass
     state.DESIGN_RISK = not a.no_design_risk

@@ -5,7 +5,7 @@ from .state import HEARTBEAT, LOCK, ST
 from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_oracle_matches, load_oracle
 from .analysis import analyze, load_text, load_upload
 from .reports import export
-from . import shortcut, symbols_data, updater
+from . import shortcut, symbols_data
 import base64
 _SYMBOLS_PNG = base64.b64decode("".join(symbols_data.PNG_B64))
 
@@ -283,7 +283,7 @@ mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{ba
     <div><h4>Scryfall data</h4><b id=heroNum>…</b><span id=heroOracle>unique cards for closest-match references</span></div>
     <div><h4>Community</h4><span class=comm>Looking for additional feedback and the potential for people to play your custom cards? Check out the <b>MSEM</b> and <b>Revolution</b> Discord communities and connect with other custom Magic designers!</span></div>
   </div>
-  <p class=short><button id=mkshort class=btn type=button hidden>Add a Desktop shortcut</button><button id=upd class="btn pri" type=button hidden>Update to newest version</button></p>
+  <p class=short><button id=mkshort class=btn type=button hidden>Add a Desktop shortcut</button></p>
 </section>
 <section id=dash hidden><div id=summary class=glass></div><div id=cards></div><div id=charts hidden></div></section>
 </main>
@@ -720,13 +720,6 @@ document.addEventListener('click',async e=>{
   else if(a==='resetign')render(await post('/api/resetign'));
 });
 
-/* in-app update (Windows app only) */
-(async()=>{let u;try{u=await (await fetch('/api/update')).json()}catch(_){return}
-  if(!u||!u.enabled)return;const b=$('#upd');b.hidden=false;
-  if(!u.newer){b.textContent='You have the newest version';b.disabled=true;b.className='btn ghost';return}
-  b.title='Newest: '+u.latest+' (you have '+u.current+')';
-  b.onclick=async()=>{b.disabled=true;b.textContent='Updating… the app will restart';let r;try{r=await post('/api/update',{})}catch(_){return}
-    if(r&&!r.ok){b.disabled=false;b.textContent='Update to newest version'}}})();
 /* Desktop shortcut question (Windows app only) */
 (async function(){
   let a;try{a=await (await fetch('/api/shortcut')).json()}catch(_){return}
@@ -775,8 +768,6 @@ class Handler(BaseHTTPRequestHandler):
             return self.wfile.write(_SYMBOLS_PNG)
         if u.path == "/api/shortcut":
             return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
-        if u.path == "/api/update":
-            return self.js(updater.check())
         if u.path == "/sets.json":
             return self.js(_sets_index())
         m = re.fullmatch(r"/set/([a-z0-9_]{2,8})\.svg", u.path)
@@ -835,9 +826,6 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError("Paste some rules text first.")
                     load_text(body.get("name", ""), body["text"])
                     return self.js(analyze())
-                if u.path == "/api/update":
-                    ok, msg = updater.apply()
-                    return self.js({"ok": ok, "message": msg})
                 if u.path == "/api/shortcut":
                     if body.get("action") == "create":
                         ok, msg = shortcut.create()
