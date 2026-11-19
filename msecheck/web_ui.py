@@ -60,7 +60,6 @@ body.lens .fsym{opacity:.3;transition:opacity .15s}body.lens .fsym.hit{opacity:.
 .herologo{transition:width .35s ease}
 #settip{position:fixed;z-index:80;pointer-events:none;padding:.45rem .7rem;border-radius:10px;background:var(--glass2);border:1px solid var(--bd2);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;line-height:1.35;box-shadow:0 8px 24px rgba(0,0,0,.35);max-width:260px}
 #settip b{display:block;font-weight:650}#settip span{color:var(--mut);font-size:12px}
-#lenshint{position:fixed;left:50%;bottom:1.2rem;transform:translateX(-50%);z-index:60;padding:.4rem .9rem;border-radius:99px;background:var(--glass2);border:1px solid var(--bd2);font-size:12.5px;color:var(--mut)}
 #floaters{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:-1}
 .fsym{position:absolute;left:0;top:0;width:var(--s);height:var(--s);background:var(--fg);opacity:.085;will-change:transform;-webkit-mask:url(/symbols.png) no-repeat;mask:url(/symbols.png) no-repeat;-webkit-mask-size:calc(var(--s)*12) calc(var(--s)*10);mask-size:calc(var(--s)*12) calc(var(--s)*10);-webkit-mask-position:calc(var(--s)*var(--cx)*-1) calc(var(--s)*var(--cy)*-1);mask-position:calc(var(--s)*var(--cx)*-1) calc(var(--s)*var(--cy)*-1)}
 body,main,article,pre,.f,.tile{-webkit-user-select:text;user-select:text}
@@ -631,7 +630,6 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   const layer=document.createElement('div');layer.id='floaters';layer.setAttribute('aria-hidden','true');document.body.prepend(layer);
   const rnd=(a,b)=>a+Math.random()*(b-a);
   const tip=document.createElement('div');tip.id='settip';tip.hidden=true;document.body.appendChild(tip);
-  const hint=document.createElement('div');hint.id='lenshint';hint.hidden=true;hint.textContent='Drag the magnifier over a floating set symbol to see its name and year. Double-click it or press Esc to put it back.';document.body.appendChild(hint);
   function spawn(el,initial){
     const W=innerWidth,H=innerHeight,s=rnd(46,76);
     if(SETS.length){let i;do{i=Math.floor(Math.random()*SETS.length)}while(i===last&&SETS.length>1);last=i;const S=SETS[i];el._set=S;
@@ -658,7 +656,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     if(best){best.classList.add('hit');tip.firstChild.textContent=best._set.n;tip.lastChild.textContent='Released '+best._set.y;tip.hidden=false;
       tip.style.left=Math.max(8,Math.min(innerWidth-270,g.x+g.r+10))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-70,g.y-20))+'px'}else tip.hidden=true;
     raf=requestAnimationFrame(scan)}
-  function setLens(on){lens=on;document.body.classList.toggle('lens',on);hint.hidden=!on;tip.hidden=true;
+  function setLens(on){lens=on;document.body.classList.toggle('lens',on);tip.hidden=true;
     els.forEach(e=>e.classList.remove('hit'));
     if(!on){held=false;logo.classList.remove('held');logo.style.left=logo.style.top='';}}
   window.__lensOff=()=>{if(lens)setLens(false)};

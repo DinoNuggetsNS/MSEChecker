@@ -12,6 +12,7 @@ from .scryfall_data import ORACLE
 from .card_checks import check_artist, check_card, check_flavor, check_structure
 from .design_risk import check_design, similar_query
 from .set_checks import check_set
+from .extra_checks import check_extra_card, check_extra_set
 from .scryfall_links import card_query
 
 
@@ -61,9 +62,14 @@ def analyze():
             fl[c["idx"]].append(mk("Needs review", "Checker", "checker-error", c["name"], c["name"],
                                    "The checker hit an unexpected problem on this card (%s). Please report it." % e))
     check_set(cards, ctx, fl)
+    try:
+        check_extra_set(cards, ctx, fl)
+    except Exception:
+        pass
     for c in cards:
         try:
             fl[c["idx"]] += check_structure(c)
+            fl[c["idx"]] += check_extra_card(c, ctx)
         except Exception:
             pass
         try:
