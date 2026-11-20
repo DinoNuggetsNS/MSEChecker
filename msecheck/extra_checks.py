@@ -110,11 +110,11 @@ def check_extra_card(card, ctx):
                 bullets = sum(1 for x in fld["plain"].split("\n") if x.strip().startswith("•"))
                 if 0 < bullets < 2:
                     add("Likely error", "Missing term", "modal-one-option", s, m.group(0), "A “Choose …” card needs at least two bulleted modes, but this one has only one.", fld["key"])
-    if re.search(r"(?:instant|sorcery)", ty) and "creature" not in ty and not is_token:
+    if re.search(r"(?:instant|sorcery)", ty) and "creature" not in ty and not is_token and one_face:
         for line in rules.split("\n"):
             unq = re.sub(r"“[^”]*”|\"[^\"]*\"", " ", re.sub(r"\([^)]*\)", " ", line))
             if re.match(r"^\s*\{[TQ]\}", unq):
-                add("Likely error", "Templating", "tap-symbol-spell", line.strip(), "{T}", "Instants and sorceries don't have activated abilities that tap. Is the type line right?", key)
+                add("Likely error", "Templating", "tap-symbol-spell", line.strip(), "{T}", "Instants and sorceries shouldn't have activated abilities that tap.", key)
                 break
     # repeated keywords / contradictory keyword pairs
     first = re.sub(r"\([^)]*\)", "", rules.split("\n")[0]) if rules.strip() else ""

@@ -152,7 +152,7 @@ def make_cards(blocks):
                 txt = "%s: %s" % (cost, txt)
             rules.append({"key": f.key, "plain": txt})
         cards.append({
-            "idx": n, "name": P("name"), "supertype": " ".join(plain(fval(f)).strip() for f in sups).strip() or P("type"),
+            "idx": n, "name": P("name"), "names": [plain(fval(f)).strip() for f in b.fields if re.fullmatch(r"name( \d+)?", nk(f.key)) and plain(fval(f)).strip()], "supertype": " ".join(plain(fval(f)).strip() for f in sups).strip() or P("type"),
             "subtype": " ".join(plain(fval(f)).strip() for f in subs).strip(), "subkey": subs[0].key if subs else "sub type",
             "cost": P("casting cost"), "cost2": " ".join(plain(fval(f)).strip() for f in b.fields
                                                           if re.fullmatch(r"casting cost \d+", nk(f.key))), "power": P("power"), "toughness": P("toughness"), "loyalty": P("loyalty"), "rarity": P("rarity"), "faces": faces,

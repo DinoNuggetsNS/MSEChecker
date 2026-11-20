@@ -69,7 +69,7 @@ def check_flavor(card, ctx):
     d = get_dict()
     if d is None:
         return out   # flavor text is ordinary English, so a real dictionary is needed to tell typos from words (pip install pyspellchecker)
-    own = set(re.findall(r"[a-z]{3,}", (card["name"] + " " + card["supertype"] + " " + card["subtype"]).lower()))
+    own = set(re.findall(r"[a-z]{3,}", (" ".join(card.get("names") or [card["name"]]) + " " + card["supertype"] + " " + card["subtype"]).lower()))
     for fld in card.get("flavor", []):
         key = fld["key"]
         for line in fld["plain"].split("\n"):

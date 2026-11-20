@@ -53,8 +53,8 @@ def build_ctx(cards, blocks):
     c.kw_single = [k for k in c.kws if re.fullmatch(r"[a-z]{5,}", k)]
     c.kw_words = {w for k in c.kws for w in re.findall(r"[a-z]{3,}", k)}
     c.set_words = {w for card in cards for w in re.findall(
-        r"[a-z]{3,}", (card["name"] + " " + card["supertype"] + " " + card["subtype"]).lower())}
-    c.names = {card["name"].strip().lower() for card in cards}
+        r"[a-z]{3,}", (" ".join(card.get("names") or [card["name"]]) + " " + card["supertype"] + " " + card["subtype"]).lower())}
+    c.names = {n.strip().lower() for card in cards for n in (card.get("names") or [card["name"]])}
     c.pool = list(VOCAB | c.set_words | c.kw_words)
     c.flavor_freq = Counter()
     for card in cards:
