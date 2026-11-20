@@ -32,7 +32,7 @@ jobs:
           "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
       - name: Build MSECheck.exe
         run: >
-          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;." --add-data "setsdata;setsdata"
+          python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;." --add-data "setsdata;setsdata" --add-data "msecheck/customsets;msecheck/customsets"
           --collect-all webview --collect-all spellchecker
           --add-data "oracle-cards.jsonl.gz;." MSECheck.py
       - name: Smoke test the exe

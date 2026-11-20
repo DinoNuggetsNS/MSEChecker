@@ -19,6 +19,17 @@ def _sets_dir():
     return None
 
 
+def _cset_dir():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "customsets")
+
+
+def _cset_index():
+    try:
+        return json.load(open(os.path.join(_cset_dir(), "index.json"), encoding="utf-8"))
+    except Exception:
+        return []
+
+
 def _sets_index():
     d = _sets_dir()
     try:
@@ -625,15 +636,18 @@ $('#graphs').onclick=()=>setChart(!chartMode);
 
 /* ---------- floating set symbols (home page background) ---------- */
 (()=>{
-  const COUNT=117,COLS=12;let last=-1,SETS=[],lens=false;const els=[];
+  const COUNT=117,COLS=12;let last=-1,SETS=[],CUST=[],lens=false;const els=[];
   if(matchMedia('(prefers-reduced-motion: reduce)').matches||!Element.prototype.animate)return;
   const layer=document.createElement('div');layer.id='floaters';layer.setAttribute('aria-hidden','true');document.body.prepend(layer);
   const rnd=(a,b)=>a+Math.random()*(b-a);
+  const MON=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const fmtDate=r=>{const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(r||'');return m?(m[3]==='01'?'':(+m[3])+', ').replace(/^/,MON[+m[2]-1]+' ')+m[1]:(r||'')};
   const tip=document.createElement('div');tip.id='settip';tip.hidden=true;document.body.appendChild(tip);
   function spawn(el,initial){
     const W=innerWidth,H=innerHeight,s=rnd(46,76);
-    if(SETS.length){let i;do{i=Math.floor(Math.random()*SETS.length)}while(i===last&&SETS.length>1);last=i;const S=SETS[i];el._set=S;
-      const u='url(/set/'+S.c+'.svg)';el.style.cssText+=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}
+    const pool=(CUST.length&&(!SETS.length||Math.random()<.5))?CUST:SETS;
+    if(pool.length){let i;do{i=Math.floor(Math.random()*pool.length)}while(pool[i]===last&&pool.length>1);const S=pool[i];last=S;el._set=S;
+      const u='url('+(S.id?'/cset/'+S.id+'.png':'/set/'+S.c+'.svg')+')';el.style.cssText+=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}
     else{let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;el._set=null;el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS))}
     el.style.setProperty('--s',s+'px');
     const side=Math.floor(Math.random()*4);let x0,y0,x1,y1;
@@ -643,7 +657,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     const a=el.animate([{transform:`translate(${x0}px,${y0}px) rotate(${r0}deg)`},{transform:`translate(${x1}px,${y1}px) rotate(${r1}deg)`}],{duration:dur,easing:'linear',fill:'forwards'});
     if(initial)a.currentTime=rnd(0,.95)*dur;
     el._a=a;a.onfinish=()=>spawn(el,false)}
-  const n=Math.max(10,Math.min(22,Math.round(innerWidth*innerHeight/60000)));
+  const n=Math.max(12,Math.min(25,Math.round(innerWidth*innerHeight/52000)));
   const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);els.push(el);spawn(el,true)}};
   /* the magnifier: grab it, drag it anywhere, and whatever set symbol is under the glass shows its name and year */
   const logo=$('#herologo');let held=false,off=[0,0],raf=0;
@@ -653,7 +667,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     const g=glass();let best=null,bd=1e9;
     els.forEach(e=>{e.classList.remove('hit');if(!e._set)return;const r=e.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,d=Math.hypot(cx-g.x,cy-g.y);
       if(d<g.r+r.width*.2&&d<bd){bd=d;best=e}});
-    if(best){best.classList.add('hit');tip.firstChild.textContent=best._set.n;tip.lastChild.textContent='Released '+best._set.y;tip.hidden=false;
+    if(best){best.classList.add('hit');tip.firstChild.textContent=best._set.n;tip.lastChild.textContent=best._set.id?('Designed by '+best._set.d+' \u00b7 Released '+fmtDate(best._set.r)):('Released '+best._set.y);tip.hidden=false;
       tip.style.left=Math.max(8,Math.min(innerWidth-270,g.x+g.r+10))+'px';tip.style.top=Math.max(8,Math.min(innerHeight-70,g.y-20))+'px'}else tip.hidden=true;
     raf=requestAnimationFrame(scan)}
   function setLens(on){lens=on;document.body.classList.toggle('lens',on);tip.hidden=true;
@@ -662,7 +676,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   window.__lensOff=()=>{if(lens)setLens(false)};
   tip.innerHTML='<b></b><span></span>';
   logo.addEventListener('pointerdown',e=>{
-    if(!SETS.length||$('#hero').hidden)return;e.preventDefault();
+    if(!(SETS.length||CUST.length)||$('#hero').hidden)return;e.preventDefault();
     const r=logo.getBoundingClientRect(),w=120,h=w*r.height/r.width;
     if(!held){setLens(true);held=true;logo.classList.add('held');off=[w*.4,h*.39];
       logo.style.left=(e.clientX-off[0])+'px';logo.style.top=(e.clientY-off[1])+'px'}
@@ -672,7 +686,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   logo.addEventListener('pointerup',()=>{logo._drag=false});
   logo.addEventListener('dblclick',()=>setLens(false));
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lens)setLens(false)});
-  fetch('/sets.json').then(r=>r.json()).catch(()=>[]).then(j=>{SETS=Array.isArray(j)?j:[];start()})
+  Promise.all([fetch('/sets.json').then(r=>r.json()).catch(()=>[]),fetch('/cset/index.json').then(r=>r.json()).catch(()=>[])]).then(([a,b])=>{SETS=Array.isArray(a)?a:[];CUST=Array.isArray(b)?b:[];start()})
 })();
 /* ---------- search filters: rarity / colour / type ---------- */
 const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r};
@@ -768,6 +782,21 @@ class Handler(BaseHTTPRequestHandler):
             return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
         if u.path == "/sets.json":
             return self.js(_sets_index())
+        if u.path == "/cset/index.json":
+            return self.js(_cset_index())
+        m = re.fullmatch(r"/cset/([a-z0-9\-]{2,80})\.png", u.path)
+        if m:
+            fp = os.path.join(_cset_dir(), m.group(1) + ".png")
+            if os.path.isfile(fp):
+                data = open(fp, "rb").read()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png")
+                self.send_header("Content-Length", str(len(data)))
+                self.send_header("Cache-Control", "max-age=86400")
+                self.end_headers()
+                return self.wfile.write(data)
+            self.send_error(404)
+            return
         m = re.fullmatch(r"/set/([a-z0-9_]{2,8})\.svg", u.path)
         if m:
             d = _sets_dir()

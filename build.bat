@@ -1,4 +1,4 @@
 @echo off
 REM Builds dist\MSECheck.exe (needs: pip install -r requirements.txt -r requirements-build.txt)
 python tools\fetch_sets.py setsdata
-python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;." --add-data "setsdata;setsdata" --collect-all webview --collect-all spellchecker MSECheck.py
+python -m PyInstaller --onefile --noconsole --name MSECheck --icon MSECheck.ico --add-data "MSECheck.ico;." --add-data "setsdata;setsdata" --add-data "msecheck/customsets;msecheck/customsets" --collect-all webview --collect-all spellchecker MSECheck.py
