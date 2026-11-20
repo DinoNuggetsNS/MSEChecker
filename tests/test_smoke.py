@@ -34,7 +34,7 @@ class Extra(unittest.TestCase):
         self.assertIn("pt-vanilla-too-big", got["Big Vanilla"])
         self.assertIn("land-has-cost", got["Dirt"])
         self.assertIn("pw-no-starting-loyalty", got["Walker"])
-        self.assertIn("counter-untyped", got["Spam"])
+        self.assertIn("counter-no-kind", got["Spam"])
 
 
 if __name__ == "__main__":

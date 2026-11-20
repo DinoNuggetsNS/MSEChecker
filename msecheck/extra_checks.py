@@ -99,9 +99,6 @@ def check_extra_card(card, ctx):
             s = line.strip()
             if not s:
                 continue
-            m = re.search(r"\b(?:put|puts|remove|removes|has|have|with|gets?)\s+(?:a|an|one|two|three|four|five|X|\d+)\s+counters?\s+(?:on|from)\b", s, re.I)
-            if m and not re.search(r"counter target|counters? of (?:any|that|the chosen)|counter of your choice|counters? of any kind", s, re.I):
-                add("Needs review", "Missing term", "counter-untyped", s, m.group(0), "“%s” never says what kind of counter. Name it, e.g. “a +1/+1 counter”." % m.group(0), fld["key"])
             if re.match(r"^(?:\{[^}]+\}[,\s]*)+(?=[A-Za-z])", s) and ":" not in s.split(".")[0]:
                 add("Likely error", "Punctuation", "cost-no-colon", s, re.match(r"^(?:\{[^}]+\}[,\s]*)+", s).group(0).strip(),
                     "This line starts like an activated ability cost but has no colon after the cost.", fld["key"])

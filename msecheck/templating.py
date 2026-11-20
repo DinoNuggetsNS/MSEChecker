@@ -200,7 +200,7 @@ RULES = [
        "Creature tokens are worded “… creature token” (e.g. “1/1 white Soldier creature token”).", REF_TOKEN,
        cond=lambda c, l, m: not re.search(r"\b(?:creature|artifact|enchantment|land)\b", m.group(0).lower()),
        fix=lambda m: re.sub(r"\b(tokens?)$", r"creature \1", m.group(0)), cat="Templating"),
-    _r("token-undefined", r"\bcreate (?:a|an|one|two|three|four|five|\d+|X) (?!(?:tapped )?(?:Treasure|Food|Clue|Blood|Map|Powerstone|Mox|Gold|Junk|Shard|Incubator|Role|Walker|Lander|Mutagen|\d|copy|token that|copies|nontoken)\b)(?:[A-Za-z']+ ){0,3}?tokens?\b",
+    _r("token-undefined", r"\bcreate (?:a|an|one|two|three|four|five|\d+|X) (?!(?:(?:tapped|snow|legendary) )*(?:Treasure|Food|Clue|Blood|Map|Powerstone|Mox|Gold|Junk|Shard|Incubator|Role|Walker|Lander|Mutagen|\d|copy|token that|copies|nontoken)\b)(?:[A-Za-z']+ ){0,3}?tokens?\b",
        "Needs review", "This token has no stated colour and type (and power/toughness, if it is a creature). That is fine if the token "
        "is defined elsewhere (e.g. a token card in your set) or by reminder text.", REF_TOKEN,
        cond=lambda c, l, m: not re.search(r"\bone or more\b|\bthat many\b|\bthose tokens\b|\bwould create\b|\bwould be created\b|^\s*if\b", l[:m.end()], re.I)
@@ -216,7 +216,7 @@ RULES = [
     _r("counter-no-kind", r"\b(?:put|puts) (?:a|an|one|two|three|X|\d+) counters?\b(?! of)", "Needs review",
        "The kind of counter isn't named (e.g. “+1/+1 counter”).", REF_COUNTER,
        # “if you put a counter on a creature this turn” / “whenever a player puts a counter…” is a condition about ANY counter, which is valid
-       cond=lambda c, l, m: not (re.search(r"^[^.]*\bthis way\b", l[m.end():], re.I)
+       cond=lambda c, l, m: not (re.search(r"^[^.]*\b(?:this way|same kind|that kind|any kind|your choice)\b", l[m.end():], re.I)
                                  or re.search(r"\b(?:if|when|whenever|unless|that|which|as long as|only if|didn't|haven't|hasn't)\b[^.,:]*$", l[:m.start()], re.I)
                                  or re.search(r"\b(?:you|they|player|players|opponent|opponents|who|has|have|had)\s*$", l[:m.start()], re.I))),
     _r("search-graveyard", r"\bsearch(?:es)? (?:your|target (?:player|opponent)'s|their) graveyard\b", "Suggestion",

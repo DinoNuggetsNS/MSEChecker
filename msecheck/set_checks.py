@@ -41,6 +41,7 @@ def norm_reminder(s, name=""):
     # a keyword's number changes the reminder: “Brood 1” → “a +1/+1 counter”, “Brood 2” → “two +1/+1 counters”
     s = re.sub(r"\b" + _NUMWORDS + r"\b(?=\s+(?:[+\-]#/[+\-]#\s+|[a-z\-]+\s+)?counters?\b)", "#", s)
     s = re.sub(r"\bcounters\b", "counter", s)
+    s = re.sub(r"\ban\b", "a", s)                                                                           # “a trample counter” / “an indestructible counter”
     s = re.sub(r"\bthat\b(?=\s+(?:creature|permanent|artifact|token|card|spell|land|enchantment)\b)", "this", s)  # “This …” on a keyword card, “That …” when a token gets it
     s = re.sub(r"\b(?:white|blue|black|red|green|colorless)\b", "@", s)
     s = re.sub(r"\b(cards|creatures|permanents|lands|spells|tokens)\b", lambda m_: m_.group(1)[:-1], s)   # “top card” / “top 3 cards”
