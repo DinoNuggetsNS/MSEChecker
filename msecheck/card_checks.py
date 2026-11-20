@@ -181,6 +181,9 @@ def check_card(card, ctx):
     out = []
     out += _kw_order(card, ctx)
     inblock, qblame, odd_straight = _quote_map(card)
+    _all = "\n".join(f["plain"] for f in card["rules"]).lower()
+    leveled = bool(re.search(r"level|class|special|chapter", " ".join(f["key"] for f in card["rules"]).lower())
+                   or re.search(r"\btranscend\b|\blevel up\b|\bclass\b", _all + " " + (card["supertype"] + " " + card["subtype"]).lower()))
     for fi, fld in enumerate(card["rules"]):
         key = fld["key"]
         lines = fld["plain"].split("\n")
@@ -191,6 +194,8 @@ def check_card(card, ctx):
             if not re.sub("[\u201c\u201d\"\\s" + _INVIS + "]", "", s):
                 continue        # a line holding only quote marks / invisible characters has nothing to check
             in_q = inblock.get((fi, i), False)
+            if leveled and re.fullmatch(r"(?:\{[^}]+\}\s*)+:\s*[A-Za-z' \-]{0,24}", s):
+                continue        # a level / class heading such as "{1}{R}: Wizard": cost plus a short label, the abilities live in their own field
             nxt = lines[i + 1] if i + 1 < len(lines) else ""
             nxt_any = nxt
             if not nxt.strip():
@@ -460,6 +465,7 @@ def check_structure(card):
     bare = re.sub(r"\b(?:have|has|had|with|control|controls|put|puts|remove|removes|removed|of|for|gets?|gain|gains|lose|loses)\s+X\s+[a-z+/\-]+", " ", bare)  # "if you have X despair" / "X counters" count something
     if (re.search(r"(?<![\w{])X(?![\w}])", bare) and "X" not in (card["cost"] + " " + card.get("cost2", "")).upper() and "{X}" not in text
             and not re.search(r"\bX is\b|\bwhere X\b|\bX equals\b", text)
+            and not re.search(r"(?m)^[^:\n]*(?<![\w{])X(?![\w}])[^:\n]*:", text)        # "Tap X untapped creatures you control: …" lets the player choose X
             and not re.search(r"^\s*\[?[+\-\u2212\u2013]?X\]?\s*:", text, re.M)          # a "[-X]:" loyalty ability defines X
             and not any("X" in c.upper() for c in card.get("loyalty_costs", []))):
         add("Needs review", "x-undefined", "X", "X is used but it is not in the mana cost and the text never says what X is.", REF_X)

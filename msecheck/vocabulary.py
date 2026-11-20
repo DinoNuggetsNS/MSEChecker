@@ -33,7 +33,7 @@ revealed shuffle shuffles look looks top bottom random choose chooses chose crea
 counter counters spell spells ability abilities activate activated activates trigger triggered triggers cast casts
 cost costs pay pays paid mana color colors colorless white blue black red green artifact artifacts creature creatures
 enchantment enchantments land lands planeswalker planeswalkers instant instants sorcery sorceries aura equipment
-vehicle saga protect protected protecting protects defeated conflict permanent permanents card cards library graveyard hand battlefield stack player players opponent opponents
+vehicle saga protect protected protecting protects survive survives survived surviving defeated conflict permanent permanents card cards library graveyard hand battlefield stack player players opponent opponents
 controller controls control owner owners turn turns phase step upkeep combat attack attacks attacked attacking
 attacker attackers block blocks blocked blocking blocker blockers damage damages dealt deals prevent prevents prevented
 life lose loses lost gain gains gained power toughness equal equals greater less least most more number numbers amount

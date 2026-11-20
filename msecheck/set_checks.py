@@ -57,7 +57,8 @@ def _real_names(cards, add):
     if faces is None:
         faces = ORACLE["face_names"] = {f.strip(): i for k, i in names.items() for f in k.split(" // ")}
     recs = ORACLE["records"]
-    norm = lambda t, nm: re.sub(r"[^a-z0-9~]", "", re.sub(r"\([^)]*\)", "", t.lower().replace(nm.lower(), "~")))
+    _self = r"\bthis (?:land|creature|artifact|enchantment|permanent|spell|card|equipment|aura|saga|vehicle|planeswalker|battle|class|case|room|token)\b"
+    norm = lambda t, nm: re.sub(r"[^a-z0-9~]", "", re.sub(_self, "~", re.sub(r"\([^)]*\)", "", t.lower().replace(nm.lower(), "~"))))
     for c in cards:
         nm = c["name"].strip()
         n, ty = nm.lower(), (c["supertype"] + " " + c["subtype"]).lower()
@@ -71,6 +72,8 @@ def _real_names(cards, add):
         real = norm(recs[i]["text"].replace(recs[i]["name"], "~"), nm)
         mine = norm("\n".join(f["plain"] for f in c["rules"] if f["plain"].strip()), nm)
         if mine == real or (mine and n not in names and mine in real):    # identical effect: fine
+            continue
+        if mine and real and difflib.SequenceMatcher(None, mine, real, autojunk=False).ratio() >= 0.9:    # nearly the same wording: also fine
             continue
         shown = re.sub(r"\s+", " ", recs[i]["text"].replace(recs[i]["name"], nm)).strip()
         add(c["idx"], "Likely error", "Real card names", "real-card-name", nm, nm,
