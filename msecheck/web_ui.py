@@ -64,7 +64,7 @@ body{margin:0;background:transparent;color:var(--fg);font:15px/1.55 var(--font);
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--fade),var(--bg)}
 body.plain::before{background:var(--bg)}
 body.plain #floaters{display:none}
-body.lens .fsym{opacity:.3;transition:opacity .15s}body.lens .fsym.hit{opacity:.95}
+body.lens .fsym{opacity:.3;transition:opacity .15s}body.lens .fsym.c{opacity:.55}.fsym.c{background-color:transparent;-webkit-mask:none;mask:none;opacity:.28}body.lens .fsym.hit{opacity:.95}
 #herologo{cursor:grab;touch-action:none;-webkit-user-drag:none;user-select:none}#brandlogo{cursor:pointer}
 .herologo.held{position:fixed!important;z-index:70;width:120px!important;max-width:none;animation:none!important;cursor:grabbing;transition:none;filter:drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff) drop-shadow(0 8px 14px rgba(0,0,0,.45))}
 :root[data-theme=light] .herologo.held{filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
@@ -647,7 +647,9 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     const W=innerWidth,H=innerHeight,s=rnd(46,76);
     const pool=(CUST.length&&SETS.length)?(el._slot%2?CUST:SETS):(CUST.length?CUST:SETS);   // half the floaters are real MTG sets, half are MSEM/Revolution sets, all at once
     if(pool.length){let i;do{i=Math.floor(Math.random()*pool.length)}while(pool[i]===last&&pool.length>1);const S=pool[i];last=S;el._set=S;
-      const u='url('+(S.id?'/cset/'+S.id+'.png':'/set/'+S.c+'.svg')+')';el.style.cssText+=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}
+      el.classList.toggle('c',!!S.id);
+      if(S.id){el.style.cssText=';background:url(/cset/'+S.id+'.png) center/contain no-repeat'}   // the community sets keep their own gold artwork
+      else{const u='url(/set/'+S.c+'.svg)';el.style.cssText=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}}
     else{let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;el._set=null;el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS))}
     el.style.setProperty('--s',s+'px');
     const side=Math.floor(Math.random()*4);let x0,y0,x1,y1;
