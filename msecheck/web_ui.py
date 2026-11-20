@@ -645,7 +645,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   const tip=document.createElement('div');tip.id='settip';tip.hidden=true;document.body.appendChild(tip);
   function spawn(el,initial){
     const W=innerWidth,H=innerHeight,s=rnd(46,76);
-    const pool=(CUST.length&&(!SETS.length||Math.random()<.5))?CUST:SETS;
+    const pool=(CUST.length&&SETS.length)?(el._slot%2?CUST:SETS):(CUST.length?CUST:SETS);   // half the floaters are real MTG sets, half are MSEM/Revolution sets, all at once
     if(pool.length){let i;do{i=Math.floor(Math.random()*pool.length)}while(pool[i]===last&&pool.length>1);const S=pool[i];last=S;el._set=S;
       const u='url('+(S.id?'/cset/'+S.id+'.png':'/set/'+S.c+'.svg')+')';el.style.cssText+=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}
     else{let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;el._set=null;el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS))}
@@ -658,7 +658,7 @@ $('#graphs').onclick=()=>setChart(!chartMode);
     if(initial)a.currentTime=rnd(0,.95)*dur;
     el._a=a;a.onfinish=()=>spawn(el,false)}
   const n=Math.max(12,Math.min(25,Math.round(innerWidth*innerHeight/52000)));
-  const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';layer.appendChild(el);els.push(el);spawn(el,true)}};
+  const start=()=>{for(let k=0;k<n;k++){const el=document.createElement('div');el.className='fsym';el._slot=k;layer.appendChild(el);els.push(el);spawn(el,true)}};
   /* the magnifier: grab it, drag it anywhere, and whatever set symbol is under the glass shows its name and year */
   const logo=$('#herologo');let held=false,off=[0,0],raf=0;
   const glass=()=>{const r=logo.getBoundingClientRect();return{x:r.left+r.width*.4,y:r.top+r.height*.39,r:r.width*.3}};
