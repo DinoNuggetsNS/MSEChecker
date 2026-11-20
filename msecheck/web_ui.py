@@ -159,7 +159,7 @@ pre.rules{white-space:pre-wrap;background:var(--inset);border-radius:12px;paddin
 .likely .badge{color:var(--err)}.review .badge{color:var(--rev)}.suggestion .badge{color:var(--sug)}
 .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-top:.65rem;font-weight:600}
 blockquote{margin:.25rem 0;padding-left:.7rem;border-left:2px solid var(--bd2)}
-mark{background:var(--mark);color:inherit;border-radius:4px;padding:0 2px}del{background:var(--del);text-decoration:none;border-radius:4px;padding:0 2px}ins{background:var(--ins);text-decoration:none;border-radius:4px;padding:0 2px}
+mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}del{background:var(--del);text-decoration:none;border-radius:2px;padding:0;margin:0}ins{background:var(--ins);text-decoration:none;border-radius:4px;padding:0 2px}
 .acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem}
 .matches{margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--glass2)}.matches h4{margin:0 0 4px}
 .match{padding:10px 0;border-top:1px solid var(--bd);display:flow-root}.match:first-of-type{border-top:0}.match img{float:right;width:96px;border-radius:7px;margin:0 0 4px 12px}

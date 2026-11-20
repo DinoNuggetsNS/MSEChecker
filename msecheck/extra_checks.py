@@ -57,9 +57,6 @@ def check_extra_card(card, ctx):
         if bad:
             add("Suggestion", "Naming", "name-small-words", name, bad[0],
                 "Small words in the middle of a card name (“of”, “the”, “and”, “to”…) are lowercase on real cards, e.g. “Lord of the Pit”.")
-        if re.search(r"[.!?]$|^[\"“”'‘’]|[\"“”'‘’]$", name):
-            add("Needs review", "Naming", "name-punct", name, name[-1] if re.search(r"[.!?]$", name) else name[0],
-                "The card name starts or ends with punctuation or a quote mark that real card names don't have.")
         if len(name) > 32:
             add("Suggestion", "Naming", "name-long", name, name, "This name is %d characters long. Names over about 30 characters tend to be squeezed or cut off in the title bar." % len(name))
 
@@ -102,7 +99,7 @@ def check_extra_card(card, ctx):
             if re.match(r"^(?:\{[^}]+\}[,\s]*)+(?=[A-Za-z])", s) and ":" not in s.split(".")[0]:
                 add("Likely error", "Punctuation", "cost-no-colon", s, re.match(r"^(?:\{[^}]+\}[,\s]*)+", s).group(0).strip(),
                     "This line starts like an activated ability cost but has no colon after the cost.", fld["key"])
-            m = re.match(r"^choose (?:one|two|three|one or both|one or more|up to (?:one|two|three))\b", s, re.I)
+            m = re.match(r"^choose (?:one|two|three|one or both|one or more|up to (?:one|two|three))(?=\s*(?:[—–:\-]|$))", s, re.I)
             if m:
                 bullets = sum(1 for x in fld["plain"].split("\n") if x.strip().startswith("•"))
                 if 0 < bullets < 2:

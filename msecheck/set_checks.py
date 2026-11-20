@@ -32,7 +32,7 @@ def _param_norm(ln, rem):
     for w in words:
         stem = w[:-1] if w.endswith("s") else w
         rem = re.sub(r"\b" + re.escape(stem) + r"(?:s|es)?\b", "#", rem, flags=re.I)
-    return norm_reminder(rem), bool(words)
+    return re.sub(r"(?:# ?){2,}", "# ", norm_reminder(rem)).strip(), bool(words)
 
 
 def norm_reminder(s, name=""):

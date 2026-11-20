@@ -311,7 +311,7 @@ def check_card(card, ctx):
                             None, ref(None, "cards using this keyword", 'keyword:"%s"' % p))
 
             # ---- modal spells need bullet modes ----
-            mm = re.match(r"(?:Choose|choose) (?:one|two|three|one or both|one or more|up to \w+)\b", s)
+            mm = re.match(r"(?:Choose|choose) (?:one|two|three|one or both|one or more|up to \w+)(?=\s*(?:[—–:\-]|$))", s)
             if mm and "•" not in s:
                 nb, j = 0, i + 1
                 while j < len(lines) and lines[j].strip().startswith("•"):

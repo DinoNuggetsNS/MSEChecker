@@ -165,12 +165,13 @@ def check_design(card, ctx):
         tgt = re.search(r"target ((?:[\w'-]+ ){0,4}?)(permanent|creature|artifact|enchantment|land|planeswalker)s?\b", low)
         if is_flicker and tgt:
             typ, quals = tgt.group(2), tgt.group(1)
-            if typ == "permanent":
+            if typ == "permanent" and not quals.strip():
                 add("Needs review", "dr-flicker-any-permanent", orig, k, tgt,
                     "This blink can target any permanent, including planeswalkers: blinking a planeswalker resets its loyalty, and "
                     "blinking a creature with an enters-the-battlefield effect can loop.",
                     REF_FLICKER)
             elif (typ in selftypes and tm and not optional and "~" in trig and "enters" in trig
+                  and not any(w.rstrip("s") in ty for w in re.findall(r"\bnon-?\s?([a-z]+)", quals))     # “non-Horror creature” on a Horror can't pick itself
                   and not _self_safe(low[max(0, tgt.start() - 24):tgt.start()], quals, low[tgt.end():].split(".")[0], selftypes)):
                 add("Needs review", "dr-flicker-self", orig, k, tgt,
                     "A mandatory enters trigger that flickers “target %s” can pick itself, so it re-triggers forever. Use "
@@ -306,7 +307,7 @@ def check_design(card, ctx):
         if pw and "planeswalker" in ty:
             cost_s, peff = pw.group(1), pw.group(2).lower()
             if not re.match(r"[\-−–]", cost_s):
-                if re.search(r"\bdestroy target\b|\bexile target\b|deals? (?:\d+|x) damage to (?:any target|target|each)|"
+                if re.search(r"\bdestroy target\b|\bexile target\b|deals? (?:\d+|x) damage to (?:any target|target|each (?!opponent|player|other player))|"
                              r"gets? -\d+/-\d+|to its owner's hand", peff):
                     add("Needs review", "dr-pw-free-removal", orig, k, cost_s + ":",
                         "Removal on a 0 or + ability means the planeswalker removes a permanent every turn and also gains loyalty. "

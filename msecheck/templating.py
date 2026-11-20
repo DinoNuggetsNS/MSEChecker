@@ -112,6 +112,11 @@ def SPELL(card, line, m):
         t in ty for t in ("creature", "artifact", "enchantment", "land", "planeswalker"))
 
 
+def _in_quote(line, pos):
+    """True when position pos is inside a quoted ability (“This creature gets +1/+1 …”): that is the token's own static ability, not the spell's."""
+    return line.count("\u201c", 0, pos) > line.count("\u201d", 0, pos) or line.count('"', 0, pos) % 2 == 1
+
+
 def _in_paren(line, pos):
     return line.count("(", 0, pos) > line.count(")", 0, pos)
 
@@ -157,7 +162,7 @@ RULES = [
        "Gaining or losing a keyword from a spell or ability needs a duration such as “until end of turn”.", REF_PUMP),
     _r("spell-effect-no-duration", r"\b(?:get|gets|gain|gains|lose|loses|have|has) (?:[+\-][\dX]+/[+\-][\dX]+|(?:" + _KW + r"))\b" + _DUR,
        "Likely error", "Instants and sorceries can't create lasting static effects; this needs a duration such as “until end of turn”.",
-       REF_PUMP, cond=lambda c, l, m: SPELL(c, l, m) and not _temp_by_design(c, l, m), skip_if=("pump-no-duration", "grant-no-duration")),
+       REF_PUMP, cond=lambda c, l, m: SPELL(c, l, m) and not _temp_by_design(c, l, m) and not _in_quote(l, m.start()), skip_if=("pump-no-duration", "grant-no-duration")),
     _r("on-to-onto", r"\bon to\b", "Likely error", "“on to” should be the single word “onto” (e.g. “put a card onto the battlefield”).", None,
        fix=lambda m: "Onto" if m.group(0)[0] == "O" else "onto", cat="Grammar"),
     _r("damage-no-amount", r"\bdeals damage to\b", "Likely error", "“deals damage” has no amount (e.g. “deals 3 damage”).", REF_DMG,
