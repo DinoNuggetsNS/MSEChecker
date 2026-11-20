@@ -645,12 +645,13 @@ $('#graphs').onclick=()=>setChart(!chartMode);
   const tip=document.createElement('div');tip.id='settip';tip.hidden=true;document.body.appendChild(tip);
   function spawn(el,initial){
     const W=innerWidth,H=innerHeight,s=rnd(46,76);
-    const pool=(CUST.length&&SETS.length)?(el._slot%2?CUST:SETS):(CUST.length?CUST:SETS);   // half the floaters are real MTG sets, half are MSEM/Revolution sets, all at once
-    if(pool.length){let i;do{i=Math.floor(Math.random()*pool.length)}while(pool[i]===last&&pool.length>1);const S=pool[i];last=S;el._set=S;
-      el.classList.toggle('c',!!S.id);
-      if(S.id){el.style.cssText=';background:url(/cset/'+S.id+'.png) center/contain no-repeat'}   // the community sets keep their own gold artwork
-      else{const u='url(/set/'+S.c+'.svg)';el.style.cssText=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}}
-    else{let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;el._set=null;el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS))}
+    /* odd slots: MSEM / Revolution sets (their own gold artwork); even slots: real MTG sets (Scryfall symbols, or the built-in symbol sheet when those aren't installed) */
+    const useC=CUST.length&&el._slot%2===1;
+    if(useC){let S;do{S=CUST[Math.floor(Math.random()*CUST.length)]}while(S===last&&CUST.length>1);last=S;el._set=S;el.classList.add('c');
+      el.style.cssText=';background:url(/cset/'+S.id+'.png) center/contain no-repeat'}
+    else if(SETS.length){let S;do{S=SETS[Math.floor(Math.random()*SETS.length)]}while(S===last&&SETS.length>1);last=S;el._set=S;el.classList.remove('c');
+      const u='url(/set/'+S.c+'.svg)';el.style.cssText=';-webkit-mask:'+u+' center/contain no-repeat;mask:'+u+' center/contain no-repeat'}
+    else{let i;do{i=Math.floor(Math.random()*COUNT)}while(i===last);last=i;el._set=null;el.classList.remove('c');el.style.cssText='';el.style.setProperty('--cx',i%COLS);el.style.setProperty('--cy',Math.floor(i/COLS))}
     el.style.setProperty('--s',s+'px');
     const side=Math.floor(Math.random()*4);let x0,y0,x1,y1;
     if(side===0){x0=-s;y0=rnd(0,H);x1=W+s;y1=rnd(0,H)}else if(side===1){x0=W+s;y0=rnd(0,H);x1=-s;y1=rnd(0,H)}
