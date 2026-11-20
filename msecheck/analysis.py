@@ -21,17 +21,24 @@ from .scryfall_links import card_query
 
 
 def diff_html(a, b):
+    """Before/after with the changed characters marked. Replaced words are compared again character by character, so changing
+    “control.If” to “control. If” marks just the one space that was added, and a doubled space marks just the extra space."""
     ta, tb = re.findall(r"\s+|\S+", a), re.findall(r"\s+|\S+", b)
     A, B = [], []
+
+    def mark(tag, t):
+        return "<%s>%s</%s>" % (tag, html.escape(t), tag) if t else ""
     for op, i1, i2, j1, j2 in difflib.SequenceMatcher(None, ta, tb, autojunk=False).get_opcodes():
-        sa, sb = html.escape("".join(ta[i1:i2])), html.escape("".join(tb[j1:j2]))
+        sa, sb = "".join(ta[i1:i2]), "".join(tb[j1:j2])
         if op == "equal":
-            A.append(sa), B.append(sb)
-        else:
-            if sa:
-                A.append("<del>%s</del>" % sa)
-            if sb:
-                B.append("<ins>%s</ins>" % sb)
+            A.append(html.escape(sa)), B.append(html.escape(sb))
+            continue
+        for o2, k1, k2, l1, l2 in difflib.SequenceMatcher(None, sa, sb, autojunk=False).get_opcodes():
+            x, y = sa[k1:k2], sb[l1:l2]
+            if o2 == "equal":
+                A.append(html.escape(x)), B.append(html.escape(y))
+            else:
+                A.append(mark("del", x)), B.append(mark("ins", y))
     return "".join(A), "".join(B)
 
 

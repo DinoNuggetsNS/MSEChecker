@@ -128,7 +128,11 @@ def check_set(cards, ctx, fl):
             continue
         if a in TYPES and b in TYPES:
             continue  # both are real creature types (Bird / Bard): neither is a typo of the other
+        def _typo(w):      # already reported as a misspelled creature type: don't also report it as a "variant"
+            return w not in TYPES and any(t[0] == w[0] and len(t) >= 4 and abs(len(t) - len(w)) <= 2 and dl(w, t) <= (1 if len(w) < 7 else 2) for t in TYPES)
         (rare, rc), (com, cc) = sorted(((a, use[a]), (b, use[b])), key=lambda t: t[1])
+        if (_typo(rare) and rc <= 3) or (_typo(com) and cc <= 3):
+            continue
         if rc == cc == 1 or rc <= 2 < cc or rc < cc and rc <= 2:
             sev = "Likely error" if rc < cc else "Needs review"
             for w, other in ((rare, com), (com, rare)) if rc == cc else ((rare, com),):

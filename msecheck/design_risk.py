@@ -270,7 +270,7 @@ def check_design(card, ctx):
         tk = re.match(r"(?:whenever|when) (.*?) (dies|enters|leaves the battlefield|is put into a graveyard from the battlefield)(?: under your control)?,\s*(.*)$", low)
         if tk and "creature token" in tk.group(3) and "create" in tk.group(3) and "~" not in tk.group(1):
             subj = tk.group(1)
-            if not re.search(r"non-?token", subj):
+            if not re.search(r"non-?token", subj) and not re.match(r"if (?:it|that \w+|they) (?:isn't|is not|wasn't|was not|aren't|are not) (?:a )?tokens?\b", tk.group(3)):
                 tdesc = re.search(r"create (.*?)tokens?", tk.group(3))
                 words = {w for w in re.findall(r"[a-z]{4,}", tdesc.group(1)) if w not in
                          {"tapped", "white", "blue", "black", "red", "green", "colorless", "creature", "artifact", "legendary", "that", "with", "have", "flying"}} if tdesc else set()
@@ -347,7 +347,7 @@ def check_design(card, ctx):
         if (cr and not re.search(r"can't reduce|less than one|can't be reduced|more than", low)
                 and not re.search(r"\bless to activate\b", low)               # activated abilities are fine
                 and not (am and re.search(r"\{[TQ]\}", am.group(1)))):       # tap/untap costs keep it from being repeated for free
-            self_cost = "~ costs" in low
+            self_cost = bool(re.search(r"~ costs?\b", low))
             variable = bool(re.search(r"for each|x less|\{x\}", low))
             _fc = card.get("cost2") if (re.search(r"\d$", k) and card.get("cost2")) else card["cost"]
             toks = _cost_tokens(_fc)
@@ -402,8 +402,8 @@ def check_design(card, ctx):
                 j += 1
             if len(modes) >= 2 and all("target" in m for m in modes) and mm.group(1) in ("two", "three"):
                 add("Suggestion", "dr-modal-all-targets", orig, k, mm.group(0),
-                    "Every mode needs a target, so the spell can't be cast unless the player has enough legal targets for the number "
-                    "of modes they must choose. Make at least one mode untargeted, or use “one or more”.", REF_MODAL)
+                    "Keep in mind: If every mode needs a target, the spell can't be cast unless the player has enough legal targets for the number "
+                    "of modes they must choose. Potentially make at least one mode untargeted, or use “one or more”.", REF_MODAL)
 
     # ===== 13. hybrid cost with colour-specific text =========================================
     pairs = [set(m.groups()) for m in (re.fullmatch(r"([WUBRG])/([WUBRG])", t.upper()) for t in _cost_tokens(card["cost"])) if m]

@@ -280,12 +280,12 @@ def check_card(card, ctx):
                     add("Needs review", "Capitalization", "lowercase-start", s[:20],
                         "This ability starts with a lowercase letter.")
                 core = re.sub(r"[\"”’')\]\s]+$", "", s)      # a closing ] (bracketed, removable text) is not the end of the sentence
-                if (core and core[-1] not in ".!?:—-…;" and not s.endswith(")") and not s.startswith("•") and not in_q
+                if (core and core[-1] not in ".!?:—–-…;" and not s.endswith(")") and not s.startswith("•") and not in_q
                         and not re.search(r"[,;][\"\u201d\u2019']$", s)):     # a comma inside the closing quote continues into the next sentence
                     words = s.split()
                     tail = " ".join(words[-4:])
                     mp_idx = len(out)
-                    _fixed = re.sub(r"\s*\]$", ".]", tail) if tail.endswith("]") else tail + "."     # period goes inside the bracket
+                    _fixed = re.sub(r"\s*\]$", ".]", tail) if tail.endswith("]") else (tail[:-1] + "." if tail.endswith(",") else tail + ".")     # period goes inside the bracket
                     add("Needs review", "Punctuation", "missing-period", words[-1],
                         "This ability ends with a comma, so the sentence looks unfinished." if core[-1] == "," else
                         "This ability does not end with a period.", fx(tail, _fixed, False))
@@ -465,6 +465,7 @@ def check_structure(card):
     bare = re.sub(r"\b(?:have|has|had|with|control|controls|put|puts|remove|removes|removed|of|for|gets?|gain|gains|lose|loses)\s+X\s+[a-z+/\-]+", " ", bare)  # "if you have X despair" / "X counters" count something
     if (re.search(r"(?<![\w{])X(?![\w}])", bare) and "X" not in (card["cost"] + " " + card.get("cost2", "")).upper() and "{X}" not in text
             and not re.search(r"\bX is\b|\bwhere X\b|\bX equals\b", text)
+            and not re.search(r"additional cost[^.]*(?<![\w{])X(?![\w}])", text, re.I)          # “As an additional cost, sacrifice X permanents” declares X
             and not re.search(r"(?m)^[^:\n]*(?<![\w{])X(?![\w}])[^:\n]*:", text)        # "Tap X untapped creatures you control: …" lets the player choose X
             and not re.search(r"^\s*\[?[+\-\u2212\u2013]?X\]?\s*:", text, re.M)          # a "[-X]:" loyalty ability defines X
             and not any("X" in c.upper() for c in card.get("loyalty_costs", []))):

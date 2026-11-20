@@ -142,7 +142,7 @@ def _temp_by_design(card, line, m):
 
 def _effect(card, line, m):
     """True when the match is an effect being applied, not a condition (“whenever you gain life”, “can't gain life”)."""
-    before = line[:m.start()].split(". ")[-1]
+    before = line[:m.start()].split(". ")[-1].replace("\u2019", "'")
     return not re.search(r"\b(?:whenever|when|if|each time|that|which|source|can't|cannot|would|unless|doesn't|don't)\b", before, re.I)
 
 
@@ -216,7 +216,9 @@ RULES = [
        and not (re.match(r"\s*(?:when|whenever|each time|if|as long as|at)\b", l, re.I) and "," not in l[:m.start()])
        and not re.match(r"[^.]*\b(?:copy|copies|copied)\b", l[m.end():], re.I)
        and not re.search(r"\b(?:copy|copies)\b", m.group(0), re.I)
-       and not re.match(r"\s*named\b", l[m.end():], re.I),
+       and not re.match(r"\s*named\b", l[m.end():], re.I)
+       and not re.match(r"\s*instead\b", l[m.end():], re.I)
+       and not re.search(r"\b(?:of those|of these|more of)\b", m.group(0), re.I),
        flags=0),
     _r("counter-no-kind", r"\b(?:put|puts) (?:a|an|one|two|three|X|\d+) counters?\b(?! of)", "Needs review",
        "The kind of counter isn't named (e.g. “+1/+1 counter”).", REF_COUNTER,
