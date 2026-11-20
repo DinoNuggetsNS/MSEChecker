@@ -178,6 +178,8 @@ def check_set(cards, ctx, fl):
     rem = defaultdict(list)
     for idx, key, ln in lines_by:
         m = re.match(r"^([A-Z][A-Za-z'\-]{3,})\b(?P<mid>[^()]{0,40}?)\s*\((?P<rem>.+)\)\s*$", ln)
+        if m and (re.search(r"[\u201c\"]|\b(?:you|have|has|gain|gains|get|gets|control|controls|is|are|can)\b", m.group("mid"))):
+            m = None        # an ordinary sentence with reminder text after it (“Creatures you control have …”), not a keyword line
         if m:
             w = m.group(1).lower()
             if w not in KEYWORDS or w in ctx.custom:

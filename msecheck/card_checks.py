@@ -323,7 +323,7 @@ def check_card(card, ctx):
 
             # ---- missing term: search without reveal ----
             if (re.search(r"\bsearch(?:es)? [^.]*?library for (?!a card\b)[^.]*?(?:into|to) (?:your|their|its owner's) hand\b", low_ := line.lower())
-                    and "reveal" not in low_):
+                    and "reveal" not in low_ and not re.search(r"\bif you would\b|\bwould search\b|\bwhenever (?:you|a player|an opponent) search", low_)):
                 add("Needs review", "Missing term", "search-no-reveal", "into your hand",
                     "A restricted library search that puts a card into hand normally says “reveal it” first, so the "
                     "other players can verify the card. Unrestricted searches (“a card”) are the usual exception."
