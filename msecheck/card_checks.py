@@ -349,6 +349,12 @@ def check_card(card, ctx):
                 m = rx.search(line)
                 if m and _in_paren(line, m.start()):
                     continue   # reminder text isn't rules text
+                if m and rid == "etb-modern" and re.match(r"(?:When|Whenever) [^,.:]+? enters(?: the battlefield)? or (?:you|a|an|another|one or more|an opponent|each|target)\b", line):
+                    continue   # that line gets the "and whenever" correction instead
+                if m and rid == "dies":
+                    subj = re.split(r"\b(?:whenever|when|if)\b", line[:m.start()], flags=re.I)[-1].lower()
+                    if re.search(r"\b(?:land|artifact|enchantment|planeswalker|permanent|aura|equipment|vehicle|saga|battle)\b", subj) and "creature" not in subj:
+                        continue   # noncreature permanents usually say “put into a graveyard from the battlefield”; “dies” is allowed but not the norm
                 if m and not (rid == "in-play" and hit & {"old-cip", "old-cip-pl"}):
                     hit.add(rid)
                     fix = fx(m.group(0), m.expand(repl)) if repl is not None else None
@@ -465,6 +471,7 @@ def check_structure(card):
     bare = re.sub(r"\b(?:have|has|had|with|control|controls|put|puts|remove|removes|removed|of|for|gets?|gain|gains|lose|loses)\s+X\s+[a-z+/\-]+", " ", bare)  # "if you have X despair" / "X counters" count something
     if (re.search(r"(?<![\w{])X(?![\w}])", bare) and "X" not in (card["cost"] + " " + card.get("cost2", "")).upper() and "{X}" not in text
             and not re.search(r"\bX is\b|\bwhere X\b|\bX equals\b", text)
+            and not re.search(r"\b(?:pay|pays|choose|chooses)\s+(?:(?:twice|thrice|half|double)\s+)?X\b|\bX can(?:\u2019|')?t\b|\bX cannot\b", text, re.I)   # the player picks X
             and not re.search(r"additional cost[^.]*(?<![\w{])X(?![\w}])", text, re.I)          # “As an additional cost, sacrifice X permanents” declares X
             and not re.search(r"(?m)^[^:\n]*(?<![\w{])X(?![\w}])[^:\n]*:", text)        # "Tap X untapped creatures you control: …" lets the player choose X
             and not re.search(r"^\s*\[?[+\-\u2212\u2013]?X\]?\s*:", text, re.M)          # a "[-X]:" loyalty ability defines X

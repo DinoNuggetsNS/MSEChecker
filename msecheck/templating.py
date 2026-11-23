@@ -146,6 +146,17 @@ def _effect(card, line, m):
     return not re.search(r"\b(?:whenever|when|if|each time|that|which|source|can't|cannot|would|unless|doesn't|don't)\b", before, re.I)
 
 
+def _is_self(card, subj):
+    s = subj.strip().lower()
+    if s.startswith("this ") or s in ("~", "it"):
+        return True
+    for n in card.get("names") or [card.get("name", "")]:
+        n = n.lower()
+        if n and (s == n or s == n.split(",")[0].strip()):
+            return True
+    return False
+
+
 def _r(rid, rx, sev, why, rf=None, cond=None, fix=None, flags=re.I, cat="Missing term", skip_if=()):
     return {"id": rid, "rx": re.compile(rx, flags), "sev": sev, "cat": cat, "why": why, "ref": rf, "cond": cond,
             "fix": fix, "skip_if": set(skip_if)}
@@ -190,8 +201,15 @@ RULES = [
     _r("whenever-etb", r"^Whenever this (?:creature|artifact|enchantment|land|permanent|Equipment|Aura|Vehicle) (?:enters|dies)\b",
        "Suggestion", "A trigger that can only happen once for this permanent is templated “When”, not “Whenever”.", REF_TRIG,
        fix=lambda m: "When" + m.group(0)[8:], cat="Templating", flags=0,
-       cond=lambda c, l, m: not re.search(r"\b(?:attacks|blocks|becomes|deals|is dealt|is put|is turned|leaves|you cast|you gain|you draw)\b",
+       cond=lambda c, l, m: not re.search(r"\b(?:attacks|blocks|becomes|deals|is dealt|is put|is turned|leaves|you cast|you gain|you draw)\b|\bor\b",
                                           re.split(r",|\.", l)[0], re.I)),
+    _r("trigger-or-other-event",
+       r"^(?:When|Whenever) (?P<subj>[^,.:]+?) (?P<ev>enters(?: the battlefield)?(?: under your control)?|dies|leaves the battlefield) or "
+       r"(?P<rest>(?:you|a|an|another|one or more|an opponent|each|target)\b[^,.:]*)(?=,)",
+       "Likely error", "An enters/dies trigger and a separate action that triggers the same effect are joined with “and whenever”: "
+       "“When ~ enters and whenever you …, …”. “Or” is only for events that happen to the same object.",
+       REF_TRIG, fix=lambda m: "When %s %s and whenever %s" % (m.group("subj"), m.group("ev"), m.group("rest")), cat="Templating", flags=0,
+       cond=lambda c, l, m: _is_self(c, m.group("subj"))),
     _r("when-multi-event",
        r"^When\b[^,.:]*?\b(?:enters(?: the battlefield)?|dies|attacks|blocks|leaves the battlefield),? or "
        r"(?:enters(?: the battlefield)?|dies|attacks|blocks|leaves the battlefield|becomes|deals)\b",

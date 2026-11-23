@@ -36,6 +36,26 @@ class Extra(unittest.TestCase):
         self.assertIn("pw-no-starting-loyalty", got["Walker"])
         self.assertIn("counter-no-kind", got["Spam"])
 
+    def test_trigger_and_dies_and_x(self):
+        def card(name, sup, sub, cost, rules, pt=None):
+            s = "card:\n\tname: %s\n\tsuper type: %s\n" % (name, sup) + ("\tsub type: %s\n" % sub if sub else "") + "\tcasting cost: %s\n" % cost
+            s += ("\tpower: %s\n\ttoughness: %s\n" % pt if pt else "") + "\trarity: rare\n\tillustrator: Bob\n\trule text:\n"
+            return s + "".join("\t\t%s\n" % l for l in rules.split("\n"))
+        t = "mse_version: 0.3.8\ngame: magic\n" \
+            + card("Beanstalk", "Enchantment", "", "1G", "Whenever Beanstalk enters or you cast a spell with mana value 5 or greater, draw a card.") \
+            + card("Land Eater", "Enchantment", "", "2G", "Whenever a land card is put into your graveyard from the battlefield, draw a card.") \
+            + card("Bear Eater", "Enchantment", "", "2G", "Whenever a creature is put into your graveyard from the battlefield, draw a card.") \
+            + card("Paolig", "Creature", "Demon", "1BB", "At the beginning of your end step, you may pay thrice X life. If you do, you draw X cards. X can\u2019t be greater than the amount of life you gained this turn.", ("2", "2")) \
+            + card("Hero", "Token Creature", "Hero", "", "Prowess, prowess (Each instance of prowess triggers separately.)", ("1", "1"))
+        ST.update(kind="set", filename="x", text=t, orig_text=t, findings={}, last=None, edited=False)
+        r = analyze()
+        got = {c["name"]: {f["rule"] for f in c["findings"]} for c in r["cards"]}
+        self.assertIn("trigger-or-other-event", got["Beanstalk"])
+        self.assertNotIn("dies", got["Land Eater"])
+        self.assertIn("dies", got["Bear Eater"])
+        self.assertNotIn("x-undefined", got["Paolig"])
+        self.assertNotIn("dup-keyword", got["Hero"])
+
 
 if __name__ == "__main__":
     unittest.main()

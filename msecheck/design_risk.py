@@ -402,8 +402,8 @@ def check_design(card, ctx):
                 j += 1
             if len(modes) >= 2 and all("target" in m for m in modes) and mm.group(1) in ("two", "three"):
                 add("Suggestion", "dr-modal-all-targets", orig, k, mm.group(0),
-                    "Keep in mind: If every mode needs a target, the spell can't be cast unless the player has enough legal targets for the number "
-                    "of modes they must choose. Potentially make at least one mode untargeted, or use “one or more”.", REF_MODAL)
+                    "Keep in mind: if every mode needs a target, the spell can't be cast unless the player has enough legal targets for the number "
+                    "of modes they must choose.", REF_MODAL)
 
     # ===== 13. hybrid cost with colour-specific text =========================================
     pairs = [set(m.groups()) for m in (re.fullmatch(r"([WUBRG])/([WUBRG])", t.upper()) for t in _cost_tokens(card["cost"])) if m]

@@ -119,6 +119,10 @@ def check_extra_card(card, ctx):
             dup = k
             break
         seen.add(k)
+    if dup and (is_token or re.search(r"each instance|triggers separately|more than one instance|separately", low)
+                or dup in ("prowess", "lifelink", "flanking", "bushido", "exalted", "afflict", "annihilator", "battle cry", "melee", "toxic",
+                           "afterlife", "dethrone", "training", "modular", "rampage", "cascade", "storm", "ripple", "persist", "undying", "evolve")):
+        dup = None   # deliberately stacked keywords
     if dup:
         add("Needs review", "Repeated word", "dup-keyword", first.strip(), dup, "The keyword “%s” is listed twice on this card." % dup, key)
     for a, b, why in _REDUNDANT:

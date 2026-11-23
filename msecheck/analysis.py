@@ -93,7 +93,13 @@ def analyze():
     ST["findings"] = {}
     out_cards, sev_count, cat_count, ignored_total, clean, no_text = [], Counter(), Counter(), 0, 0, 0
     for c in cards:
-        items = sorted(fl[c["idx"]], key=lambda f: SEV_ORDER[f["sev"]])
+        _seen, _uniq = set(), []
+        for f in fl[c["idx"]]:      # a planeswalker/level card reads its text from several fields; report each identical finding once
+            sig = (f["rule"], f["detected"], f["match"], f["why"])
+            if sig not in _seen:
+                _seen.add(sig)
+                _uniq.append(f)
+        items = sorted(_uniq, key=lambda f: SEV_ORDER[f["sev"]])
         res, n_vis, n_ign = [], 0, 0
         rules_text = "\n".join(f["plain"] for f in c["rules"] if f["plain"].strip()).strip()
         tline = (c["supertype"] + (" — " + c["subtype"] if c["subtype"] else "")).strip()
