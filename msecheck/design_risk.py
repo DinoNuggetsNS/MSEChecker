@@ -239,7 +239,7 @@ def check_design(card, ctx):
                         "Artifact). Make the untap cost more than the mana produced." % (produced, n))
         if tm and "~ enters" in trig:
             um = re.search(r"\buntap (?:up to (\w+) |all |(?:another|other) target |another |other |target |(\w+) )?(lands?|permanents?|creatures?|artifacts?|nonland permanents?)\b", eff)
-            if um and not ((um.group(2) or "").lower() in ("that", "those", "it", "them", "each")
+            if um and not ((um.group(2) or "").lower() in ("that", "those", "it", "them", "each", "enchanted", "equipped")
                            or re.search(r"\bgain control of\b|\bcontrol of target\b|\bdon't control\b|\bdo not control\b|\bopponent(?:'s)? controls?\b|"
                                         r"\bopponent's\b|\bdefending player\b|\bthat player controls\b", eff)):
                 cnt = _NUMW.get((um.group(1) or um.group(2) or "").lower(), 0)
@@ -288,7 +288,8 @@ def check_design(card, ctx):
                         "Add “nontoken” or exclude the token's type so it can't chain with sacrifice outlets.")
 
         # ===== 10 / feedback: punisher triggers with no cap ====================================
-        if tm and not re.search(_NOSTACK, low):
+        _amts = [int(x) for x in re.findall(r"\b(\d+) (?:damage|life)\b|\bloses? (\d+) life\b", eff) for x in x if x] if tm else []
+        if tm and not re.search(_NOSTACK, low) and not (_amts and max(_amts) <= 1):   # a flat 1 damage/life is already a small, bounded amount
             if re.search(r"\b(?:an opponent|each opponent|a player|each player)\b[^,]*\b(?:draws?|taps?|plays? a land|casts?|activates?|"
                          r"loses? life|puts?[^,]*into (?:their|a|an opponent's) graveyard)\b", trig) \
                     and re.search(r"\bloses? [^.]*life\b|\bdeals? \w+ damage\b|\bmills?\b", eff):
@@ -400,7 +401,9 @@ def check_design(card, ctx):
             while j < len(raw) and raw[j].strip().startswith("•"):
                 modes.append(raw[j].lower())
                 j += 1
-            if len(modes) >= 2 and all("target" in m for m in modes) and mm.group(1) in ("two", "three"):
+            need = {"two": 2, "three": 3}.get(mm.group(1), 99)
+            # only when the player has no spare mode to switch to: with more modes than they choose, they can always pick ones that have targets
+            if len(modes) >= 2 and len(modes) <= need and all("target" in m for m in modes) and mm.group(1) in ("two", "three"):
                 add("Suggestion", "dr-modal-all-targets", orig, k, mm.group(0),
                     "Keep in mind: if every mode needs a target, the spell can't be cast unless the player has enough legal targets for the number "
                     "of modes they must choose.", REF_MODAL)

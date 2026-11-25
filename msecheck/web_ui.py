@@ -149,7 +149,7 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .tile b{display:block;font-size:1.7rem;letter-spacing:-.03em;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12.5px;color:var(--mut)}
 .tile.e b{color:var(--err)}.tile.r b{color:var(--rev)}.tile.s b{color:var(--sug)}.tile.o b{color:var(--ok)}
-.ignbtn{margin-left:auto;font-size:12px;padding:.2rem .65rem}.igncard{opacity:.6}.igncard .rules{display:none}
+.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.ignbtn.on{background:var(--grad);color:#fff;border-color:transparent}.igncard{opacity:.6}.igncard .rules{display:none}
 .dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dgrid{display:grid;gap:1rem;margin-top:.9rem;padding:1rem 1.1rem;border-radius:14px;border:1px solid var(--bd);background:var(--glass2)}
 .dgrid h5{margin:0 0 .4rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
 .dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchips{gap:.25rem .65rem}.dchip{display:inline-flex;gap:.35rem;align-items:baseline;color:var(--fg);font-size:13.5px}
@@ -249,7 +249,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
     <label class="chip r"><input type=checkbox data-sev="Needs review" checked><i></i>Review <b id=cR>0</b></label>
     <label class="chip s"><input type=checkbox data-sev="Suggestion" checked><i></i>Suggestions <b id=cS>0</b></label>
     <label class="chip o"><input type=checkbox id=onlyissues checked title="Only show cards that have findings"><i></i>With findings</label>
-    <label class="chip g" title="Hide the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Remove Scryfall comparisons</label>
+    <label class="chip g" title="Show the closest-real-card panels and the Scryfall reference notes"><input type=checkbox id=noscry><i></i>Include Scryfall comparisons</label>
     <button id=extras class=extrasbtn type=button aria-expanded=false aria-controls=extrabar title="More tools">Extras <span class=car>▾</span></button>
   </div>
   <div id=sortwrap class=sortwrap hidden><button id=sortbtn class=sortbtn type=button aria-haspopup=true aria-expanded=false title="Sort the cards and filter them by rarity, colour and type">⇅ Sort &amp; filter <span id=sortn class=rarn hidden></span> ▾</button><div id=sortmenu class="glass sortmenu" hidden></div></div>
@@ -305,7 +305,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtextv='',noScry=false,compact=false,chartMode=false;
+let D=null,FM={},sortMode='sev',qtextv='',noScry=true,compact=false,chartMode=false;
 /* Scryfall-style search over the cards in the set */
 const QCOL={w:'W',white:'W',u:'U',blue:'U',b:'B',black:'B',r:'R',red:'R',g:'G',green:'G'};
 const QRAR={c:0,common:0,u:1,uncommon:1,r:2,rare:2,m:3,mythic:3,s:4,special:4};
@@ -463,8 +463,8 @@ function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
-  return `<article${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
-  ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class=ignbtn type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" title="${c.ign_whole?'Check this card again':'Skip every check for this card, for example a reminder token'}">${c.ign_whole?'Stop ignoring':'Ignore this card'}</button></header>${c.ign_whole?'<p class=mut>This card is being ignored, so none of its issues are shown or counted.</p>':''}
+  return `<article data-idx="${c.idx}"${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
+  ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class="ignbtn${c.ign_whole?' on':''}" type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" aria-label="${c.ign_whole?'Done. Click to check this card again':'Mark this card as done'}" title="${c.ign_whole?'Marked as done. Click to check this card again':'Mark this card as done (hides its issues)'}">✓</button></header>${c.ign_whole?'<p class=mut>This card is marked as done, so none of its issues are shown or counted.</p>':''}
   <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
@@ -561,10 +561,19 @@ function chSize(cs){const cr=cs.filter(c=>/creature/.test(qinfo(c).type)),N=8,ce
   g+=`<text class="axl" x="${x0+cw*N/2}" y="${H-24}" text-anchor="middle">Power →</text><text class="axl" transform="translate(24 ${y0+ch*N/2}) rotate(-90)" text-anchor="middle">Toughness ↓</text>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`+note(`${n} creatures with numbers for both power and toughness${odd?` · ${odd} more have * or no stats and aren’t shown`:''}. Darker squares mean more creatures.`)}
 const MECH=['flying','first strike','double strike','deathtouch','haste','hexproof','indestructible','lifelink','menace','reach','trample','vigilance','defender','flash','ward','prowess','cycling','kicker','equip','scry','surveil','mill','landfall','convoke','delve','flashback','morph','megamorph','embalm','eternalize','escape','evolve','exploit','fabricate','fear','intimidate','infect','undying','persist','proliferate','populate','explore','investigate','amass','afflict','annihilator','bestow','cascade','changeling','crew','dash','disturb','enrage','fight','foretell','hideaway','madness','mentor','mutate','ninjutsu','offspring','overload','partner','plot','protection','rebound','renown','riot','saddle','shroud','skulk','spectacle','storm','suspend','toxic','training','transform','unearth','unleash','vanishing','wither','blitz','casualty','connive','craft','daybound','nightbound','disguise','squad','backup','bargain','treasure','food','clue','blood','incubate','adapt','learn','support','manifest','goad','venture','discover','cloak','impending','gift','valiant','menace'];
+function hbarsStack(items,keys,note){const rh=30,top=12,lw=170,w=SW-lw-70,h=top*2+rh*items.length,mx=Math.max(1,...items.map(i=>i.n));
+  let g='';items.forEach((it,i)=>{const y=top+i*rh;let x=lw;
+    g+=`<text class="xl" x="${lw-10}" y="${y+rh/2+4}" text-anchor="end">${esc(it.label)}</text>`;
+    keys.forEach(k=>{const v=it.by[k]||0;if(!v)return;const bw=Math.max(2,w*v/mx);
+      g+=`<rect class="seg" x="${x}" y="${y+4}" width="${bw}" height="${rh-9}" fill="${CCOL[k]}"><title>${esc(it.label)} · ${CNAME[k]}: ${v}</title></rect>`;x+=bw});
+    g+=`<text class="tot" x="${x+8}" y="${y+rh/2+4}">${it.n}</text>`});
+  return `<svg class="chart" viewBox="0 0 ${SW} ${h}" role="img">${g}</svg>`+legendHTML(keys,CCOL,CNAME)+(note||'')}
 function chMech(cs){const cust=(D.summary.custom_keywords||[]).map(x=>x.toLowerCase()),seen=new Set(),rows=[];
-  [...cust,...MECH].forEach(k=>{if(seen.has(k))return;seen.add(k);const r=new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');const n=cs.filter(c=>r.test(noRem(c))).length;if(n)rows.push({label:k.replace(/^./,x=>x.toUpperCase()),n,color:cust.includes(k)?'#4a90d9':null})});
+  [...cust,...MECH].forEach(k=>{if(seen.has(k))return;seen.add(k);const r=new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');const hit=cs.filter(c=>r.test(noRem(c))),n=hit.length,by={};hit.forEach(c=>{const q=ccol(c);by[q]=(by[q]||0)+1});if(n)rows.push({label:k.replace(/^./,x=>x.toUpperCase()),n,by,color:cust.includes(k)?'#4a90d9':null})});
   rows.sort((a,b)=>b.n-a.n||a.label.localeCompare(b.label));
   if(!rows.length)return '<div class="empty">No keywords found in the rules text.</div>';
+  if(FILT.col.set.size){const ks=CORDER.filter(k=>rows.some(r=>r.by[k]));
+    return hbarsStack(rows.slice(0,18),ks,note(`Number of cards using each keyword or mechanic (top ${Math.min(18,rows.length)}), split by card colour so you can see where each one comes from. Reminder text isn’t counted.`))}
   return hbars(rows.slice(0,18),note(`Number of cards using each keyword or mechanic (top ${Math.min(18,rows.length)}). Reminder text isn’t counted.${cust.length?' <span class="legend"><span><i style="background:#4a90d9"></i>Custom keyword from your set</span></span>':''}`))}
 const REM=[['Destroy',/\bdestroy (?:up to \w+ )?(?:another )?target\b/],['Exile',/\bexile (?:up to \w+ )?(?:another )?target (?:\w+ )*?(?:creature|artifact|enchantment|permanent|planeswalker|battle|nonland)/],
   ['Damage',/\bdeals? (?:\d+|x|that much|twice x) damage to (?:any target|target (?:\w+ )*?(?:creature|planeswalker|battle|permanent)|up to)/],['−X/−X',/\bgets? -(?:\d+|x)\/-(?:\d+|x)/],
@@ -718,18 +727,60 @@ document.addEventListener('click',()=>sortOpen(false));document.addEventListener
 $('#extras').onclick=e=>{e.stopPropagation();const bar=$('#extrabar'),on=bar.hidden;bar.hidden=!on;$('#extras').classList.toggle('open',on);$('#extras').setAttribute('aria-expanded',on)};
 
 
-$('#noscry').onchange=e=>{noScry=e.target.checked;draw()};
+/* Ctrl + / Ctrl - / Ctrl 0 zoom, like Chrome */
+(function(){
+  const Z=[.25,.33,.5,.67,.75,.8,.9,1,1.1,1.25,1.5,1.75,2,2.5,3];let z=1;
+  try{z=parseFloat(localStorage.getItem('msecheck-zoom'))||1}catch(_){}
+  const tip=document.createElement('div');tip.style.cssText='position:fixed;right:16px;bottom:16px;z-index:99999;padding:.35rem .7rem;border-radius:99px;background:rgba(20,20,24,.92);color:#fff;font:600 13px system-ui;border:1px solid rgba(255,255,255,.25);opacity:0;transition:opacity .25s;pointer-events:none';document.body.appendChild(tip);let tt;
+  const apply=(show)=>{document.documentElement.style.zoom=z===1?'':z;try{localStorage.setItem('msecheck-zoom',z)}catch(_){}
+    if(show){tip.textContent=Math.round(z*100)+'%';tip.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>tip.style.opacity=0,900)}};
+  apply(false);
+  const step=d=>{let i=Z.findIndex(v=>v>=z-1e-6);if(i<0)i=Z.length-1;i=Math.max(0,Math.min(Z.length-1,i+d));z=Z[i];apply(true)};
+  addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey)||e.altKey)return;
+    if(e.key==='+'||e.key==='='||e.code==='NumpadAdd'){e.preventDefault();step(1)}
+    else if(e.key==='-'||e.key==='_'||e.code==='NumpadSubtract'){e.preventDefault();step(-1)}
+    else if(e.key==='0'||e.code==='Numpad0'){e.preventDefault();z=1;apply(true)}},true);
+  addEventListener('wheel',e=>{if(!e.ctrlKey)return;e.preventDefault();step(e.deltaY<0?1:-1)},{passive:false});
+})();
+$('#noscry').onchange=e=>{noScry=!e.target.checked;draw()};
+/* instant ignoring: update the page first, then tell the server (no re-analysis, no full redraw) */
+function bg(path,body){fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({fast:true},body))}).catch(()=>{})}
+function recount(){
+  const sv={'Likely error':0,'Needs review':0,'Suggestion':0};let clean=0,noT=0,ign=0,tot=0;
+  D.cards.forEach(c=>{c.findings.forEach(f=>sv[f.sev]++);ign+=c.ignored||0;tot+=c.findings.length;if(!c.has_text)noT++;else if(!c.findings.length)clean++});
+  const s=D.summary;s.severity=sv;s.clean=clean;s.no_text=noT;s.ignored=ign;s.total=tot;s.with_findings=D.cards.length-clean-noT;
+  $('#cE').textContent=sv['Likely error'];$('#cR').textContent=sv['Needs review'];$('#cS').textContent=sv['Suggestion'];
+  const v=[s.cards,sv['Likely error'],sv['Needs review'],sv['Suggestion'],s.with_findings,clean,noT,ign];
+  document.querySelectorAll('#summary .tile b').forEach((el,i)=>{if(v[i]!==undefined)el.textContent=v[i]})}
+function redrawCards(ids){
+  ids.forEach(i=>{const el=document.querySelector('article[data-idx="'+i+'"]'),c=D.cards.find(x=>x.idx===i);
+    if(!el||!c)return;const t=document.createElement('div');t.innerHTML=cardHTML(view(c));const n=t.firstElementChild;el.replaceWith(n);
+    n.querySelectorAll('.lazy').forEach(l=>lazyIO.observe(l))})}
+function ignFinding(f,scope){
+  if(!f)return;const hit=new Set();
+  D.cards.forEach(c=>{
+    const gone=x=>scope==='rule'?x.rule===f.rule:x.key===f.key&&(scope==='text'||c.findings.includes(f)||(c._saved||[]).includes(f));
+    const n=c.findings.filter(gone).length;
+    if(scope==='card'&&!(c.findings.includes(f)||(c._saved||[]).includes(f)))return;
+    if(n){c.findings=c.findings.filter(x=>!gone(x));c.ignored=(c.ignored||0)+n;hit.add(c.idx)}
+    if(c._saved)c._saved=c._saved.filter(x=>!gone(x))});
+  bg('/api/ignore',{id:f.id,scope});recount();if(chartMode)drawCharts();else redrawCards([...hit])}
+function igncard(idx,on){
+  const c=D.cards.find(x=>String(x.idx)===String(idx));if(!c)return;
+  if(on){c._saved=c.findings;c.ignored=(c.ignored||0)+c.findings.length;c.findings=[];c.ign_whole=true}
+  else{c.findings=c._saved||[];c.ignored=Math.max(0,(c.ignored||0)-c.findings.length);c._saved=null;c.ign_whole=false}
+  bg('/api/ignorecard',{idx:c.idx,on});recount();redrawCards([c.idx])}
 $('#q').oninput=e=>{fromList=false;setQuery(e.target.value);pg=0;draw()};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
   if(a==='toastx'){$('#toast').hidden=true;return}
-  if(a==='igncard'){render(await post('/api/ignorecard',{idx:b.dataset.idx,on:b.dataset.on==='1'}));return}
+  if(a==='igncard'){igncard(b.dataset.idx,b.dataset.on==='1');return}
   if(a==='newcheck'){showHero();return}
   if(a==='backlist'){fromList=false;$('#q').value='';setQuery('');setCompact(true);window.scrollTo({top:0});return}
   if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){$('#q').value='!"'+(c.name||'')+'"';setQuery($('#q').value);fromList=true;setCompact(false);window.scrollTo({top:$('#cards').offsetTop-$('header.top').offsetHeight-12})}return}
   if(a==='copy'){try{await navigator.clipboard.writeText(f.after);b.textContent='Copied ✓'}catch(_){prompt('Copy this wording:',f.after)}}
-  else if(a==='ign')render(await post('/api/ignore',{id,scope:b.dataset.scope}));
+  else if(a==='ign')ignFinding(f,b.dataset.scope);
   else if(a==='recheck')render(await post('/api/recheck'));
   else if(a==='export')location.href='/api/export?fmt='+b.dataset.fmt;
   else if(a==='resetign')render(await post('/api/resetign'));
@@ -832,6 +883,10 @@ class Handler(BaseHTTPRequestHandler):
                     c = ST["last"]["cards"][f["card"]]
                     return self.js({"close": close_for_finding(f["detected"], c["rules"], c["name"], c["type"])})
                 if u.path == "/api/export" and ST["last"]:
+                    if ST.get("dirty"):      # ignores were applied without re-analysing; refresh the report data (finding ids stay as the page has them)
+                        keep = ST["findings"]
+                        analyze()
+                        ST["findings"], ST["dirty"] = keep, False
                     b, t, n = export(urllib.parse.parse_qs(u.query).get("fmt", ["csv"])[0])
                     return self.send(b, t, name=n)
             except Exception as e:
@@ -870,10 +925,16 @@ class Handler(BaseHTTPRequestHandler):
                     f = ST["findings"][body["id"]]
                     {"card": lambda: ST["ign_card"].add((f["card"], f["key"])), "text": lambda: ST["ign_text"].add(f["key"]),
                      "rule": lambda: ST["ign_rule"].add(f["rule"])}[body["scope"]]()
+                    if body.get("fast"):     # the page already updated itself; just remember the choice
+                        ST["dirty"] = True
+                        return self.js({"ok": True})
                     return self.js(analyze())
                 if u.path == "/api/ignorecard":
                     w = ST.setdefault("ign_whole", set())
                     (w.add if body.get("on") else w.discard)(int(body["idx"]))
+                    if body.get("fast"):
+                        ST["dirty"] = True
+                        return self.js({"ok": True})
                     return self.js(analyze())
                 if u.path == "/api/resetign":
                     ST["ign_card"], ST["ign_text"], ST["ign_rule"], ST["ign_whole"] = set(), set(), set(), set()

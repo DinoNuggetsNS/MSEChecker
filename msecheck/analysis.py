@@ -129,7 +129,7 @@ def analyze():
             n_vis += 1
             sev_count[f["sev"]] += 1
             cat_count[f["cat"]] += 1
-            res.append({"id": f["id"], "sev": f["sev"], "cat": f["cat"], "rule": f["rule"], "source": f["source"],
+            res.append({"id": f["id"], "key": f["key"], "sev": f["sev"], "cat": f["cat"], "rule": f["rule"], "source": f["source"],
                         "detected": f["detected"], "detected_html": hl(f["detected"], f["match"]), "why": f["why"],
                         "after": after, "before_html": bh, "after_html": ah, "can_apply": bool(f["fix"]),
                         "ref": f["ref"]})
