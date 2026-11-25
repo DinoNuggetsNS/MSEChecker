@@ -393,20 +393,19 @@ def check_design(card, ctx):
                 "Preventing or removing -1/-1 (or +1/+1) counters makes persist/undying creatures return forever with a sacrifice outlet "
                 "(Melira + Kitchen Finks). Check how this works with persist/undying in your set.")
 
-    # ===== modal spells where every mode needs a target =======================================
+    # ===== modal spells with exactly one targeting mode ========================================
     for k, orig, s, raw, idx in lines:
-        mm = re.match(r"^choose (two|three|one or more|up to (?:two|three))\b", s.lower())
+        mm = re.match(r"^choose (two|three|one or more|one or both|up to (?:two|three))\b", s.lower())
         if mm:
             modes, j = [], idx + 1
             while j < len(raw) and raw[j].strip().startswith("•"):
-                modes.append(raw[j].lower())
+                modes.append(re.sub(r"\([^)]*\)", "", raw[j].lower()))   # reminder text can say "target" without the mode targeting
                 j += 1
-            need = {"two": 2, "three": 3}.get(mm.group(1), 99)
-            # only when the player has no spare mode to switch to: with more modes than they choose, they can always pick ones that have targets
-            if len(modes) >= 2 and len(modes) <= need and all("target" in m for m in modes) and mm.group(1) in ("two", "three"):
-                add("Suggestion", "dr-modal-all-targets", orig, k, mm.group(0),
-                    "Keep in mind: if every mode needs a target, the spell can't be cast unless the player has enough legal targets for the number "
-                    "of modes they must choose.", REF_MODAL)
+            tgt = sum(1 for m in modes if re.search(r"\btargets?\b", m))
+            if len(modes) >= 2 and tgt == 1:
+                add("Suggestion", "dr-modal-one-target", orig, k, mm.group(0),
+                    "Keep in mind: only one mode here targets. If a player picks it together with an untargeted mode and the opponent makes that single "
+                    "target illegal, the whole spell fizzles, including the untargeted mode. Players should be aware of this when choosing.", REF_MODAL)
 
     # ===== 13. hybrid cost with colour-specific text =========================================
     pairs = [set(m.groups()) for m in (re.fullmatch(r"([WUBRG])/([WUBRG])", t.upper()) for t in _cost_tokens(card["cost"])) if m]
