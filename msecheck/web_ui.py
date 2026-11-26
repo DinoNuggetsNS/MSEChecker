@@ -149,7 +149,7 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .tile b{display:block;font-size:1.7rem;letter-spacing:-.03em;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12.5px;color:var(--mut)}
 .tile.e b{color:var(--err)}.tile.r b{color:var(--rev)}.tile.s b{color:var(--sug)}.tile.o b{color:var(--ok)}
-.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.ignbtn.on{background:var(--grad);color:#fff;border-color:transparent}.igncard{opacity:.6}.igncard .rules{display:none}
+.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.acts2 button.on{background:var(--grad);color:#fff;border-color:transparent}.ignbtn.on{background:var(--grad);color:#fff;border-color:transparent}.igncard{opacity:.6}.igncard .rules{display:none}
 .dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dgrid{display:grid;gap:1rem;margin-top:.9rem;padding:1rem 1.1rem;border-radius:14px;border:1px solid var(--bd);background:var(--glass2)}
 .dgrid h5{margin:0 0 .4rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
 .dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchips{gap:.25rem .65rem}.dchip{display:inline-flex;gap:.35rem;align-items:baseline;color:var(--fg);font-size:13.5px}
@@ -305,7 +305,7 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let D=null,FM={},sortMode='sev',qtextv='',noScry=true,compact=false,chartMode=false;
+let showDone=false,D=null,FM={},sortMode='sev',qtextv='',noScry=true,compact=false,chartMode=false;
 /* Scryfall-style search over the cards in the set */
 const QCOL={w:'W',white:'W',u:'U',blue:'U',b:'B',black:'B',r:'R',red:'R',g:'G',green:'G'};
 const QRAR={c:0,common:0,u:1,uncommon:1,r:2,rare:2,m:3,mythic:3,s:4,special:4};
@@ -427,7 +427,7 @@ function render(d){
   const t=(cls,n,l)=>`<div class="tile ${cls}"><b>${n}</b><span>${l}</span></div>`;
   $('#summary').innerHTML=`<div class=sumhead><div><div class=eyebrow2>Analysis</div><h2>${esc(d.file)}</h2></div>
   <div class=acts2><button data-act=newcheck>＋ New check</button><button data-act=recheck>↻ Recheck</button><span class=sep></span>
-    <button data-act=resetign>Reset ignores</button></div></div>
+    <button data-act=resetign>Reset ignores</button><button data-act=done id=donebtn></button></div></div>
   <div class=tiles>${t('',s.cards,'cards')}${t('e',sv['Likely error'],'likely errors')}${t('r',sv['Needs review'],'need review')}${t('s',sv['Suggestion'],'suggestions')}
   ${t('',s.with_findings,'cards with findings')}${t('o',s.clean,'checked, no findings')}${t('',s.no_text,'not checked (empty text)')}${t('',s.ignored,'ignored')}</div>
   ${s.game&&s.game!=='magic'?`<div class=warn>This file is for the game “${esc(s.game)}”, not Magic. Results may be meaningless.</div>`:''}
@@ -438,7 +438,7 @@ function render(d){
     <section><h5>Scryfall card data</h5><span class=dval>${d.oracle_cards?d.oracle_cards.toLocaleString()+' unique cards loaded':(d.oracle_state==='loading'?'Still loading…':'Not loaded')}</span></section></div>
     ${s.custom_keywords.length?`<section><h5>Custom keywords</h5><div class=dchips>${[...new Set(s.custom_keywords)].map(k=>`<span class="dchip kw">${esc(k)}</span>`).join('')}</div></section>`:''}
   </div></details>`;
-  draw();
+  updDone();draw();
 }
 function findingHTML(f){
   let h=`<div class="f ${CL[f.sev]}"><span class=badge>${esc(f.sev)}</span> <b>${esc(f.cat)}</b>
@@ -488,17 +488,17 @@ function sheetHTML(list){
   const lv={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
   return '<div class="glass sheet"><div class="srow shead"><span>Card</span><span>Error type</span><span>Level</span></div>'+list.map(v=>{
     const c=v.c,nm=`<span class=sname>${esc(c.name||'(unnamed card)')}</span>`;
-    if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
+    if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.ign_whole?'✓ Marked as done':c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
     return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
 function draw(){if(chartMode){drawCharts();return}
   const only=$('#onlyissues').checked;
-  const list=D.cards.map(view).filter(v=>!(only&&!v.fs.length)&&(!qfn||qfn(v.c))&&rfOk(v.c)).sort(CMP[sortMode]),
+  const list=D.cards.map(view).filter(v=>(showDone?v.c.ign_whole:!(only&&!v.fs.length))&&(!qfn||qfn(v.c))&&rfOk(v.c)).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
   if(pg>=pages)pg=pages-1;if(pg<0)pg=0;
   const ebn=qerr?`<div class=warn>Search: ${esc(qerr)}. Showing all cards until it’s fixed.</div>`:'';
   let NV;
   $('#cards').innerHTML=ebn+(list.length?(NV=fromList&&!compact?'<div class=pager><button data-act=backlist>← Back to collapsed list</button></div>':nav(list.length))+(compact?sheetHTML(list.slice(pg*PS(),(pg+1)*PS())):list.slice(pg*PS(),(pg+1)*PS()).map(cardHTML).join(''))+NV
-    :`<div class="glass empty"><b>No cards to show</b><span class=mut>${only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`);
+    :`<div class="glass empty"><b>No cards to show</b><span class=mut>${showDone?'No cards are marked as done yet. Use the ✓ button on a card to mark it done.':only?'“With findings” is on, so cards with nothing flagged are hidden. Turn it off to see all '+D.cards.length+' cards.':'No cards match your search.'}</span></div>`);
   document.querySelectorAll('.lazy').forEach(el=>lazyIO.observe(el))}
 /* ---------- graphical analysis ---------- */
 const CCOL={W:'#efe6c8',U:'#4a90d9',B:'#8b7d99',R:'#e3493b',G:'#4caf6b',M:'#e0b03a',C:'#9aa0a6'};
@@ -605,13 +605,13 @@ const CHARTS=[{id:'mvcol',title:'Mana Value Distribution',sub:'How many cards co
   {id:'complex',title:'Complexity vs. Rarity',sub:'How much rules text cards have at each rarity.',draw:chComplex}];
 let chartId='mvcol';
 function drawCharts(){
-  const cs=D.cards.filter(c=>(!qfn||qfn(c))&&rfOk(c)&&!isBasic(c)),ch=CHARTS.find(x=>x.id===chartId);
-  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
+  const cs=D.cards.filter(c=>(!showDone||c.ign_whole)&&(!qfn||qfn(c))&&rfOk(c)&&!isBasic(c)),ch=CHARTS.find(x=>x.id===chartId);
+  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${showDone?' marked as done':qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'Back to cards':'Graphs';
   $('#filters').classList.toggle('chartmode',on);$('#collapse').hidden=on||!D;$('#sortwrap').classList.toggle('chartmode',on)
   if(D){if(on)drawCharts();else draw()}}
-async function upload(f){if(!f)return;pg=0;Object.values(FILT).forEach(f=>f.set.clear());if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
+async function upload(f){if(!f)return;pg=0;showDone=false;Object.values(FILT).forEach(f=>f.set.clear());if(chartMode)setChart(false);render(await post('/api/upload?name='+encodeURIComponent(f.name),f,true))}
 $('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};
 let dragN=0;
 addEventListener('dragenter',e=>{e.preventDefault();dragN++;$('#dropveil').hidden=false});
@@ -748,13 +748,14 @@ $('#extras').onclick=e=>{e.stopPropagation();const bar=$('#extrabar'),on=bar.hid
 $('#noscry').onchange=e=>{noScry=!e.target.checked;draw()};
 /* instant ignoring: update the page first, then tell the server (no re-analysis, no full redraw) */
 function bg(path,body){fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({fast:true},body))}).catch(()=>{})}
+function updDone(){const b=$('#donebtn');if(!b)return;const n=D.cards.filter(c=>c.ign_whole).length;b.classList.toggle('on',showDone);b.textContent=showDone?'Show all cards':'✓ See all completed ('+n+')'}
 function recount(){
   const sv={'Likely error':0,'Needs review':0,'Suggestion':0};let clean=0,noT=0,ign=0,tot=0;
   D.cards.forEach(c=>{c.findings.forEach(f=>sv[f.sev]++);ign+=c.ignored||0;tot+=c.findings.length;if(!c.has_text)noT++;else if(!c.findings.length)clean++});
   const s=D.summary;s.severity=sv;s.clean=clean;s.no_text=noT;s.ignored=ign;s.total=tot;s.with_findings=D.cards.length-clean-noT;
   $('#cE').textContent=sv['Likely error'];$('#cR').textContent=sv['Needs review'];$('#cS').textContent=sv['Suggestion'];
   const v=[s.cards,sv['Likely error'],sv['Needs review'],sv['Suggestion'],s.with_findings,clean,noT,ign];
-  document.querySelectorAll('#summary .tile b').forEach((el,i)=>{if(v[i]!==undefined)el.textContent=v[i]})}
+  updDone();document.querySelectorAll('#summary .tile b').forEach((el,i)=>{if(v[i]!==undefined)el.textContent=v[i]})}
 function redrawCards(ids){
   ids.forEach(i=>{const el=document.querySelector('article[data-idx="'+i+'"]'),c=D.cards.find(x=>x.idx===i);
     if(!el||!c)return;const t=document.createElement('div');t.innerHTML=cardHTML(view(c));const n=t.firstElementChild;el.replaceWith(n);
@@ -772,13 +773,14 @@ function igncard(idx,on){
   const c=D.cards.find(x=>String(x.idx)===String(idx));if(!c)return;
   if(on){c._saved=c.findings;c.ignored=(c.ignored||0)+c.findings.length;c.findings=[];c.ign_whole=true}
   else{c.findings=c._saved||[];c.ignored=Math.max(0,(c.ignored||0)-c.findings.length);c._saved=null;c.ign_whole=false}
-  bg('/api/ignorecard',{idx:c.idx,on});recount();redrawCards([c.idx])}
+  bg('/api/ignorecard',{idx:c.idx,on});recount();if(showDone)draw();else redrawCards([c.idx])}
 $('#q').oninput=e=>{fromList=false;setQuery(e.target.value);pg=0;draw()};
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-act]');if(!b)return;const a=b.dataset.act,id=b.dataset.id,f=FM[id];
   if(a==='prev'||a==='next'){pg+=a==='next'?1:-1;draw();window.scrollTo({top:$('#cards').offsetTop-80});return}
   if(a==='toastx'){$('#toast').hidden=true;return}
   if(a==='igncard'){igncard(b.dataset.idx,b.dataset.on==='1');return}
+  if(a==='done'){showDone=!showDone;pg=0;updDone();draw();return}
   if(a==='newcheck'){showHero();return}
   if(a==='backlist'){fromList=false;$('#q').value='';setQuery('');setCompact(true);window.scrollTo({top:0});return}
   if(a==='openrow'){const c=D.cards.find(x=>String(x.idx)===b.dataset.idx);if(c){$('#q').value='!"'+(c.name||'')+'"';setQuery($('#q').value);fromList=true;setCompact(false);window.scrollTo({top:$('#cards').offsetTop-$('header.top').offsetHeight-12})}return}
