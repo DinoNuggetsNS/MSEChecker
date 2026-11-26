@@ -126,7 +126,8 @@ h1{font-size:clamp(2.4rem,5.2vw,4.1rem);line-height:1.04;letter-spacing:-.045em;
 h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
 .lead{font-size:16.5px;color:var(--mut);max-width:34em;margin:0 0 1.6rem}
 .cta{display:flex;gap:.8rem;flex-wrap:wrap}.hint{color:var(--mut);font-size:13px;margin:1rem 0 0}
-.paste{padding:1rem;margin-top:1.2rem;max-width:34em}.paste p{margin:.4rem 0}.paste input{width:100%}
+.paste{padding:1rem;margin-top:1.2rem;max-width:40em}.paste p{margin:.4rem 0}.paste input,.paste select{width:100%}.cf{display:flex;gap:.5rem;margin:.4rem 0}.cf>*{flex:1;min-width:0}.cf select{flex:0 0 9em}.c3>*{flex:1}
+.cpv{margin:.3rem 0;padding:.4rem .6rem;border-radius:10px;background:var(--inset);font-size:14px;white-space:pre-wrap;text-align:left}.csyms{display:flex;flex-wrap:wrap;gap:.25rem;margin:.4rem 0}.csyms button{padding:2px;border:0;background:none;cursor:pointer;border-radius:50%;line-height:0}.csyms button:hover{outline:2px solid var(--accent)}.csyms img{width:24px;height:24px}
 .heroart{position:relative;display:grid;place-items:center;min-height:300px}
 .herologo{display:block;position:relative;width:min(100%,380px);height:auto;animation:fl 6s ease-in-out infinite;filter:drop-shadow(0 24px 40px rgba(0,0,0,.25))}
 :root:not([data-theme=light]) .herologo{filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff)}
@@ -158,7 +159,7 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .drow{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem}.dval{color:var(--fg);font-size:13.5px;font-weight:550}
 .warn{margin-top:.9rem;padding:.7rem 1rem;border-radius:12px;border:1px solid var(--err);color:var(--err);background:color-mix(in srgb,var(--err) 10%,transparent);font-weight:550}
 article{background:var(--glass);border:1px solid var(--bd);border-radius:var(--r);padding:1.15rem 1.3rem;margin:.9rem 0;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-article header{display:flex;flex-wrap:wrap;gap:.3rem .8rem;align-items:baseline}
+article header{display:flex;flex-wrap:wrap;gap:.3rem 1.1rem;align-items:center}.cost{white-space:nowrap;line-height:1}
 article h3{margin:0;font-size:1.12rem;letter-spacing:-.02em;font-weight:650}
 .dots{margin-left:auto;display:flex;gap:.35rem}
 .dot{font-size:12px;font-weight:650;padding:1px 9px;border-radius:99px;border:1px solid color-mix(in srgb,currentColor 45%,transparent);background:color-mix(in srgb,currentColor 12%,transparent)}
@@ -281,9 +282,16 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
       </div>
       <p class=hint>or drop a <b>.mse-set</b> file anywhere in this window</p>
       <div id=pastebox class="glass paste" hidden>
-        <p><input type=text id=cname placeholder="Card name (optional)"></p>
-        <p><textarea id=ctext rows=5 placeholder="Paste the rules text here…"></textarea></p>
-        <button class=pri id=checktext type=button>Check text</button>
+        <div class=cf><input type=text id=cname placeholder="Card name"><input type=text id=ccost placeholder="Mana cost, e.g. {1}{R}{G}" autocomplete=off></div>
+        <div id=ccostpv class=cpv hidden></div>
+        <div class=cf><input type=text id=ctype placeholder="Type line, e.g. Legendary Creature — Fox Shapeshifter" autocomplete=off>
+          <select id=crar title="Rarity"><option value="">Rarity</option><option>common</option><option>uncommon</option><option>rare</option><option>mythic rare</option></select></div>
+        <div class="cf c3"><input type=text id=cpow placeholder="Power" autocomplete=off><input type=text id=ctou placeholder="Toughness" autocomplete=off><input type=text id=clo placeholder="Loyalty" autocomplete=off></div>
+        <div id=csyms class=csyms></div>
+        <p><textarea id=ctext rows=5 placeholder="Rules text. Type symbols like {T}, {R} or {2}{W}."></textarea></p>
+        <div id=ctextpv class=cpv hidden></div>
+        <p><textarea id=cflavor rows=2 placeholder="Flavor text (optional)"></textarea></p>
+        <button class=pri id=checktext type=button>Check card</button>
       </div>
       <span id=oraclemsg hidden></span>
     </div>
@@ -473,7 +481,7 @@ function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
-  return `<article data-idx="${c.idx}"${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${symCost(c.cost)} ${esc(c.type)}</span>
+  return `<article data-idx="${c.idx}"${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3>${c.cost?`<span class=cost>${symCost(c.cost)}</span>`:''}<span class=mut>${esc(c.type)}</span>
   ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class="ignbtn${c.ign_whole?' on':''}" type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" aria-label="${c.ign_whole?'Done. Click to check this card again':'Mark this card as done'}" title="${c.ign_whole?'Marked as done. Click to check this card again':'Mark this card as done (hides its issues)'}">✓</button></header>${c.ign_whole?'<p class=ok>✓ Completed</p>':''}
   <pre class=rules>${S(esc(c.rules))||'(no rules text)'}</pre>
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length||c.ign_whole?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
@@ -501,7 +509,7 @@ function sheetHTML(list){
     if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.ign_whole?'✓ Completed':c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
     return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
 function draw(){if(chartMode){drawCharts();return}
-  const only=$('#onlyissues').checked;
+  const only=$('#onlyissues').checked&&D.mode!=='text';
   const list=D.cards.map(view).filter(v=>(showDone?v.c.ign_whole:!(only&&!v.fs.length))&&(!qfn||qfn(v.c))&&rfOk(v.c)).sort(CMP[sortMode]),
     pages=Math.max(1,Math.ceil(list.length/PS()));
   if(pg>=pages)pg=pages-1;if(pg<0)pg=0;
@@ -640,7 +648,17 @@ async function pollOracle(){
 pollOracle();
 $('#showpaste').onclick=()=>{const b=$('#pastebox');b.hidden=!b.hidden;if(!b.hidden)$('#ctext').focus()};
 $('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();showHero()};
-$('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value});if(r){pg=0;if(chartMode)setChart(false);render(r)}};
+/* single-card form: live symbol preview + click-to-insert symbol palette */
+(function(){
+  const ids=['ccost','ctext','cflavor'];let last='ctext';ids.forEach(i=>$('#'+i).addEventListener('focus',()=>last=i));
+  $('#csyms').innerHTML=['W','U','B','R','G','C','S','X','1','2','3','4','5','T','Q','E'].map(k=>`<button type=button data-sym="${k}" title="{${k}}"><img src="/sym/${k}.png" alt="{${k}}"></button>`).join('');
+  $('#csyms').onclick=e=>{const b=e.target.closest('[data-sym]');if(!b)return;const el=$('#'+last),t='{'+b.dataset.sym+'}',a=el.selectionStart==null?el.value.length:el.selectionStart,z=el.selectionEnd==null?a:el.selectionEnd;
+    el.value=el.value.slice(0,a)+t+el.value.slice(z);el.focus();el.setSelectionRange(a+t.length,a+t.length);el.dispatchEvent(new Event('input'))};
+  const pv=(src,dst,f)=>{const v=$('#'+src).value;$('#'+dst).hidden=!v.trim();$('#'+dst).innerHTML=f(v)};
+  $('#ccost').addEventListener('input',()=>pv('ccost','ccostpv',symCost));
+  $('#ctext').addEventListener('input',()=>pv('ctext','ctextpv',v=>S(esc(v))));
+})();
+$('#checktext').onclick=async()=>{const r=await post('/api/text',{name:$('#cname').value,text:$('#ctext').value,cost:$('#ccost').value,type:$('#ctype').value,rarity:$('#crar').value,power:$('#cpow').value,toughness:$('#ctou').value,loyalty:$('#clo').value,flavor:$('#cflavor').value});if(r){pg=0;if(chartMode)setChart(false);render(r)}};
 document.querySelectorAll('[data-sev]').forEach(cb=>cb.onchange=()=>{on[cb.dataset.sev]=cb.checked;pg=0;draw()});
 $('#onlyissues').onchange=()=>{pg=0;draw()};
 
@@ -933,7 +951,7 @@ class Handler(BaseHTTPRequestHandler):
                 if u.path == "/api/text":
                     if not body.get("text", "").strip():
                         raise ValueError("Paste some rules text first.")
-                    load_text(body.get("name", ""), body["text"])
+                    load_text(body.get("name", ""), body["text"], body)
                     return self.js(analyze())
                 if u.path == "/api/shortcut":
                     if body.get("action") == "create":

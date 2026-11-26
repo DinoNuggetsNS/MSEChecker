@@ -176,8 +176,27 @@ def load_upload(name, data):
     ST["orig_text"] = ST["text"] = text.replace("\r\n", "\n")
 
 
-def load_text(name, text):
-    lines = ["card:", "\tname: " + (name or "(single card)"), "\trule text:"] + ["\t\t" + l.replace("\t", " ") for l in text.replace("\r\n", "\n").split("\n")]
+def load_text(name, text, f=None):
+    """Single-card check. `f` may add the other card fields typed into the form (cost, type line, power, toughness, ...)."""
+    f = f or {}
+    one = lambda v: re.sub(r"\s+", " ", str(v or "")).strip()
+    lines = ["card:", "\tname: " + (one(name) or "(single card)")]
+    ty = one(f.get("type"))
+    if ty:
+        parts = re.split(r"\s*[\u2014\u2013]\s*|\s+-\s+", ty, maxsplit=1)
+        sup, sub = parts[0], (parts[1] if len(parts) > 1 else "")
+        lines.append("\tsuper type: " + sup.strip())
+        if sub.strip():
+            lines.append("\tsub type: " + sub.strip())
+    cost = re.sub(r"[{}]", "", one(f.get("cost")))
+    for key, val in (("casting cost", cost), ("power", one(f.get("power"))), ("toughness", one(f.get("toughness"))),
+                     ("loyalty", one(f.get("loyalty"))), ("rarity", one(f.get("rarity")))):
+        if val:
+            lines.append("\t%s: %s" % (key, val))
+    lines += ["\trule text:"] + ["\t\t" + l.replace("\t", " ") for l in text.replace("\r\n", "\n").split("\n")]
+    fl = str(f.get("flavor") or "").replace("\r\n", "\n").strip("\n")
+    if fl.strip():
+        lines += ["\tflavor text:"] + ["\t\t" + l.replace("\t", " ") for l in fl.split("\n")]
     ST.update(kind="text", filename="single card", orig=b"", ign_whole=set(), ign_card=set(), ign_text=set(), ign_rule=set(), edited=False,
               bom=False, crlf=False)
     ST["orig_text"] = ST["text"] = "\n".join(lines)
