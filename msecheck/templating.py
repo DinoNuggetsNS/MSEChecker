@@ -192,7 +192,7 @@ RULES = [
     _r("draw-no-count", r"\bdraws? (?:card\b|cards\b(?! equal| until))", "Likely error",
        "“Draw” needs a number or “a card” (e.g. “draw a card”, “draw two cards”).", None,
        cond=lambda c, l, m: not re.match(r"[^.]*\b(?:equal to|for each|that many|that much|X)\b", l[m.end():]) and not re.search(r"(?:can't|cannot|can not|don't|do not|doesn't|won't|unable to|no longer|instead of|may not|never|"
-                                          r"not|unless|rather than|without)\s+(?:\w+\s+)?$", l[:m.start()].replace("\u2019", "'"), re.I)),
+                                          r"not|unless|rather than|without)\s+(?:[\w']+\s+){0,5}$", l[:m.start()].replace("\u2019", "'"), re.I)),
     _r("plural-after-article", r"\b(?:a|an) (?:[a-z]+ )?(?:creatures|cards|lands|permanents|spells|players|tokens|artifacts|enchantments|planeswalkers)\b",
        "Likely error", "A singular article (“a”/“an”) is followed by a plural noun.", None, cat="Grammar"),
     _r("bounce-your-hand", r"\breturn target (?![^.]*\bcard\b)[^.]*?\bto your hand\b", "Needs review",
