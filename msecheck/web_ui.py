@@ -794,7 +794,7 @@ $('#extras').onclick=e=>{e.stopPropagation();const bar=$('#extrabar'),on=bar.hid
 $('#noscry').onchange=e=>{noScry=!e.target.checked;draw()};
 /* instant ignoring: update the page first, then tell the server (no re-analysis, no full redraw) */
 function bg(path,body){fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({fast:true},body))}).catch(()=>{})}
-function updDone(){const b=$('#donebtn');if(!b)return;const n=D.cards.filter(c=>c.ign_whole).length;b.classList.toggle('on',showDone);b.textContent=showDone?'Show all cards':'✓ See all completed ('+n+')'}
+function updDone(){const b=$('#donebtn');if(!b)return;const n=D.cards.filter(c=>c.ign_whole).length;b.classList.toggle('on',showDone);b.textContent='✓ See all completed ('+n+')'}
 function recount(){
   const sv={'Likely error':0,'Needs review':0,'Suggestion':0};let clean=0,noT=0,ign=0,tot=0;
   D.cards.forEach(c=>{c.findings.forEach(f=>sv[f.sev]++);ign+=c.ignored||0;tot+=c.findings.length;if(!c.has_text)noT++;else if(!c.findings.length)clean++});
