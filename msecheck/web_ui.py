@@ -534,12 +534,12 @@ function hbars(items,note){const rh=30,top=12,lw=170,w=SW-lw-70,h=top*2+rh*items
 const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*100)/100:0;
 const note=t=>`<p class="chartnote">${t}</p>`;
 
-function chMvCol(cs){const L=cs.filter(c=>!isLand(c)),B=['0','1','2','3','4','5','6','7+'];
-  const cats=B.map(l=>({label:l,vals:{}}));L.forEach(c=>{const m=qinfo(c).mv,i=Math.min(7,Math.floor(m)),k=ccol(c);cats[i].vals[k]=(cats[i].vals[k]||0)+1});
-  return stacked(cats,CORDER,CCOL,CNAME,{xlabel:'Mana value'})+note(`${L.length} non-land cards · average mana value ${avg(L.map(c=>qinfo(c).mv))}`)}
+function chMvCol(cs){const L=cs.filter(c=>!isLand(c)),B=['0','1','2','3','4','5','6','7+'],S=stackSpec(L);
+  const cats=B.map(l=>({label:l,vals:{}}));L.forEach(c=>{const m=qinfo(c).mv,i=Math.min(7,Math.floor(m)),k=S.of(c);cats[i].vals[k]=(cats[i].vals[k]||0)+1});
+  return stacked(cats,S.keys,S.colors,S.names,Object.assign({xlabel:'Mana value'},S.opt))+note(`${L.length} non-land cards · average mana value ${avg(L.map(c=>qinfo(c).mv))}`)}
 function chTypeCol(cs){const T=['Creature','Instant','Sorcery','Artifact','Enchantment','Planeswalker','Battle','Land','Other'],m={};
-  cs.forEach(c=>{const t=ptype(c),k=ccol(c);(m[t]=m[t]||{})[k]=((m[t]||{})[k]||0)+1});
-  return stacked(T.filter(t=>m[t]).map(t=>({label:t,vals:m[t]})),CORDER,CCOL,CNAME)+note('Each card counts once, under its main type (an artifact creature counts as a creature).')}
+  const S=stackSpec(cs);cs.forEach(c=>{const t=ptype(c),k=S.of(c);(m[t]=m[t]||{})[k]=((m[t]||{})[k]||0)+1});
+  return stacked(T.filter(t=>m[t]).map(t=>({label:t,vals:m[t]})),S.keys,S.colors,S.names,S.opt)+note('Each card counts once, under its main type (an artifact creature counts as a creature).')}
 function chMvRar(cs){const L=cs.filter(c=>!isLand(c)),K=['0–1','2','3','4','5','6+'],KC={'0–1':'#f6c5bf','2':'#f09a90','3':'#ea7466','4':'#e3493b','5':'#b8352b','6+':'#7d2019'},KN={};K.forEach(k=>KN[k]=k);
   const OP={'0–1':.38,'2':.5,'3':.62,'4':.74,'5':.87,'6+':1};K.forEach(k=>KC[k]='rgba(150,155,165,'+OP[k]+')');
   const bk=m=>m<=1?'0–1':m>=6?'6+':String(Math.floor(m)),by={};
@@ -556,34 +556,37 @@ function chSize(cs){const cr=cs.filter(c=>/creature/.test(qinfo(c).type)),N=8,ce
   const cw=64,ch=44,x0=110,y0=40,W=SW,H=y0+ch*N+70;let g='';
   for(let b=0;b<N;b++){g+=`<text class="xl" x="${x0-14}" y="${y0+ch*b+ch/2+4}" text-anchor="end">${b===N-1?N-1+'+':b}</text>`;
     for(let a=0;a<N;a++){const v=cell[a+','+b]||0,o=v?.18+.82*v/mx:.05;
-      g+=`<rect class="cell" x="${x0+cw*a+2}" y="${y0+ch*b+2}" width="${cw-4}" height="${ch-4}" rx="6" fill="#a2d7f2" fill-opacity="${o}"><title>${a===N-1?N-1+'+':a} power / ${b===N-1?N-1+'+':b} toughness: ${v}</title></rect>`+(v?`<text class="tot" x="${x0+cw*a+cw/2}" y="${y0+ch*b+ch/2+4}" text-anchor="middle">${v}</text>`:'')}}
+      g+=`<rect class="cell" x="${x0+cw*a+2}" y="${y0+ch*b+2}" width="${cw-4}" height="${ch-4}" rx="6" fill="${(accent()||{col:'#a2d7f2'}).col}" fill-opacity="${o}"><title>${a===N-1?N-1+'+':a} power / ${b===N-1?N-1+'+':b} toughness: ${v}</title></rect>`+(v?`<text class="tot" x="${x0+cw*a+cw/2}" y="${y0+ch*b+ch/2+4}" text-anchor="middle">${v}</text>`:'')}}
   for(let a=0;a<N;a++)g+=`<text class="xl" x="${x0+cw*a+cw/2}" y="${y0-12}" text-anchor="middle">${a===N-1?N-1+'+':a}</text>`;
   g+=`<text class="axl" x="${x0+cw*N/2}" y="${H-24}" text-anchor="middle">Power →</text><text class="axl" transform="translate(24 ${y0+ch*N/2}) rotate(-90)" text-anchor="middle">Toughness ↓</text>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`+note(`${n} creatures with numbers for both power and toughness${odd?` · ${odd} more have * or no stats and aren’t shown`:''}. Darker squares mean more creatures.`)}
 const MECH=['flying','first strike','double strike','deathtouch','haste','hexproof','indestructible','lifelink','menace','reach','trample','vigilance','defender','flash','ward','prowess','cycling','kicker','equip','scry','surveil','mill','landfall','convoke','delve','flashback','morph','megamorph','embalm','eternalize','escape','evolve','exploit','fabricate','fear','intimidate','infect','undying','persist','proliferate','populate','explore','investigate','amass','afflict','annihilator','bestow','cascade','changeling','crew','dash','disturb','enrage','fight','foretell','hideaway','madness','mentor','mutate','ninjutsu','offspring','overload','partner','plot','protection','rebound','renown','riot','saddle','shroud','skulk','spectacle','storm','suspend','toxic','training','transform','unearth','unleash','vanishing','wither','blitz','casualty','connive','craft','daybound','nightbound','disguise','squad','backup','bargain','treasure','food','clue','blood','incubate','adapt','learn','support','manifest','goad','venture','discover','cloak','impending','gift','valiant','menace'];
-function hbarsStack(items,keys,note){const rh=30,top=12,lw=170,w=SW-lw-70,h=top*2+rh*items.length,mx=Math.max(1,...items.map(i=>i.n));
-  let g='';items.forEach((it,i)=>{const y=top+i*rh;let x=lw;
-    g+=`<text class="xl" x="${lw-10}" y="${y+rh/2+4}" text-anchor="end">${esc(it.label)}</text>`;
-    keys.forEach(k=>{const v=it.by[k]||0;if(!v)return;const bw=Math.max(2,w*v/mx);
-      g+=`<rect class="seg" x="${x}" y="${y+4}" width="${bw}" height="${rh-9}" fill="${CCOL[k]}"><title>${esc(it.label)} · ${CNAME[k]}: ${v}</title></rect>`;x+=bw});
-    g+=`<text class="tot" x="${x+8}" y="${y+rh/2+4}">${it.n}</text>`});
-  return `<svg class="chart" viewBox="0 0 ${SW} ${h}" role="img">${g}</svg>`+legendHTML(keys,CCOL,CNAME)+(note||'')}
-function chMech(cs){const cust=(D.summary.custom_keywords||[]).map(x=>x.toLowerCase()),seen=new Set(),rows=[];
-  [...cust,...MECH].forEach(k=>{if(seen.has(k))return;seen.add(k);const r=new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');const hit=cs.filter(c=>r.test(noRem(c))),n=hit.length,by={};hit.forEach(c=>{const q=ccol(c);by[q]=(by[q]||0)+1});if(n)rows.push({label:k.replace(/^./,x=>x.toUpperCase()),n,by,color:cust.includes(k)?'#4a90d9':null})});
+const rgba=(h,o)=>{h=h.replace('#','');return `rgba(${parseInt(h.slice(0,2),16)},${parseInt(h.slice(2,4),16)},${parseInt(h.slice(4,6),16)},${o})`};
+const ROP={Common:.4,Uncommon:.58,Rare:.78,Mythic:.95,Special:.7,Unknown:.7};
+/* when exactly one colour (or, failing that, one rarity) is filtered, graphs use that colour in different shades */
+function accent(){const c=[...FILT.col.set].filter(k=>CCOL[k]);if(c.length===1)return{col:CCOL[c[0]],mode:'col'};
+  const r=[...FILT.rar.set].map(k=>k==='Other'?'Special':k);if(r.length===1&&RCOL[r[0]])return{col:RCOL[r[0]],mode:'rar'};return null}
+function stackSpec(cs){const a=accent();
+  if(a&&a.mode==='col'){const keys=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),colors={},names={};keys.forEach(k=>{colors[k]=rgba(a.col,ROP[k]);names[k]=RNAME[k]||k});
+    return{keys,colors,names,of:prarity,opt:{outline:true}}}
+  return{keys:CORDER,colors:CCOL,names:CNAME,of:ccol,opt:{}}}
+function chMech(cs){const cust=(D.summary.custom_keywords||[]).map(x=>x.toLowerCase()),seen=new Set(),rows=[],S=stackSpec(cs);
+  [...cust,...MECH].forEach(k=>{if(seen.has(k))return;seen.add(k);const r=new RegExp('\\b'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b');
+    const hit=cs.filter(c=>r.test(noRem(c))),n=hit.length,vals={};hit.forEach(c=>{const q=S.of(c);vals[q]=(vals[q]||0)+1});
+    if(n)rows.push({label:k.replace(/^./,x=>x.toUpperCase()),n,vals,sub:cust.includes(k)?'custom':''})});
   rows.sort((a,b)=>b.n-a.n||a.label.localeCompare(b.label));
   if(!rows.length)return '<div class="empty">No keywords found in the rules text.</div>';
-  if(FILT.col.set.size){const ks=CORDER.filter(k=>rows.some(r=>r.by[k]));
-    return hbarsStack(rows.slice(0,18),ks,note(`Number of cards using each keyword or mechanic (top ${Math.min(18,rows.length)}), split by card colour so you can see where each one comes from. Reminder text isn’t counted.`))}
-  return hbars(rows.slice(0,18),note(`Number of cards using each keyword or mechanic (top ${Math.min(18,rows.length)}). Reminder text isn’t counted.${cust.length?' <span class="legend"><span><i style="background:#4a90d9"></i>Custom keyword from your set</span></span>':''}`))}
+  const top=rows.slice(0,12);
+  return stacked(top,S.keys,S.colors,S.names,Object.assign({xlabel:'Keyword or mechanic'},S.opt))+note(`The ${top.length} most-used keywords and mechanics, split by card colour. Reminder text isn’t counted.${cust.length?' Keywords marked “custom” come from your set.':''}`)}
 const REM=[['Destroy',/\bdestroy (?:up to \w+ )?(?:another )?target\b/],['Exile',/\bexile (?:up to \w+ )?(?:another )?target (?:\w+ )*?(?:creature|artifact|enchantment|permanent|planeswalker|battle|nonland)/],
   ['Damage',/\bdeals? (?:\d+|x|that much|twice x) damage to (?:any target|target (?:\w+ )*?(?:creature|planeswalker|battle|permanent)|up to)/],['−X/−X',/\bgets? -(?:\d+|x)\/-(?:\d+|x)/],
   ['Edict',/(?:target (?:player|opponent)|each opponent|defending player) sacrifices?/],['Bounce',/\breturn (?:up to \w+ )?target (?:\w+ )*?(?:creature|permanent|nonland permanent)s? to (?:its|their) owner/],
   ['Fight',/\bfights?\b/],['Sweeper',/\b(?:destroy|exile) all\b|damage to each creature|each creature gets -/]];
-function chRemoval(cs){const m={};let any=0;
-  cs.forEach(c=>{const t=noRem(c),tt=t.split(qinfo(c).nm||'\u0000').join('~');let hit=false;REM.forEach(r=>{if(r[1].test(t)||r[1].test(tt)){hit=true;const k=ccol(c);(m[r[0]]=m[r[0]]||{})[k]=((m[r[0]]||{})[k]||0)+1}});if(hit)any++});
+function chRemoval(cs){const m={},S=stackSpec(cs);let any=0;
+  cs.forEach(c=>{const t=noRem(c),tt=t.split(qinfo(c).nm||'\u0000').join('~');let hit=false;REM.forEach(r=>{if(r[1].test(t)||r[1].test(tt)){hit=true;const k=S.of(c);(m[r[0]]=m[r[0]]||{})[k]=((m[r[0]]||{})[k]||0)+1}});if(hit)any++});
   const cats=REM.filter(r=>m[r[0]]).map(r=>({label:r[0],vals:m[r[0]]}));
   if(!cats.length)return '<div class="empty">No removal effects found in the rules text.</div>';
-  return stacked(cats,CORDER,CCOL,CNAME,{xlabel:'Removal type'})+note(`${any} card${any==1?'':'s'} with removal. A card that does more than one thing counts under each type. Found by matching common wording, so unusual templating can be missed.`)}
+  return stacked(cats,S.keys,S.colors,S.names,Object.assign({xlabel:'Removal type'},S.opt))+note(`${any} card${any==1?'':'s'} with removal. A card that does more than one thing counts under each type. Found by matching common wording, so unusual templating can be missed.`)}
 function chComplex(cs){const rar=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),words=c=>noRem(c).trim().split(/\s+/).filter(Boolean).length,mx=Math.max(1,...cs.map(words)),top=niceMax(mx);
   const pw=SW-ML-MR,ph=SH-MT-MB,step=pw/rar.length;let g=grid(top);
   rar.forEach((r,i)=>{const L=cs.filter(c=>prarity(c)===r),cx=ML+step*i+step/2,a=avg(L.map(words)),ya=MT+ph*(1-a/top);
@@ -592,12 +595,12 @@ function chComplex(cs){const rar=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),wor
     g+=`<line class="avg" x1="${cx-step*.36}" x2="${cx+step*.36}" y1="${ya}" y2="${ya}"/><text class="tot" x="${cx+step*.36+6}" y="${ya+4}">avg ${a}</text><text class="xl" x="${cx}" y="${SH-MB+22}" text-anchor="middle">${r}</text><text class="xs" x="${cx}" y="${SH-MB+39}" text-anchor="middle">${L.length} cards</text>`});
   g+=`<text class="axl" transform="translate(14 ${MT+ph/2}) rotate(-90)" text-anchor="middle">Words of rules text</text><text class="axl" x="${ML+pw/2}" y="${SH-8}" text-anchor="middle">Rarity</text>`;
   return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+legendHTML(CORDER,CCOL,CNAME)+note('Each dot is a card; hover a dot to see its name. Complexity is measured as the number of words in the rules text, without reminder text. The line marks each rarity’s average.')}
-const CHARTS=[{id:'mvcol',title:'Mana Value Distribution by Colour',sub:'How many cards cost each amount of mana, split by colour.',draw:chMvCol},
-  {id:'typecol',title:'Card Type Distribution by Colour',sub:'How many cards of each type there are, split by colour.',draw:chTypeCol},
+const CHARTS=[{id:'mvcol',title:'Mana Value Distribution',sub:'How many cards cost each amount of mana.',draw:chMvCol},
+  {id:'typecol',title:'Card Type Distribution',sub:'How many cards of each type there are.',draw:chTypeCol},
   {id:'mvrar',title:'Mana Value by Rarity',sub:'Each rarity’s cards grouped by mana value, with the average mana value underneath.',draw:chMvRar},
   {id:'pairs',title:'Colour Pair Distribution',sub:'How many cards belong to each two-colour combination.',draw:chPairs},
   {id:'size',title:'Creature Size Distribution',sub:'Creatures laid out by power and toughness.',draw:chSize},
-  {id:'mech',title:'Mechanic Frequency',sub:'The keywords and mechanics your set uses most.',draw:chMech},
+  {id:'mech',title:'Mechanic Frequency',sub:'The keywords and mechanics your set uses most, split by colour.',draw:chMech},
   {id:'removal',title:'Removal Distribution',sub:'The kinds of removal in your set, split by colour.',draw:chRemoval},
   {id:'complex',title:'Complexity vs. Rarity',sub:'How much rules text cards have at each rarity.',draw:chComplex}];
 let chartId='mvcol';
@@ -705,7 +708,7 @@ const rkey=c=>{const r=prarity(c);return r==='Special'||r==='Unknown'?'Other':r}
 const FILT={
   rar:{label:'Rarity',opts:[['Common','Common',RCOL.Common],['Uncommon','Uncommon',RCOL.Uncommon],['Rare','Rare',RCOL.Rare],['Mythic','Mythic',RCOL.Mythic],['Other','Other',RCOL.Special]],has:(c,k)=>rkey(c)===k},
   col:{label:'Colour',opts:[['W','White','#f4efd2'],['U','Blue','#4a90d9'],['B','Black','#3d3646'],['R','Red','#e3493b'],['G','Green','#3da66a'],['M','Multicolour','#e8b93a'],['C','Colourless','#aeb4bd']],
-    has:(c,k)=>{const s=qinfo(c).cols;return k==='M'?s.size>1:k==='C'?s.size===0:s.has(k)}},
+    has:(c,k)=>{const s=qinfo(c).cols;return k==='M'?s.size>1:k==='C'?s.size===0:(s.size===1&&s.has(k))}},
   typ:{label:'Type',opts:['creature','instant','sorcery','artifact','enchantment','land','planeswalker'].map(t=>[t,t[0].toUpperCase()+t.slice(1),null]),has:(c,k)=>(qinfo(c).type||'').includes(k)}
 };
 Object.values(FILT).forEach(f=>f.set=new Set());
