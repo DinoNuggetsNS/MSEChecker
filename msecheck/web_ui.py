@@ -6,6 +6,7 @@ from .scryfall_data import ORACLE, _strip_name, close_for_finding, find_close_or
 from .analysis import analyze, load_text, load_upload
 from .reports import export
 from . import shortcut, symbols_data
+from .mana_data import ICONS as _MANA_B64
 import base64
 _SYMBOLS_PNG = base64.b64decode("".join(symbols_data.PNG_B64))
 
@@ -149,7 +150,7 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .tile b{display:block;font-size:1.7rem;letter-spacing:-.03em;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12.5px;color:var(--mut)}
 .tile.e b{color:var(--err)}.tile.r b{color:var(--rev)}.tile.s b{color:var(--sug)}.tile.o b{color:var(--ok)}
-.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.acts2 button.on{background:var(--grad);color:#fff;border-color:transparent}.ignbtn.on{background:#1f6b3a;color:#e9ffef;border-color:#2f8f52}:root[data-theme=light] .ignbtn.on{background:#2a8049;color:#fff;border-color:#1f6b3a}.igncard{opacity:.6}.igncard .rules{display:none}
+.sym{height:1.1em;width:1.1em;vertical-align:-.22em;margin:0 .05em}.sym2{display:inline-flex;align-items:center;justify-content:center;min-width:1.1em;height:1.1em;padding:0 .25em;border-radius:99px;background:#cac5c0;color:#111;font-size:.78em;font-weight:700;vertical-align:.02em;margin:0 .05em}.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.acts2 button.on{background:var(--grad);color:#fff;border-color:transparent}.ignbtn.on{background:#1f6b3a;color:#e9ffef;border-color:#2f8f52}:root[data-theme=light] .ignbtn.on{background:#2a8049;color:#fff;border-color:#1f6b3a}.igncard{opacity:.6}.igncard .rules{display:none}
 .dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dgrid{display:grid;gap:1rem;margin-top:.9rem;padding:1rem 1.1rem;border-radius:14px;border:1px solid var(--bd);background:var(--glass2)}
 .dgrid h5{margin:0 0 .4rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
 .dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchips{gap:.25rem .65rem}.dchip{display:inline-flex;gap:.35rem;align-items:baseline;color:var(--fg);font-size:13.5px}
@@ -304,6 +305,13 @@ setInterval(()=>{fetch('/api/ping').catch(()=>{})},4000);fetch('/api/ping').catc
 const $=s=>document.querySelector(s);
 $('#brandlogo').src=$('#herologo').src;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* real mana/tap symbols: {W} {2} {T} {W/U} {2/B} {G/P} … become icons (already-escaped HTML in, HTML out) */
+const SYMS=new Set(["0", "1", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "2", "20", "2B", "2G", "2R", "2U", "2W", "3", "4", "5", "6", "7", "8", "9", "B", "BG", "BP", "BR", "C", "E", "G", "GP", "GU", "GW", "Q", "R", "RG", "RP", "RW", "S", "T", "U", "UB", "UP", "UR", "W", "WB", "WP", "WU", "X", "Y", "Z"]),HY={WU:'WU',UW:'WU',WB:'WB',BW:'WB',UB:'UB',BU:'UB',UR:'UR',RU:'UR',BR:'BR',RB:'BR',BG:'BG',GB:'BG',RW:'RW',WR:'RW',RG:'RG',GR:'RG',GW:'GW',WG:'GW',GU:'GU',UG:'GU'};
+function symName(t){t=t.toUpperCase().replace(/[\s]/g,'');const k=t.replace('/','');
+  if(SYMS.has(t))return t;if(HY[k])return HY[k];if(/^2[WUBRG]$/.test(k))return k;if(/^[WUBRG]P$/.test(k))return k;if(/^P[WUBRG]$/.test(k))return k[1]+'P';return null}
+const S=h=>String(h==null?'':h).replace(/\{([^{}<>]{1,6})\}/g,(m,t)=>{const n=symName(t);return n?`<img class=sym src="/sym/${n}.png" alt="${m}" title="${m}">`:`<span class=sym2>${t}</span>`});
+function symCost(c){c=String(c==null?'':c);if(c.indexOf('{')>=0)return S(esc(c));
+  return esc(c).replace(/\d+|[WUBRG]\/[WUBRGP]|2\/[WUBRG]|[WUBRGXYZSC]/g,t=>{const n=symName(t);return n?`<img class=sym src="/sym/${n}.png" alt="${t}" title="${t}">`:t})}
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
@@ -444,9 +452,9 @@ function render(d){
 }
 function findingHTML(f){
   let h=`<div class="f ${CL[f.sev]}"><span class=badge>${esc(f.sev)}</span> <b>${esc(f.cat)}</b>
-  <div class=lbl>Detected text</div><blockquote>“${f.detected_html}”</blockquote><div class=lbl>Why it was flagged</div><div>${esc(f.why)}</div>`;
+  <div class=lbl>Detected text</div><blockquote>“${S(f.detected_html)}”</blockquote><div class=lbl>Why it was flagged</div><div>${S(esc(f.why))}</div>`;
   if(f.after_html){h+=`<div class=lbl>Suggested wording (heuristic, not verified)</div>
-   <div><small>Before:</small> ${f.before_html}</div><div><small>After:</small> ${f.after_html}</div>`}
+   <div><small>Before:</small> ${S(f.before_html)}</div><div><small>After:</small> ${S(f.after_html)}</div>`}
   h+=`<div class=acts>`;
   if(f.after)h+=`<button data-act=copy data-id="${f.id}">Copy wording</button>`;
   h+=`<button data-act=ign data-scope=card data-id="${f.id}">Ignore on this card</button>
@@ -460,14 +468,14 @@ function findingHTML(f){
 }
 function closeHTML(cm,title,empty){
   if(!cm||!cm.items||!cm.items.length)return empty||'';
-  return `<div class=matches><h4>${esc(title)}</h4>${cm.note?`<p class=mut><small>${esc(cm.note)}</small></p>`:''}${cm.items.map(m=>`<div class=match>${m.img?`<img src="${esc(m.img)}" loading=lazy alt="" onerror="this.remove()">`:''}<b><a href="${esc(m.url)}" target=_blank rel=noopener>${esc(m.name)}</a></b> <span class=mut>${esc(m.mana)} ${esc(m.type)}${m.of?' · '+m.score+'% similar · shares '+m.shared+' of '+m.of+' distinct words':' · closest type line'}</span><pre class=rules>${esc(m.text)||'(no rules text)'}</pre></div>`).join('')}<small>A close match is a wording comparison, not proof of an error or of copying.</small></div>`}
+  return `<div class=matches><h4>${esc(title)}</h4>${cm.note?`<p class=mut><small>${esc(cm.note)}</small></p>`:''}${cm.items.map(m=>`<div class=match>${m.img?`<img src="${esc(m.img)}" loading=lazy alt="" onerror="this.remove()">`:''}<b><a href="${esc(m.url)}" target=_blank rel=noopener>${esc(m.name)}</a></b> <span class=mut>${S(esc(m.mana))} ${esc(m.type)}${m.of?' · '+m.score+'% similar · shares '+m.shared+' of '+m.of+' distinct words':' · closest type line'}</span><pre class=rules>${S(esc(m.text))||'(no rules text)'}</pre></div>`).join('')}<small>A close match is a wording comparison, not proof of an error or of copying.</small></div>`}
 function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
-  return `<article data-idx="${c.idx}"${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
+  return `<article data-idx="${c.idx}"${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${symCost(c.cost)} ${esc(c.type)}</span>
   ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class="ignbtn${c.ign_whole?' on':''}" type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" aria-label="${c.ign_whole?'Done. Click to check this card again':'Mark this card as done'}" title="${c.ign_whole?'Marked as done. Click to check this card again':'Mark this card as done (hides its issues)'}">✓</button></header>${c.ign_whole?'<p class=ok>✓ Completed</p>':''}
-  <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>
+  <pre class=rules>${S(esc(c.rules))||'(no rules text)'}</pre>
   ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length||c.ign_whole?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
   <div class=acts>${c.scryfall&&!noScry?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
@@ -841,6 +849,15 @@ class Handler(BaseHTTPRequestHandler):
             return self.wfile.write(_SYMBOLS_PNG)
         if u.path == "/api/shortcut":
             return self.js({"ask": shortcut.should_ask(), "available": shortcut.available()})
+        m = re.fullmatch(r"/sym/([A-Z0-9]{1,3})\.png", u.path)
+        if m and m.group(1) in _MANA_B64:
+            data = base64.b64decode("".join(_MANA_B64[m.group(1)]))
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png")
+            self.send_header("Content-Length", str(len(data)))
+            self.send_header("Cache-Control", "max-age=86400")
+            self.end_headers()
+            return self.wfile.write(data)
         if u.path == "/sets.json":
             return self.js(_sets_index())
         if u.path == "/cset/index.json":
