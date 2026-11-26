@@ -466,9 +466,9 @@ function cardHTML(v){
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
   const dots=[['e','error','errors'],['r','review','review'],['s','suggestion','suggestions']].map((x,i)=>v.cnt[i]?`<span class="dot ${x[0]}">${v.cnt[i]} ${v.cnt[i]>1?x[2]:x[1]}</span>`:'').join('');
   return `<article data-idx="${c.idx}"${c.ign_whole?' class=igncard':''}><header><h3>${esc(c.name||'(unnamed card)')}</h3><span class=mut>${esc(c.cost)} ${esc(c.type)}</span>
-  ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class="ignbtn${c.ign_whole?' on':''}" type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" aria-label="${c.ign_whole?'Done. Click to check this card again':'Mark this card as done'}" title="${c.ign_whole?'Marked as done. Click to check this card again':'Mark this card as done (hides its issues)'}">✓</button></header>${c.ign_whole?'<p class=mut>This card is marked as done, so none of its issues are shown or counted.</p>':''}
-  <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>${tf}
-  ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
+  ${c.ignored&&!c.ign_whole?`<small>${c.ignored} ignored</small>`:''}<span class=dots>${dots}</span><button class="ignbtn${c.ign_whole?' on':''}" type=button data-act=igncard data-idx="${c.idx}" data-on="${c.ign_whole?0:1}" aria-label="${c.ign_whole?'Done. Click to check this card again':'Mark this card as done'}" title="${c.ign_whole?'Marked as done. Click to check this card again':'Mark this card as done (hides its issues)'}">✓</button></header>${c.ign_whole?'<p class=ok>✓ Completed</p>':''}
+  <pre class=rules>${esc(c.rules)||'(no rules text)'}</pre>
+  ${!c.has_text?`<p class=mut>⚠ NOT CHECKED: this card has no non-empty rules-text field in the MSE data. The checker cannot verify text that is not stored in the file. Non-empty fields found: ${esc(c.filled.join(', ')||'none')}.</p>`:(c.findings.length||c.ign_whole?'':'<p class=ok>✓ No errors found</p>')}${fs.map(findingHTML).join('')}
   ${noScry?'':`<div class=lazy data-card="${c.idx}" data-title="Closest real cards to this card"><small class=mut>Finding the closest real cards…</small></div>`}
   <div class=acts>${c.scryfall&&!noScry?`🔎 <a href="${c.scryfall}" target=_blank rel=noopener>Search Scryfall for cards with similar key terms</a> <small>(${c.terms.map(esc).join(' · ')})</small>`:''}</div></article>`;
 }
@@ -490,7 +490,7 @@ function sheetHTML(list){
   const lv={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
   return '<div class="glass sheet"><div class="srow shead"><span>Card</span><span>Error type</span><span>Level</span></div>'+list.map(v=>{
     const c=v.c,nm=`<span class=sname>${esc(c.name||'(unnamed card)')}</span>`;
-    if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.ign_whole?'✓ Marked as done':c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
+    if(!v.fs.length)return `<div class=sgroup data-act=openrow data-idx="${c.idx}"><div class=srow>${nm}<span class=none>${c.ign_whole?'✓ Completed':c.has_text?'No findings':'Not checked (no rules text)'}</span><span class=none>—</span></div></div>`;
     return `<div class=sgroup data-act=openrow data-idx="${c.idx}">`+v.fs.map((f,i)=>`<div class=srow>${i?'<span></span>':nm}<span>${esc(f.cat)}</span><span class="${lv[f.sev]}"><span class=badge>${esc(f.sev)}</span></span></div>`).join('')+'</div>'}).join('')+'</div>'}
 function draw(){if(chartMode){drawCharts();return}
   const only=$('#onlyissues').checked;
