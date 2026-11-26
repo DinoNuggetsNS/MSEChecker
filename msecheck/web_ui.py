@@ -151,7 +151,7 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .tile b{display:block;font-size:1.7rem;letter-spacing:-.03em;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
 .tile span{font-size:12.5px;color:var(--mut)}
 .tile.e b{color:var(--err)}.tile.r b{color:var(--rev)}.tile.s b{color:var(--sug)}.tile.o b{color:var(--ok)}
-.sym{height:1.1em;width:1.1em;vertical-align:-.22em;margin:0 .05em}.sym2{display:inline-flex;align-items:center;justify-content:center;min-width:1.1em;height:1.1em;padding:0 .25em;border-radius:99px;background:#cac5c0;color:#111;font-size:.78em;font-weight:700;vertical-align:.02em;margin:0 .05em}.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.acts2 button.on{background:var(--grad);color:#fff;border-color:transparent}.ignbtn.on{background:#1f6b3a;color:#e9ffef;border-color:#2f8f52}:root[data-theme=light] .ignbtn.on{background:#2a8049;color:#fff;border-color:#1f6b3a}.igncard{opacity:.6}.igncard .rules{display:none}
+.sym{height:1.1em;width:1.1em;vertical-align:-.22em;margin:0 .05em}.sym2{display:inline-flex;align-items:center;justify-content:center;min-width:1.1em;height:1.1em;padding:0 .25em;border-radius:99px;background:#cac5c0;color:#111;font-size:.78em;font-weight:700;vertical-align:.02em;margin:0 .05em}.ignbtn{margin-left:auto;font-size:15px;line-height:1;width:34px;height:30px;padding:0;border-radius:99px;display:inline-flex;align-items:center;justify-content:center}.ignbtn.on{background:#1f6b3a;color:#e9ffef;border-color:#2f8f52}:root[data-theme=light] .ignbtn.on{background:#2a8049;color:#fff;border-color:#1f6b3a}.igncard{opacity:.6}.igncard .rules{display:none}
 .dets{margin-top:.9rem;color:var(--mut);font-size:13px}.dets summary{cursor:pointer;font-weight:550}.dgrid{display:grid;gap:1rem;margin-top:.9rem;padding:1rem 1.1rem;border-radius:14px;border:1px solid var(--bd);background:var(--glass2)}
 .dgrid h5{margin:0 0 .4rem;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:650}
 .dchips{display:flex;flex-wrap:wrap;gap:.35rem}.dchips{gap:.25rem .65rem}.dchip{display:inline-flex;gap:.35rem;align-items:baseline;color:var(--fg);font-size:13.5px}
@@ -285,7 +285,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
         <div class=cf><input type=text id=cname placeholder="Card name"><input type=text id=ccost placeholder="Mana cost, e.g. {1}{R}{G}" autocomplete=off></div>
         <div id=ccostpv class=cpv hidden></div>
         <div class=cf><input type=text id=ctype placeholder="Type line, e.g. Legendary Creature — Fox Shapeshifter" autocomplete=off>
-          <select id=crar title="Rarity"><option value="">Rarity</option><option>common</option><option>uncommon</option><option>rare</option><option>mythic rare</option></select></div>
+          <select id=crar title="Rarity"><option value="">Rarity</option><option value=common>Common</option><option value=uncommon>Uncommon</option><option value=rare>Rare</option><option value="mythic rare">Mythic Rare</option></select></div>
         <div class="cf c3"><input type=text id=cpow placeholder="Power" autocomplete=off><input type=text id=ctou placeholder="Toughness" autocomplete=off><input type=text id=clo placeholder="Loyalty" autocomplete=off></div>
         <p><textarea id=ctext rows=5 placeholder="Rules text. Type symbols like {T}, {R} or {2}{W}."></textarea></p>
         <div id=ctextpv class=cpv hidden></div>
