@@ -349,6 +349,8 @@ def check_card(card, ctx):
                 m = rx.search(line)
                 if m and _in_paren(line, m.start()):
                     continue   # reminder text isn't rules text
+                if m and rid in ("etb-modern", "dies") and rid not in ctx.modern:
+                    continue   # every card in the set uses the older wording consistently, so a style comparison isn't useful
                 if m and rid == "etb-modern" and re.match(r"(?:When|Whenever) [^,.:]+? enters(?: the battlefield)? or (?:you|a|an|another|one or more|an opponent|each|target)\b", line):
                     continue   # that line gets the "and whenever" correction instead
                 if m and rid == "dies":
@@ -446,7 +448,7 @@ def check_structure(card):
         add("Needs review", "aura-no-enchant", "Aura", "Aura cards need an “Enchant …” line saying what they can enchant.", REF_AURA)
     if "equipment" in ty and not re.search(r"\bequip\b", low):
         add("Needs review", "equipment-no-equip", "Equipment", "Equipment needs an “Equip {cost}” ability to attach it.", REF_EQUIP)
-    if "vehicle" in ty and not re.search(r"\bcrew\b", low):
+    if "vehicle" in ty and not re.search(r"\bcrew\b", low) and not re.search(r"\bbecomes? an? (?:\w+ )*creature\b", low):
         add("Suggestion", "vehicle-no-crew", "Vehicle", "A Vehicle usually has a crew cost (“Crew N”).", REF_VEH)
     # Sagas: chapter numerals are usually drawn by the template from separate chapter fields, so the stored text
     # has no "I —". Accept numeral lines, chapter/level fields, or the standard lore-counter reminder text.

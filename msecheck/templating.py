@@ -279,7 +279,7 @@ CREATURE_KW = {"flying", "first strike", "double strike", "deathtouch", "defende
                "lifelink", "menace", "reach", "trample", "vigilance"}
 
 
-SYM_OK = re.compile(r"^(?:[WUBRGCXYZSTQE]|\d{1,2}|[WUBRG]/[WUBRG]|[WUBRG]/P|2/[WUBRG]|[WUBRG]/[WUBRG]/P|CHAOS|PW)$")
+SYM_OK = re.compile(r"^(?:[WUBRGCXYZSTQE]|\d{1,2}|100|1000000|[WUBRG]/[WUBRG]|[WUBRG]/P|2/[WUBRG]|[WUBRG]/[WUBRG]/P|CHAOS|PW)$")
 STOP = set("""the and for with that this then when from into your their have each target creature creatures spell spells card
 cards player players until end turn battlefield graveyard library control controller enters""".split())
 PHRASES = ["search your library", "damage to any target", "damage to target", "draw a card", "+1/+1 counter", "-1/-1 counter", "create a", "destroy target",

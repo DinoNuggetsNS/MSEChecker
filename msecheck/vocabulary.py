@@ -65,7 +65,8 @@ pro quo sans serif route masse tete esprit corps savoir joie vivre noblesse obli
 attache chic elan ennui fiance fiancee naive naif precis resume cliche matinee debut decor entree facade fete gala lingerie papier mache petite
 regime risque soiree touche vignette bona fide magnum opus modus operandi persona grata status terra firma deus machina rigor mortis nihilo
 priori sine qua carpe diem tabula rasa verbatim populi culpa bono facto jure versa ergo veni vidi vici fortuna habeas corpus
-esoteric exotic luxuries prophetic relics artwork"""
+esoteric exotic luxuries prophetic relics artwork
+kung karate judo jujitsu jitsu ninjutsu samurai ninja kata dojo sensei ronin kimono chi gong yin yang shui tai taekwondo aikido sumo shogun katana"""
 
 
 def _inflect(w):

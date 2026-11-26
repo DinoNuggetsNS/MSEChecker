@@ -35,6 +35,12 @@ def _param_norm(ln, rem):
     return re.sub(r"(?:# ?){2,}", "# ", norm_reminder(rem)).strip(), bool(words)
 
 
+def _param_key(ln):
+    mm = re.match(r"^[A-Z][A-Za-z'\-]{3,}\b(?P<mid>[^()]{0,40}?)\s*\(", ln)
+    ws = [(w[:-1] if w.endswith("s") else w) for w in re.findall(r"[a-z]+", (mm.group("mid") if mm else "").lower()) if w not in _PARAM_STOP and len(w) >= 3]
+    return tuple(sorted(ws))
+
+
 def norm_reminder(s, name=""):
     s = s.lower()
     s = re.sub(r"(?:\{[^}]*\}\s*)+|\b\d+\b|\bx\b|\bn\b", "# ", s)   # “{1}{U}” and “{U}” are both just “a cost”
@@ -59,7 +65,14 @@ def _real_names(cards, add):
         faces = ORACLE["face_names"] = {f.strip(): i for k, i in names.items() for f in k.split(" // ")}
     recs = ORACLE["records"]
     _self = r"\bthis (?:land|creature|artifact|enchantment|permanent|spell|card|equipment|aura|saga|vehicle|planeswalker|battle|class|case|room|token)\b"
-    norm = lambda t, nm: re.sub(r"[^a-z0-9~]", "", re.sub(_self, "~", re.sub(r"\([^)]*\)", "", t.lower().replace(nm.lower(), "~"))))
+    def norm(t, nm):
+        t = re.sub(r"\([^)]*\)", "", t.lower().replace(nm.lower(), "~"))
+        t = re.sub(_self, "~", t)
+        t = re.sub(r"\benters the battlefield\b", "enters", t)                                  # older wording of the same card is fine
+        t = re.sub(r"\b(?:is|are) put into (?:a|an|your|its owner's|their owners'?) graveyard from the battlefield\b", "dies", t)
+        t = re.sub(r"\bcomes? into play\b", "enters", t)
+        t = re.sub(r"\{t\}: add [^.]*\.", "", t)                                                  # a land's own mana ability (printed or as reminder text)
+        return re.sub(r"[^a-z0-9~]", "", t)
     for c in cards:
         nm = c["name"].strip()
         n, ty = nm.lower(), (c["supertype"] + " " + c["subtype"]).lower()
@@ -78,8 +91,7 @@ def _real_names(cards, add):
             continue
         shown = re.sub(r"\s+", " ", recs[i]["text"].replace(recs[i]["name"], nm)).strip()
         add(c["idx"], "Likely error", "Real card names", "real-card-name", nm, nm,
-            "“%s” is the name of a real Magic card, but this card doesn't do what the real card does. Reusing a real card's name is only "
-            "fine when the rules text is exactly the same. The real card reads: “%s”" % (nm, (shown[:180] + "…") if len(shown) > 180 else shown or "(no rules text)"))
+            "“%s” is the name of a real Magic card with the effect “%s”" % (nm, ((shown[:180] + "…") if len(shown) > 180 else shown or "(no rules text)")) + ("" if shown.endswith((".", "”", ")")) else "."))
 
 
 def check_set(cards, ctx, fl):
@@ -211,8 +223,18 @@ def check_set(cards, ctx, fl):
         if tc == 1 and len(groups) == len(items):
             continue
         sample = next(r for _, _, ln_, r in items if _param_norm(ln_, r)[0] == top)
+        by_param = defaultdict(Counter)       # “Affinity for monsters” always has its own wording: cards with the same parameter only have to match each other
+        for _, _, ln_, r_ in items:
+            _pk = _param_key(ln_)
+            if _pk:
+                by_param[_pk][_param_norm(ln_, r_)[0]] += 1
         for idx, key, ln, r in items:
             n, _has_param = _param_norm(ln, r)
+            _pk = _param_key(ln)
+            if _pk and sum(by_param[_pk].values()) >= 2:
+                if n == by_param[_pk].most_common(1)[0][0] or len(by_param[_pk]) == 1:
+                    continue
+                top = by_param[_pk].most_common(1)[0][0]
             if re.search(r"\bcast (?:this|it|that|the)\b|\bcasting\b|\balternat(?:e|ive) cost\b|\brather than paying\b|\bfor its\b[^.]*\bcost\b", r, re.I):
                 continue   # reminder text that describes how to cast the card varies with the alternate cost it carries
             if n != top and difflib.SequenceMatcher(None, n, top).ratio() > 0.5:

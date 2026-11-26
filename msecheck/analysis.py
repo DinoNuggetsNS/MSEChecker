@@ -139,7 +139,7 @@ def analyze():
         no_text += not has_text
         clean += (n_vis == 0 and has_text)
         out_cards.append({"idx": c["idx"], "name": " // ".join(c["names"]) if len(c.get("names") or []) > 1 else (c["name"] or "(unnamed card #%d)" % (c["idx"] + 1)), "cost": c["cost"] + (" // " + c["cost2"] if c.get("cost2") else ""),
-                          "type": tline,
+                          "type": tline, "pt": (c["power"] + "/" + c["toughness"]) if c["power"] and c["toughness"] else "",
                           "rules": rules_text, "findings": res,
                           "power": c["power"], "toughness": c["toughness"], "loyalty": c.get("loyalty", ""), "rarity": c.get("rarity", ""),
                           "flavor": "\n".join(f["plain"] for f in c["flavor"]), "artist": c["artist"],

@@ -45,6 +45,7 @@ class Extra(unittest.TestCase):
             + card("Beanstalk", "Enchantment", "", "1G", "Whenever Beanstalk enters or you cast a spell with mana value 5 or greater, draw a card.") \
             + card("Land Eater", "Enchantment", "", "2G", "Whenever a land card is put into your graveyard from the battlefield, draw a card.") \
             + card("Bear Eater", "Enchantment", "", "2G", "Whenever a creature is put into your graveyard from the battlefield, draw a card.") \
+            + card("Mod", "Creature", "Bear", "1G", "When Mod dies, draw a card.", ("1", "1")) \
             + card("Paolig", "Creature", "Demon", "1BB", "At the beginning of your end step, you may pay thrice X life. If you do, you draw X cards. X can\u2019t be greater than the amount of life you gained this turn.", ("2", "2")) \
             + card("Hero", "Token Creature", "Hero", "", "Prowess, prowess (Each instance of prowess triggers separately.)", ("1", "1"))
         ST.update(kind="set", filename="x", text=t, orig_text=t, findings={}, last=None, edited=False)
