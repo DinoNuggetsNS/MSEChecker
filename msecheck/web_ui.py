@@ -127,7 +127,7 @@ h1 em{font-style:normal;background:linear-gradient(120deg,var(--fg) 20%,var(--ac
 .lead{font-size:16.5px;color:var(--mut);max-width:34em;margin:0 0 1.6rem}
 .cta{display:flex;gap:.8rem;flex-wrap:wrap}.hint{color:var(--mut);font-size:13px;margin:1rem 0 0}
 .paste{padding:1rem;margin-top:1.2rem;max-width:40em}.paste p{margin:.4rem 0}.paste input,.paste select{width:100%}.cf{display:flex;gap:.5rem;margin:.4rem 0}.cf>*{flex:1;min-width:0}.cf select{flex:0 0 9em}.c3>*{flex:1}
-.cpv{margin:.3rem 0;padding:.4rem .6rem;border-radius:10px;background:var(--inset);font-size:14px;white-space:pre-wrap;text-align:left}.csyms{display:flex;flex-wrap:wrap;gap:.25rem;margin:.4rem 0}.csyms button{padding:2px;border:0;background:none;cursor:pointer;border-radius:50%;line-height:0}.csyms button:hover{outline:2px solid var(--accent)}.csyms img{width:24px;height:24px}
+.cpv{margin:.3rem 0;padding:.4rem .6rem;border-radius:10px;background:var(--inset);font-size:14px;white-space:pre-wrap;text-align:left}
 .heroart{position:relative;display:grid;place-items:center;min-height:300px}
 .herologo{display:block;position:relative;width:min(100%,380px);height:auto;animation:fl 6s ease-in-out infinite;filter:drop-shadow(0 24px 40px rgba(0,0,0,.25))}
 :root:not([data-theme=light]) .herologo{filter:drop-shadow(2.5px 0 0 #fff) drop-shadow(-2.5px 0 0 #fff) drop-shadow(0 2.5px 0 #fff) drop-shadow(0 -2.5px 0 #fff)}
@@ -287,7 +287,6 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
         <div class=cf><input type=text id=ctype placeholder="Type line, e.g. Legendary Creature — Fox Shapeshifter" autocomplete=off>
           <select id=crar title="Rarity"><option value="">Rarity</option><option>common</option><option>uncommon</option><option>rare</option><option>mythic rare</option></select></div>
         <div class="cf c3"><input type=text id=cpow placeholder="Power" autocomplete=off><input type=text id=ctou placeholder="Toughness" autocomplete=off><input type=text id=clo placeholder="Loyalty" autocomplete=off></div>
-        <div id=csyms class=csyms></div>
         <p><textarea id=ctext rows=5 placeholder="Rules text. Type symbols like {T}, {R} or {2}{W}."></textarea></p>
         <div id=ctextpv class=cpv hidden></div>
         <p><textarea id=cflavor rows=2 placeholder="Flavor text (optional)"></textarea></p>
@@ -648,12 +647,8 @@ async function pollOracle(){
 pollOracle();
 $('#showpaste').onclick=()=>{const b=$('#pastebox');b.hidden=!b.hidden;if(!b.hidden)$('#ctext').focus()};
 $('#backres').onclick=showDash;$('#home').onclick=e=>{e.preventDefault();showHero()};
-/* single-card form: live symbol preview + click-to-insert symbol palette */
+/* single-card form: live symbol preview */
 (function(){
-  const ids=['ccost','ctext','cflavor'];let last='ctext';ids.forEach(i=>$('#'+i).addEventListener('focus',()=>last=i));
-  $('#csyms').innerHTML=['W','U','B','R','G','C','S','X','1','2','3','4','5','T','Q','E'].map(k=>`<button type=button data-sym="${k}" title="{${k}}"><img src="/sym/${k}.png" alt="{${k}}"></button>`).join('');
-  $('#csyms').onclick=e=>{const b=e.target.closest('[data-sym]');if(!b)return;const el=$('#'+last),t='{'+b.dataset.sym+'}',a=el.selectionStart==null?el.value.length:el.selectionStart,z=el.selectionEnd==null?a:el.selectionEnd;
-    el.value=el.value.slice(0,a)+t+el.value.slice(z);el.focus();el.setSelectionRange(a+t.length,a+t.length);el.dispatchEvent(new Event('input'))};
   const pv=(src,dst,f)=>{const v=$('#'+src).value;$('#'+dst).hidden=!v.trim();$('#'+dst).innerHTML=f(v)};
   $('#ccost').addEventListener('input',()=>pv('ccost','ccostpv',symCost));
   $('#ctext').addEventListener('input',()=>pv('ctext','ctextpv',v=>S(esc(v))));
