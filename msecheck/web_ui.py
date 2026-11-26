@@ -219,8 +219,9 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
 :root[data-theme=light] .extrasbtn:hover,:root[data-theme=light] .extrasbtn.open{border-color:#000;background:rgba(0,0,0,.09)}
 .filters.chartmode .chip{display:none}
 .extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
-.graphbtn{border-color:transparent;color:#fff;font-weight:650;background:linear-gradient(135deg,#3b6fd4,#7c4fd0);box-shadow:0 4px 16px rgba(92,80,208,.35)}
-.graphbtn:hover{filter:brightness(1.08);background:linear-gradient(135deg,#3b6fd4,#7c4fd0);border-color:transparent}.graphbtn.on{background:var(--glass);color:var(--fg);border-color:var(--bd2);box-shadow:none}
+.graphbtn{--c:#ee77b8;display:inline-flex;align-items:center;padding:.3rem .8rem;border-radius:99px;font-size:12.5px;font-weight:650;color:var(--c);border:1px solid color-mix(in srgb,var(--c) 58%,transparent);background:color-mix(in srgb,var(--c) 13%,transparent);box-shadow:none}
+:root[data-theme=light] .graphbtn{--c:#b8327d}
+.graphbtn:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 20%,transparent);filter:none}.graphbtn.on{color:var(--fg);border-color:var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}
 .chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .chartsel{font-size:1.05rem;font-weight:650;padding:.55rem 1rem;border-radius:12px;min-width:min(380px,100%)}.chartsub{color:var(--mut);margin:.8rem 0 .4rem}
 .chart{width:100%;height:auto;display:block}.chart .grid{stroke:var(--bd);stroke-width:1}.chart .tick,.chart .xl,.chart .xs,.chart .axl{fill:var(--mut);font-size:12.5px}.chart .xl{fill:var(--fg);font-size:13px;font-weight:550}.chart .axl{font-size:12px;letter-spacing:.04em}
