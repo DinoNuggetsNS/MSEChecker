@@ -162,11 +162,11 @@ def check_extra_set(cards, ctx, fl):
             bysig[(rt, c["cost"].strip(), t, c["power"], c["toughness"])].append(c["idx"])
     for v in byflav.values():
         if len(v) > 1:
-            for i in v:
+            for i in v[:1]:
                 add(i, "Needs review", "Flavor text", "dup-flavor", cards[i]["name"], "flavor", "The same flavor text is on more than one card (%s)." % ", ".join("#%d" % (j + 1) for j in v if j != i))
     for v in bysig.values():
         if len(v) > 1:
-            for i in v:
+            for i in v[:1]:
                 add(i, "Suggestion", "Possible duplicate", "dup-card", cards[i]["name"], cards[i]["name"],
                     "This card is identical in cost, type, stats and rules to %s. Is it an accidental copy?" % ", ".join("“%s”" % cards[j]["name"] for j in v if j != i))
     # tokens: made by nothing / no token card for what is made

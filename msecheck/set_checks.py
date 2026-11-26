@@ -24,6 +24,15 @@ def _reminder_nums(s):
 _PARAM_STOP = {"for", "the", "and", "or", "of", "from", "with", "an", "a", "to", "in", "on", "your", "you"}
 
 
+def _affinity_ok(ln, rem):
+    """“Affinity for Islands and for monsters” has one “less to cast for each …” clause per “for …” it names; that is just the pattern."""
+    mm = re.match(r"^Affinity\b(?P<mid>[^()]*)\(", ln)
+    if not mm:
+        return False
+    n_for = len(re.findall(r"\bfor\b", mm.group("mid"), re.I))
+    return n_for >= 1 and len(re.findall(r"less to cast for each", rem, re.I)) == n_for
+
+
 def _param_norm(ln, rem):
     """Normalised reminder with the keyword's own parameter words (“Affinity for tokens”) blanked out, so “each token you control” and
     “each artifact you control” count as the same wording."""
@@ -83,6 +92,8 @@ def _real_names(cards, add):
             i = faces.get(n)
         if i is None:
             continue
+        if re.match(r"\s*\(?theme color", recs[i]["text"], re.I) or not recs[i]["text"].strip().strip("()"):
+            continue            # theme-deck names and other non-rules "cards" aren't a card you'd be copying
         real = norm(recs[i]["text"].replace(recs[i]["name"], "~"), nm)
         mine = norm("\n".join(f["plain"] for f in c["rules"] if f["plain"].strip()), nm)
         if mine == real or (mine and n not in names and mine in real):    # identical effect: fine
@@ -112,10 +123,10 @@ def check_set(cards, ctx, fl):
                 "The card name has leading, trailing or doubled spaces.")
     for k, v in by.items():
         if k and len(v) > 1:
-            for i in v:
+            for i in v[:1]:                      # reported once, on the first card, not on every copy
                 others = ", ".join("#%d" % (j + 1) for j in v if j != i)
                 add(i, "Likely error", "Naming consistency", "dup-name", cards[i]["name"], cards[i]["name"],
-                    "Another card in the set has the same name (%s). Ignore this if it is intentional (e.g. token or "
+                    "Other cards in the set have the same name (%s). Ignore this if it is intentional (e.g. token or "
                     "double-faced card)." % others)
 
     # typeline consistency
@@ -230,6 +241,8 @@ def check_set(cards, ctx, fl):
                 by_param[_pk][_param_norm(ln_, r_)[0]] += 1
         for idx, key, ln, r in items:
             n, _has_param = _param_norm(ln, r)
+            if _affinity_ok(ln, r):
+                continue
             _pk = _param_key(ln)
             if _pk and sum(by_param[_pk].values()) >= 2:
                 if n == by_param[_pk].most_common(1)[0][0] or len(by_param[_pk]) == 1:

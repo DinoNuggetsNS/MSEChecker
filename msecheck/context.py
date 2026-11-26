@@ -59,9 +59,9 @@ def build_ctx(cards, blocks):
     c.flavor_freq = Counter()
     for card in cards:
         c.flavor_freq.update({w.lower() for f in card.get("flavor", []) for w in re.findall(r"[^\W\d_]{4,}", f["plain"])})
-    _all = "\n".join(f["plain"] for card in cards for f in card["rules"])
+    _all = re.sub(r"\([^)]*\)", " ", "\n".join(f["plain"] for card in cards for f in card["rules"]))   # reminder text doesn't count
     c.modern = set()          # style comparisons ("enters" vs "enters the battlefield") only matter if the set already uses the newer wording somewhere
-    if re.search(r"\b(?:when|whenever)\b[^.\n]*\benters?\b(?! the battlefield)", _all, re.I):
+    if re.search(r"\b(?:when|whenever)\b[^.,\n]*?\benters?(?=\s*(?:,|\bor\b|\band\b))", _all, re.I):
         c.modern.add("etb-modern")
     if re.search(r"\bdies\b", _all, re.I):
         c.modern.add("dies")

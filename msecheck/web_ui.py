@@ -225,7 +225,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
 :root[data-theme=light] .graphbtn{--c:#b8327d}
 .graphbtn::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.9;margin-right:.45rem}
 .graphbtn:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 20%,transparent);filter:none}.graphbtn.on{color:var(--fg);border-color:var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}
-.chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}#cxrem{margin-right:auto;padding:.5rem 1rem;font-size:14px}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}#cxrem{padding:.5rem 1rem;font-size:14px}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap}.charthead>.mut{margin-left:auto}
 .chartsel{font-size:1.05rem;font-weight:650;padding:.55rem 1rem;border-radius:12px;min-width:min(380px,100%)}.chartsub{color:var(--mut);margin:.8rem 0 .4rem}
 .chart{width:100%;height:auto;display:block}.chart .grid{stroke:var(--bd);stroke-width:1}.chart .tick,.chart .xl,.chart .xs,.chart .axl{fill:var(--mut);font-size:12.5px}.chart .xl{fill:var(--fg);font-size:13px;font-weight:550}.chart .axl{font-size:12px;letter-spacing:.04em}
 .chart .tot{fill:var(--fg);font-size:12.5px;font-weight:650}.chart .seg{stroke:rgba(0,0,0,.28);stroke-width:.6}.chart .seg:hover,.chart .dot:hover{filter:brightness(1.18)}
@@ -623,9 +623,31 @@ const CHARTS=[{id:'mvcol',title:'Mana Value Distribution',sub:'How many cards co
 let chartId='mvcol';
 function drawCharts(){
   const cs=D.cards.filter(c=>(!showDone||c.ign_whole)&&(!qfn||qfn(c))&&rfOk(c)&&!isBasic(c)),ch=CHARTS.find(x=>x.id===chartId);
-  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select>${chartId==='complex'?`<button type=button id=cxrem class="${cxRem?'on':''}" aria-pressed="${cxRem}" title="Count the words in reminder text (the text in parentheses) as well">${cxRem?'✓ ':''}Include reminder text</button>`:''}<span class="mut">${cs.length} card${cs.length==1?'':'s'}${showDone?' marked as done':qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
+  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select>${chartId==='complex'?`<button type=button id=cxrem class="${cxRem?'on':''}" aria-pressed="${cxRem}" title="Count the words in reminder text (the text in parentheses) as well">${cxRem?'✓ ':''}Include reminder text</button>`:''}<span class="mut">${cs.length} card${cs.length==1?'':'s'}${showDone?' marked as done':qfn?' matching your search':' in your set'}</span><button type=button id=cpchart title="Copy this graph as a picture, with the current filters">⧉ Copy graph</button></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
   $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()};
-  const cb=$('#cxrem');if(cb)cb.onclick=()=>{cxRem=!cxRem;drawCharts()}}
+  const cb=$('#cxrem');if(cb)cb.onclick=()=>{cxRem=!cxRem;drawCharts()};
+  $('#cpchart').onclick=copyChart}
+/* copy the graph exactly as shown (filters included) as a PNG on the clipboard */
+async function copyChart(){
+  const btn=$('#cpchart'),src=document.querySelector('.chartbox');if(!src)return;
+  const flash=t=>{const o=btn.textContent;btn.textContent=t;setTimeout(()=>btn.textContent=o,1600)};
+  try{
+    const clone=src.cloneNode(true),so=[src,...src.querySelectorAll('*')],co=[clone,...clone.querySelectorAll('*')];
+    so.forEach((e,i)=>{const cs=getComputedStyle(e);let st='';for(const p of cs)st+=p+':'+cs.getPropertyValue(p)+';';co[i].setAttribute('style',st)});
+    const sel=clone.querySelector('#chartsel');if(sel){const h=document.createElement('div');h.textContent=sel.options[sel.selectedIndex].text;h.setAttribute('style',sel.getAttribute('style')+';border:0;background:none;padding:0;min-width:0');sel.replaceWith(h)}
+    clone.querySelectorAll('button').forEach(b=>b.remove());
+    clone.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));
+    const solid=c=>c&&!/rgba?\(\s*0\s*,\s*0\s*,\s*0\s*(?:,\s*0\s*)?\)/.test(c)&&c!=='transparent',tc=(getComputedStyle(src).color.match(/\d+/g)||[0,0,0]).map(Number);
+    const bg=[getComputedStyle(document.body).backgroundColor,getComputedStyle(document.documentElement).backgroundColor].find(solid)||((tc[0]+tc[1]+tc[2])/3>128?'#17171a':'#ffffff'),w=src.offsetWidth,h=src.offsetHeight;
+    clone.style.margin='0';clone.style.width=w+'px';clone.style.boxSizing='border-box';clone.style.background=bg;clone.style.backdropFilter='none';
+    const xml=new XMLSerializer().serializeToString(clone);
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml">${xml}</div></foreignObject></svg>`;
+    const img=new Image();await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)});
+    const k=2,cv=document.createElement('canvas');cv.width=w*k;cv.height=h*k;const cx=cv.getContext('2d');cx.fillStyle=bg;cx.fillRect(0,0,cv.width,cv.height);cx.scale(k,k);cx.drawImage(img,0,0);
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    try{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);flash('✓ Copied')}
+    catch(_){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='msecheck-graph.png';document.body.appendChild(a);a.click();a.remove();flash('Saved as PNG')}
+  }catch(e){flash('Could not copy')}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'Back to cards':'Graphs';
   $('#filters').classList.toggle('chartmode',on);$('#collapse').hidden=on||!D;$('#sortwrap').classList.toggle('chartmode',on)
   if(D){if(on)drawCharts();else draw()}}
