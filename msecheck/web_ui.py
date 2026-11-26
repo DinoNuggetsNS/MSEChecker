@@ -221,6 +221,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
 .extrabar{flex:1 1 100%;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;padding:.55rem .7rem;border:1px solid var(--bd);border-radius:14px;background:var(--glass2);animation:mpop .2s ease}
 .graphbtn{--c:#ee77b8;display:inline-flex;align-items:center;padding:.3rem .8rem;border-radius:99px;font-size:12.5px;font-weight:650;color:var(--c);border:1px solid color-mix(in srgb,var(--c) 58%,transparent);background:color-mix(in srgb,var(--c) 13%,transparent);box-shadow:none}
 :root[data-theme=light] .graphbtn{--c:#b8327d}
+.graphbtn::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.9;margin-right:.45rem}
 .graphbtn:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 20%,transparent);filter:none}.graphbtn.on{color:var(--fg);border-color:var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}
 .chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .chartsel{font-size:1.05rem;font-weight:650;padding:.55rem 1rem;border-radius:12px;min-width:min(380px,100%)}.chartsub{color:var(--mut);margin:.8rem 0 .4rem}
