@@ -225,7 +225,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
 :root[data-theme=light] .graphbtn{--c:#b8327d}
 .graphbtn::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.9;margin-right:.45rem}
 .graphbtn:hover{border-color:var(--c);background:color-mix(in srgb,var(--c) 20%,transparent);filter:none}.graphbtn.on{color:var(--fg);border-color:var(--c);background:color-mix(in srgb,var(--c) 26%,transparent)}
-.chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
+.chartbox{padding:1.3rem 1.4rem;margin:.9rem 0}#cxrem{margin-right:auto;padding:.5rem 1rem;font-size:14px}.charthead{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;justify-content:space-between}
 .chartsel{font-size:1.05rem;font-weight:650;padding:.55rem 1rem;border-radius:12px;min-width:min(380px,100%)}.chartsub{color:var(--mut);margin:.8rem 0 .4rem}
 .chart{width:100%;height:auto;display:block}.chart .grid{stroke:var(--bd);stroke-width:1}.chart .tick,.chart .xl,.chart .xs,.chart .axl{fill:var(--mut);font-size:12.5px}.chart .xl{fill:var(--fg);font-size:13px;font-weight:550}.chart .axl{font-size:12px;letter-spacing:.04em}
 .chart .tot{fill:var(--fg);font-size:12.5px;font-weight:650}.chart .seg{stroke:rgba(0,0,0,.28);stroke-width:.6}.chart .seg:hover,.chart .dot:hover{filter:brightness(1.18)}
@@ -322,7 +322,7 @@ function symCost(c){c=String(c==null?'':c);if(c.indexOf('{')>=0)return S(esc(c))
 const CL={'Likely error':'likely','Needs review':'review','Suggestion':'suggestion'};
 const RANK={'Likely error':0,'Needs review':1,'Suggestion':2};
 const on={'Likely error':true,'Needs review':true,'Suggestion':true};
-let showDone=false,D=null,FM={},sortMode='sev',qtextv='',noScry=true,compact=false,chartMode=false;
+let cxRem=false,showDone=false,D=null,FM={},sortMode='sev',qtextv='',noScry=true,compact=false,chartMode=false;
 /* Scryfall-style search over the cards in the set */
 const QCOL={w:'W',white:'W',u:'U',blue:'U',b:'B',black:'B',r:'R',red:'R',g:'G',green:'G'};
 const QRAR={c:0,common:0,u:1,uncommon:1,r:2,rare:2,m:3,mythic:3,s:4,special:4};
@@ -604,14 +604,14 @@ function chRemoval(cs){const m={},S=stackSpec(cs);let any=0;
   const cats=REM.filter(r=>m[r[0]]).map(r=>({label:r[0],vals:m[r[0]]}));
   if(!cats.length)return '<div class="empty">No removal effects found in the rules text.</div>';
   return stacked(cats,S.keys,S.colors,S.names,Object.assign({xlabel:'Removal type'},S.opt))+note(`${any} card${any==1?'':'s'} with removal. A card that does more than one thing counts under each type. Found by matching common wording, so unusual templating can be missed.`)}
-function chComplex(cs){const rar=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),words=c=>noRem(c).trim().split(/\s+/).filter(Boolean).length,mx=Math.max(1,...cs.map(words)),top=niceMax(mx);
+function chComplex(cs){const rar=RAROD.filter(r=>cs.some(c=>prarity(c)===r)),words=c=>(cxRem?(qinfo(c).low||''):noRem(c)).trim().split(/\s+/).filter(Boolean).length,mx=Math.max(1,...cs.map(words)),top=niceMax(mx);
   const pw=SW-ML-MR,ph=SH-MT-MB,step=pw/rar.length;let g=grid(top);
   rar.forEach((r,i)=>{const L=cs.filter(c=>prarity(c)===r),cx=ML+step*i+step/2,a=avg(L.map(words)),ya=MT+ph*(1-a/top);
     L.forEach(c=>{const j=(((c.idx*47)%100)/100-.5)*Math.min(110,step*.7),y=MT+ph*(1-words(c)/top);
       g+=`<circle class="dot" cx="${cx+j}" cy="${y}" r="6" fill="${CCOL[ccol(c)]}" data-tip="${esc(c.name)}"></circle>`});
     g+=`<line class="avg" x1="${cx-step*.36}" x2="${cx+step*.36}" y1="${ya}" y2="${ya}"/><text class="tot" x="${cx+step*.36+6}" y="${ya+4}">avg ${a}</text><text class="xl" x="${cx}" y="${SH-MB+22}" text-anchor="middle">${r}</text><text class="xs" x="${cx}" y="${SH-MB+39}" text-anchor="middle">${L.length} cards</text>`});
   g+=`<text class="axl" transform="translate(14 ${MT+ph/2}) rotate(-90)" text-anchor="middle">Words of rules text</text><text class="axl" x="${ML+pw/2}" y="${SH-8}" text-anchor="middle">Rarity</text>`;
-  return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+legendHTML(CORDER,CCOL,CNAME)+note('Each dot is a card; hover a dot to see its name. Complexity is measured as the number of words in the rules text, without reminder text. The line marks each rarity’s average.')}
+  return `<svg class="chart" viewBox="0 0 ${SW} ${SH}" role="img">${g}</svg>`+legendHTML(CORDER,CCOL,CNAME)+note(`Each dot is a card; hover a dot to see its name. Complexity is measured as the number of words in the rules text, ${cxRem?'including':'without'} reminder text. The line marks each rarity’s average.`)}
 const CHARTS=[{id:'mvcol',title:'Mana Value Distribution',sub:'How many cards cost each amount of mana.',draw:chMvCol},
   {id:'typecol',title:'Card Type Distribution',sub:'How many cards of each type there are.',draw:chTypeCol},
   {id:'mvrar',title:'Mana Value by Rarity',sub:'Each rarity’s cards grouped by mana value, with the average mana value underneath.',draw:chMvRar},
@@ -623,8 +623,9 @@ const CHARTS=[{id:'mvcol',title:'Mana Value Distribution',sub:'How many cards co
 let chartId='mvcol';
 function drawCharts(){
   const cs=D.cards.filter(c=>(!showDone||c.ign_whole)&&(!qfn||qfn(c))&&rfOk(c)&&!isBasic(c)),ch=CHARTS.find(x=>x.id===chartId);
-  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select><span class="mut">${cs.length} card${cs.length==1?'':'s'}${showDone?' marked as done':qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
-  $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()}}
+  $('#charts').innerHTML=`<div class="glass chartbox"><div class="charthead"><select id="chartsel" class="chartsel" aria-label="Choose a graph">${CHARTS.map(x=>`<option value="${x.id}"${x.id===chartId?' selected':''}>${esc(x.title)}</option>`).join('')}</select>${chartId==='complex'?`<button type=button id=cxrem class="${cxRem?'on':''}" aria-pressed="${cxRem}" title="Count the words in reminder text (the text in parentheses) as well">${cxRem?'✓ ':''}Include reminder text</button>`:''}<span class="mut">${cs.length} card${cs.length==1?'':'s'}${showDone?' marked as done':qfn?' matching your search':' in your set'}</span></div><p class="chartsub">${esc(ch.sub)}</p>${cs.length?ch.draw(cs):'<div class="empty">No cards match your search.</div>'}</div>`;
+  $('#chartsel').onchange=e=>{chartId=e.target.value;drawCharts()};
+  const cb=$('#cxrem');if(cb)cb.onclick=()=>{cxRem=!cxRem;drawCharts()}}
 function setChart(on){chartMode=on;$('#cards').hidden=on;$('#charts').hidden=!on;$('#summary').hidden=on;const b=$('#graphs');b.classList.toggle('on',on);b.textContent=on?'Back to cards':'Graphs';
   $('#filters').classList.toggle('chartmode',on);$('#collapse').hidden=on||!D;$('#sortwrap').classList.toggle('chartmode',on)
   if(D){if(on)drawCharts();else draw()}}

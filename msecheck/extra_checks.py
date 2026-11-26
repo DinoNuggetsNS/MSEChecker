@@ -42,13 +42,15 @@ def check_extra_card(card, ctx):
     key = card["rules"][0]["key"] if card["rules"] else None
     typeline = " — ".join(x for x in (card["supertype"], card["subtype"]) if x) or name
     is_token = "token" in ty
+    _ls = [l.strip() for l in rules.split("\n") if l.strip()]
+    is_helper = is_token or "reminder" in ty or "msemar" in ty or (bool(_ls) and all(l.startswith("(") for l in _ls)) or not re.search(r"creature|instant|sorcery|artifact|enchantment|land|planeswalker|battle|kindred|tribal|saga|class|vehicle|equipment|aura", ty)   # keyword-reminder / token helper cards
     is_basic = bool(re.search(r"\bbasic\b", ty))
 
     def add(sev, cat, rule, line, match, why, field=None):
         out.append(mk(sev, cat, rule, line, match, why, None, None, field))
 
     # ---- names ----
-    if name and not is_token:
+    if name and not is_helper:
         words = name.split()
         if name[0].islower():
             add("Needs review", "Naming", "name-lowercase", name, words[0], "The card name starts with a lowercase letter. Card names are written in title case.")

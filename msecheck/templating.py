@@ -157,6 +157,14 @@ def _is_self(card, subj):
     return False
 
 
+def _is_condition(line, m):
+    """“if the creature you control has trample, …” and “a creature that has flying” test for a keyword; they don't grant it."""
+    if m.group(0).split()[0].lower() not in ("has", "have"):
+        return False
+    sent = re.split(r"(?<=[.!?])\s+", line[:m.start()])[-1]
+    return bool(re.search(r"\b(?:if|unless|whether|that|which|who|as long as|when|whenever|with)\b[^.;:]*$", sent, re.I))
+
+
 def _r(rid, rx, sev, why, rf=None, cond=None, fix=None, flags=re.I, cat="Missing term", skip_if=()):
     return {"id": rid, "rx": re.compile(rx, flags), "sev": sev, "cat": cat, "why": why, "ref": rf, "cond": cond,
             "fix": fix, "skip_if": set(skip_if)}
@@ -173,7 +181,7 @@ RULES = [
        "Gaining or losing a keyword from a spell or ability needs a duration such as “until end of turn”.", REF_PUMP),
     _r("spell-effect-no-duration", r"\b(?:get|gets|gain|gains|lose|loses|have|has) (?:[+\-][\dX]+/[+\-][\dX]+|(?:" + _KW + r"))\b" + _DUR,
        "Likely error", "Instants and sorceries can't create lasting static effects; this needs a duration such as “until end of turn”.",
-       REF_PUMP, cond=lambda c, l, m: SPELL(c, l, m) and not _temp_by_design(c, l, m) and not _in_quote(l, m.start()), skip_if=("pump-no-duration", "grant-no-duration")),
+       REF_PUMP, cond=lambda c, l, m: SPELL(c, l, m) and not _temp_by_design(c, l, m) and not _in_quote(l, m.start()) and not _is_condition(l, m), skip_if=("pump-no-duration", "grant-no-duration")),
     _r("on-to-onto", r"\bon to\b", "Likely error", "“on to” should be the single word “onto” (e.g. “put a card onto the battlefield”).", None,
        fix=lambda m: "Onto" if m.group(0)[0] == "O" else "onto", cat="Grammar"),
     _r("damage-no-amount", r"\bdeals damage to\b", "Likely error", "“deals damage” has no amount (e.g. “deals 3 damage”).", REF_DMG,

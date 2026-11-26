@@ -59,7 +59,13 @@ simultaneous otherwise therefore thereafter afterward afterwards later earlier e
 deal add remove change swap spend exchange detach take give make keep win tie roll flip count exceed match share
 begin start finish pick name rest wait stay move join split merge reduce form fight regenerate enlist attach
 creature nonartifact nonland blocked unblocked exiled owner's battlefield's opponent's controller's
-list lists listed reselect reselects cast casts"""
+list lists listed reselect reselects cast casts
+avant garde faux deja coup grace carte blanche bon vivant raison etre laissez faire fait accompli hoc hoi polloi vice versa alma mater quid
+pro quo sans serif route masse tete esprit corps savoir joie vivre noblesse oblige plume guerre belle epoque noir haute couture cuisine genre
+attache chic elan ennui fiance fiancee naive naif precis resume cliche matinee debut decor entree facade fete gala lingerie papier mache petite
+regime risque soiree touche vignette bona fide magnum opus modus operandi persona grata status terra firma deus machina rigor mortis nihilo
+priori sine qua carpe diem tabula rasa verbatim populi culpa bono facto jure versa ergo veni vidi vici fortuna habeas corpus
+esoteric exotic luxuries prophetic relics artwork"""
 
 
 def _inflect(w):
