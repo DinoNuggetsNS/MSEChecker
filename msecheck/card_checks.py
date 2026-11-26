@@ -355,7 +355,8 @@ def check_card(card, ctx):
                     continue   # that line gets the "and whenever" correction instead
                 if m and rid == "dies":
                     subj = re.split(r"\b(?:whenever|when|if)\b", line[:m.start()], flags=re.I)[-1].lower()
-                    if re.search(r"\b(?:land|artifact|enchantment|planeswalker|permanent|aura|equipment|vehicle|saga|battle)\b", subj) and "creature" not in subj:
+                    if ("creature" not in _types(card) and "creature" not in subj) or (
+                            re.search(r"\b(?:land|artifact|enchantment|planeswalker|permanent|aura|equipment|vehicle|saga|battle)\b", subj) and "creature" not in subj):
                         continue   # noncreature permanents usually say “put into a graveyard from the battlefield”; “dies” is allowed but not the norm
                 if m and not (rid == "in-play" and hit & {"old-cip", "old-cip-pl"}):
                     hit.add(rid)
