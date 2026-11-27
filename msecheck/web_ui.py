@@ -176,7 +176,7 @@ mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}d
 .acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem}
 .matches{margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--glass2)}.matches h4{margin:0 0 4px}
 .match{padding:10px 0;border-top:1px solid var(--bd);display:flow-root}.match:first-of-type{border-top:0}.match>img:not(.sym){float:right;width:96px;border-radius:7px;margin:0 0 4px 12px}
-.match .rules{max-height:150px;overflow:auto;font-size:.9em}
+.match .rules{max-height:150px;overflow:auto;font-size:.9em}.mcost{display:inline-block;margin:0 1.1rem;white-space:nowrap;line-height:1;vertical-align:middle}
 .pager{display:flex;justify-content:space-between;align-items:center;margin:.8rem 0;gap:.6rem}
 @media(max-width:700px){header.top{position:static}}
 .empty{padding:2rem;text-align:center;display:grid;gap:.4rem;margin-top:1rem}.empty b{font-size:1.1rem}
@@ -475,7 +475,7 @@ function findingHTML(f){
 }
 function closeHTML(cm,title,empty){
   if(!cm||!cm.items||!cm.items.length)return empty||'';
-  return `<div class=matches><h4>${esc(title)}</h4>${cm.note?`<p class=mut><small>${esc(cm.note)}</small></p>`:''}${cm.items.map(m=>`<div class=match>${m.img?`<img src="${esc(m.img)}" loading=lazy alt="" onerror="this.remove()">`:''}<b><a href="${esc(m.url)}" target=_blank rel=noopener>${esc(m.name)}</a></b> <span class=mut>${S(esc(m.mana))} ${esc(m.type)}${m.of?' · '+m.score+'% similar · shares '+m.shared+' of '+m.of+' distinct words':' · closest type line'}</span><pre class=rules>${S(esc(m.text))||'(no rules text)'}</pre></div>`).join('')}<small>A close match is a wording comparison, not proof of an error or of copying.</small></div>`}
+  return `<div class=matches><h4>${esc(title)}</h4>${cm.note?`<p class=mut><small>${esc(cm.note)}</small></p>`:''}${cm.items.map(m=>`<div class=match>${m.img?`<img src="${esc(m.img)}" loading=lazy alt="" onerror="this.remove()">`:''}<b><a href="${esc(m.url)}" target=_blank rel=noopener>${esc(m.name)}</a></b>${m.mana?`<span class=mcost>${S(esc(m.mana))}</span>`:' '}<span class=mut>${esc(m.type)}${m.of?' · '+m.score+'% similar · shares '+m.shared+' of '+m.of+' distinct words':' · closest type line'}</span><pre class=rules>${S(esc(m.text))||'(no rules text)'}</pre></div>`).join('')}<small>A close match is a wording comparison, not proof of an error or of copying.</small></div>`}
 function cardHTML(v){
   const c=v.c,fs=v.fs,n=fs.length;
   const tf=c.text_fields&&c.text_fields.length?`<small>Text read from: ${c.text_fields.map(esc).join(', ')}</small>`:'';
