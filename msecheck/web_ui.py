@@ -175,7 +175,7 @@ blockquote{margin:.25rem 0;padding-left:.7rem;border-left:2px solid var(--bd2)}
 mark{background:var(--mark);color:inherit;border-radius:2px;padding:0;margin:0}del{background:var(--del);text-decoration:none;border-radius:2px;padding:0;margin:0;white-space:pre-wrap}ins{background:var(--ins);text-decoration:none;border-radius:2px;padding:0;margin:0;white-space:pre-wrap}
 .acts{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.7rem}
 .matches{margin-top:12px;padding:12px 14px;border:1px solid var(--bd);border-radius:14px;background:var(--glass2)}.matches h4{margin:0 0 4px}
-.match{padding:10px 0;border-top:1px solid var(--bd);display:flow-root}.match:first-of-type{border-top:0}.match img{float:right;width:96px;border-radius:7px;margin:0 0 4px 12px}
+.match{padding:10px 0;border-top:1px solid var(--bd);display:flow-root}.match:first-of-type{border-top:0}.match>img:not(.sym){float:right;width:96px;border-radius:7px;margin:0 0 4px 12px}
 .match .rules{max-height:150px;overflow:auto;font-size:.9em}
 .pager{display:flex;justify-content:space-between;align-items:center;margin:.8rem 0;gap:.6rem}
 @media(max-width:700px){header.top{position:static}}
